@@ -1,5 +1,5 @@
 "use client";
 
 export default function ErrorPage() {
-    return <p>Sorry, something went wrong</p>;
+    return <p className="font-sans text-center mt-10">Sorry, something went wrong</p>;
 }
