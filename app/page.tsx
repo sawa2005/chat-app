@@ -32,7 +32,9 @@ export default async function Home() {
                     {messages.map((message) => (
                         <li key={message.id}>
                             <p className={(message.sent_by === "samuelward" ? "text-right" : "") + " text-xs mb-1"}>
-                                {message.created_at.toLocaleDateString() +
+                                {message.sent_by +
+                                    " - " +
+                                    message.created_at.toLocaleDateString() +
                                     " / " +
                                     message.created_at.toLocaleTimeString()}
                             </p>
@@ -40,10 +42,11 @@ export default async function Home() {
                                 className={
                                     (message.sent_by !== "samuelward"
                                         ? "bg-accent rounded-tl-none"
-                                        : "rounded-tr-none") + " p-2 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8"
+                                        : "rounded-tr-none ml-auto") +
+                                    " py-2 px-4 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit"
                                 }
                             >
-                                {message.sent_by + " - " + message.content}
+                                {message.content}
                             </div>
                         </li>
                     ))}
