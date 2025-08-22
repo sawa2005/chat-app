@@ -22,17 +22,6 @@ export default async function Home() {
     return (
         <div className="font-sans flex flex-col justify-center m-auto w-fit mt-20">
             <h1 className="text-2xl font-bold">Welcome to the Chat App</h1>
-            <p className="mt-4">
-                {currentUserEmail ? (
-                    "Logged in as: " + currentUserEmail
-                ) : (
-                    <Button asChild className="mt-6">
-                        <Link href={"/login"} className="cursor-pointer">
-                            Login / Sign up!
-                        </Link>
-                    </Button>
-                )}
-            </p>
 
             <div className="mt-6">
                 <h2 className="text-xl font-semibold mb-2">Messages:</h2>

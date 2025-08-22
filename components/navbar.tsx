@@ -42,16 +42,21 @@ export default async function Navigation() {
                         <NavigationMenuItem>
                             <NavigationMenuTrigger>Profile</NavigationMenuTrigger>
                             <NavigationMenuContent>
-                                <ul className="grid w-[200px] gap-4">
+                                <ul className="grid w-[220px] gap-4">
                                     <li>
+                                        <div>
+                                            <p className="my-2 text-sm font-mono text-muted-foreground text-center">
+                                                {currentUserEmail}
+                                            </p>
+                                        </div>
                                         <NavigationMenuLink asChild>
-                                            <Link href="#">Components</Link>
+                                            <Link href="/profile/edit">Edit Profile</Link>
                                         </NavigationMenuLink>
                                         <NavigationMenuLink asChild>
-                                            <Link href="#">Documentation</Link>
+                                            <Link href="#">Upload Avatars</Link>
                                         </NavigationMenuLink>
                                         <NavigationMenuLink asChild>
-                                            <Link href="#">Blocks</Link>
+                                            <Link href="#">Your Chats</Link>
                                         </NavigationMenuLink>
                                     </li>
                                 </ul>
