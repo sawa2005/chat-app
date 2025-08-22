@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { logout } from "./login/actions";
+import Link from "next/link";
 
 export default async function Home() {
     const supabase = await createClient();
@@ -21,11 +23,24 @@ export default async function Home() {
         <div className="font-sans flex flex-col justify-center m-auto w-fit mt-20">
             <h1 className="text-2xl font-bold">Welcome to the Chat App</h1>
             <p className="mt-4">
-                {currentUserEmail
-                    ? "Logged in as: " + currentUserEmail
-                    : "This is a simple chat application built with Next.js."}
+                {currentUserEmail ? (
+                    "Logged in as: " + currentUserEmail
+                ) : (
+                    <Button asChild className="mt-6">
+                        <Link href={"/login"} className="cursor-pointer">
+                            Login / Sign up!
+                        </Link>
+                    </Button>
+                )}
             </p>
-            <Button className="mt-6 w-100">This is a button</Button>
+            <div className="flex gap-1 w-100">
+                <form action={logout}>
+                    <Button className="mt-6 cursor-pointer" type="submit">
+                        Logout
+                    </Button>
+                </form>
+            </div>
+
             <div className="mt-6">
                 <h2 className="text-xl font-semibold mb-2">Messages:</h2>
                 <ul className="list-none">
