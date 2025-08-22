@@ -10,11 +10,11 @@ export default async function Home() {
 
     const { data, error } = await supabase.auth.getUser();
 
-    if (error || !data?.user) {
-        redirect("/login");
-    }
+    // if (error || !data?.user) {
+    //     redirect("/login");
+    // }
 
-    const currentUserEmail = data.user.email;
+    const currentUserEmail = data.user?.email;
 
     const messages = await prisma.messages.findMany();
     console.log(messages);
@@ -33,13 +33,6 @@ export default async function Home() {
                     </Button>
                 )}
             </p>
-            <div className="flex gap-1 w-100">
-                <form action={logout}>
-                    <Button className="mt-6 cursor-pointer" type="submit">
-                        Logout
-                    </Button>
-                </form>
-            </div>
 
             <div className="mt-6">
                 <h2 className="text-xl font-semibold mb-2">Messages:</h2>
