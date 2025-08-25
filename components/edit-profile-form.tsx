@@ -67,6 +67,7 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
         const validationError = validateUsername(value);
         setError(validationError);
         if (validationError) {
+            setMessagesVisible(true);
             setIsAvailable(null);
             return;
         }
