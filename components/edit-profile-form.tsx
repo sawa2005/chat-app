@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile, checkUsernameAvailability } from "@/app/login/actions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Profile properties
 interface Profile {
@@ -28,6 +28,9 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
     const [error, setError] = useState<string | null>(null);
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
     const [checking, setChecking] = useState(false);
+    const [normalizedValue, setNormalizedValue] = useState(username.trim().toLowerCase());
+    const [normalizedOld, setNormalizedOld] = useState(oldUsername ? oldUsername.trim().toLowerCase() : undefined);
+    const [messagesVisible, setMessagesVisible] = useState(true);
     let checkTimeout: NodeJS.Timeout;
     let lastCheckedValue = "";
 
@@ -50,23 +53,14 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
 
     const handleUsernameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = (e.target as HTMLInputElement).value;
-        const normalizedValue = value.trim().toLowerCase();
-        const normalizedOld = oldUsername ? oldUsername.trim().toLowerCase() : undefined;
+        setNormalizedValue(value.trim().toLowerCase());
+        setNormalizedOld(oldUsername ? oldUsername.trim().toLowerCase() : undefined);
 
         setUsername(value);
 
-        // If input is empty, clear error and availability
+        // If input is empty, hide all messages
         if (!value || value.trim() === "") {
-            setError(null);
-            setIsAvailable(null);
-            return;
-        }
-
-        // If username matches the original, clear error and availability
-        console.log("Username compared:", normalizedValue, normalizedOld);
-        if (normalizedValue === normalizedOld) {
-            setError(null);
-            setIsAvailable(null);
+            setMessagesVisible(false);
             return;
         }
 
@@ -82,6 +76,7 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
         checkTimeout = setTimeout(async () => {
             lastCheckedValue = normalizedValue;
             setChecking(true);
+            setMessagesVisible(true);
             try {
                 const result = await checkUsernameAvailability(value, userId);
                 if (lastCheckedValue === normalizedValue) {
@@ -118,6 +113,21 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
 
     const isDisabled = !!error;
 
+    // Clear messages if input is cleared or matches original username
+    useEffect(() => {
+        if (normalizedValue === "") {
+            setMessagesVisible(false);
+            setError(null);
+            return;
+        }
+
+        if (normalizedValue === normalizedOld && isAvailable !== null) {
+            setMessagesVisible(false);
+            setError(null);
+            return;
+        }
+    }, [checking, normalizedOld, normalizedValue, isAvailable]);
+
     return (
         <form
             onSubmit={handleSubmit}
@@ -146,11 +156,15 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
                     value={username}
                     onChange={handleUsernameChange}
                 />
-                {checking && <p className="text-blue-500 text-sm mt-1">Checking availability...</p>}
-                {!checking && isAvailable && !error && (
-                    <p className="text-green-500 text-sm mt-1">Username is available!</p>
+                {messagesVisible && (
+                    <>
+                        {checking && <p className="text-sm text-blue-500">Checking availability...</p>}
+                        {!checking && error && <p className="text-sm text-red-500">{error}</p>}
+                        {!checking && isAvailable && !error && (
+                            <p className="text-sm text-green-500">Username is available!</p>
+                        )}
+                    </>
                 )}
-                {!checking && error && <p className="text-red-500 text-sm mt-1">{error}</p>}
             </div>
             <div className="flex flex-col gap-1">
                 <Label htmlFor="display-name">Display Name</Label>
