@@ -74,3 +74,71 @@ export async function logout() {
     revalidatePath("/", "layout");
     redirect("/login");
 }
+
+export async function updateProfile(formData: FormData) {
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+        console.error("No user found:", userError?.message);
+        redirect("/login");
+    }
+
+    const username = formData.get("username") as string;
+    const display_name = formData.get("display-name") as string;
+    const avatarFile = formData.get("avatar") as File;
+
+    let avatar_url: string | null = null;
+
+    if (avatarFile && avatarFile.size > 0) {
+        const fileExt = avatarFile.name.split(".").pop();
+        const fileName = `${user.id}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from("avatars")
+            .upload(filePath, avatarFile, { upsert: true });
+
+        if (uploadError) {
+            console.error("Avatar upload error:", uploadError);
+        } else {
+            avatar_url = filePath;
+        }
+    }
+
+    const updates: { username?: string; display_name?: string | null; avatar_url?: string | null } = {};
+    if (username) updates.username = username;
+    if (display_name !== null) updates.display_name = display_name;
+    if (avatar_url !== null) updates.avatar_url = avatar_url;
+
+    try {
+        await prisma.profiles.update({
+            where: { user_id: user.id },
+            data: updates,
+        });
+
+        /* revalidatePath("/profile", "page");
+        redirect("/profile"); */
+
+        redirect("/profile/edit");
+    } catch (error) {
+        console.error("Profile update error:", error);
+    }
+}
+
+export async function checkUsernameAvailability(
+    username: string,
+    currentUserId?: string
+): Promise<{ available: boolean } | false> {
+    if (!username) return false;
+
+    const existingProfile = await prisma.profiles.findUnique({
+        where: { username, NOT: currentUserId ? { user_id: currentUserId } : undefined },
+    });
+
+    return { available: !existingProfile };
+}

@@ -23,19 +23,12 @@ model profiles {
   id           BigInt   @id @default(autoincrement())
   created_at   DateTime @default(now()) @db.Timestamptz(6)
   user_id      String?  @unique @db.Uuid
-  username     String?  @default("") @db.VarChar
+  username     String   @unique @default("") @db.VarChar
   avatar       String?  @default("") @db.VarChar
   display_name String?  @default("") @db.VarChar
 
   @@schema("public")
 }
-
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-// model users {
-// @@map("users")
-// @@schema("auth")
-// }
 
 /// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -145,6 +138,15 @@ model profiles {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 // model sso_providers {
+// @@schema("auth")
+// }
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model users {
 // @@schema("auth")
 // }
 
