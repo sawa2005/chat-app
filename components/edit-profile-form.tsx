@@ -8,9 +8,12 @@ import { useEffect, useState } from "react";
 
 // Profile properties
 interface Profile {
-    username: string | null;
+    id: bigint;
+    created_at: Date;
+    user_id: string | null;
+    username: string;
+    avatar: string | null;
     display_name: string | null;
-    avatar_url: string | null;
 }
 
 // Properties for the EditProfileForm component

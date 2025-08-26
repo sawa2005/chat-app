@@ -142,3 +142,16 @@ export async function checkUsernameAvailability(
 
     return { available: !existingProfile };
 }
+
+export async function getUsername(userId: string): Promise<string | null> {
+    try {
+        const profile = await prisma.profiles.findUnique({
+            where: { user_id: userId },
+        });
+
+        return profile?.username || null;
+    } catch (error) {
+        console.error("Error fetching username:", error);
+        return null;
+    }
+}

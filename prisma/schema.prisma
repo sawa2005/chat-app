@@ -10,11 +10,14 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model messages {
-  id         BigInt   @id @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  sent_by    String?  @default("") @db.VarChar
-  sent_to    String?  @default("") @db.VarChar
-  content    String?  @default("")
+  id              BigInt        @id @default(autoincrement())
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  sent_by         String?       @default("") @db.VarChar
+  sent_to         String?       @default("") @db.VarChar
+  content         String?       @default("")
+  conversation_id String        @db.Uuid
+  sender_id       String        @db.Uuid
+  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
 
   @@schema("public")
 }
@@ -149,6 +152,26 @@ model profiles {
 // model users {
 // @@schema("auth")
 // }
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model conversation_members {
+  conversation_id String         @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String         @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversations   conversations?
+
+  @@id([conversation_id, user_id])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model conversations {
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at           DateTime             @default(now()) @db.Timestamptz(6)
+  conversation_members conversation_members @relation(fields: [id], references: [conversation_id], onDelete: Cascade)
+  messages             messages[]
+
+  @@schema("public")
+}
 
 enum aal_level {
   aal1
