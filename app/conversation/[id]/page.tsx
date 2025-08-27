@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/prisma";
+import { sendMessage } from "../create/actions";
+import { getCurrentProfileId } from "@/app/login/actions";
 
 interface ConversationPageProps {
     params: { id: string };
 }
 
 export default async function ConversationPage({ params }: ConversationPageProps) {
-    const id = params.id;
+    const { id } = params;
+    const currentProfileId = await getCurrentProfileId();
+
+    if (!currentProfileId) return null; // TODO: handle this neater
 
     const conversation = await prisma.conversations.findUnique({
         where: { id },
@@ -43,6 +48,28 @@ export default async function ConversationPage({ params }: ConversationPageProps
                     </li>
                 ))}
             </ul>
+
+            <form
+                action={async (formData) => {
+                    // TODO: put this in a seperate file to make it neater
+                    "use server";
+                    const content = formData.get("content")?.toString();
+                    if (!content) return;
+
+                    await sendMessage(id, currentProfileId, content);
+                }}
+                className="flex gap-2 mt-4"
+            >
+                <input
+                    name="content"
+                    type="text"
+                    placeholder="Type your message..."
+                    className="flex-1 border rounded px-2 py-1"
+                />
+                <button type="submit" className="bg-blue-500 text-white px-3 py-1 rounded">
+                    Send
+                </button>
+            </form>
         </div>
     );
 }
