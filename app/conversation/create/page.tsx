@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createConversation, handleCreateConversation } from "./actions";
 
 export default async function CreateConversationPage() {
     const supabase = await createClient();
@@ -19,7 +20,7 @@ export default async function CreateConversationPage() {
         <div className="font-sans flex flex-col justify-center m-auto w-fit mt-20">
             <h1 className="text-2xl font-bold">Create a New Conversation</h1>
             <p className="mt-4">This is a placeholder page for creating a new conversation.</p>
-            <form className="font-sans flex flex-col gap-3 p-5 max-w-md m-auto mt-10" method="post">
+            <form action={handleCreateConversation} className="font-sans flex flex-col gap-3 p-5 max-w-md m-auto mt-10">
                 <div className="flex flex-col gap-1">
                     <Label htmlFor="selected-profile-names">Who do you want to message?</Label>
                     <p className="text-xs font-mono text-muted-foreground">
