@@ -155,3 +155,19 @@ export async function getUsername(userId: string): Promise<string | null> {
         return null;
     }
 }
+
+export async function getCurrentProfileId() {
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const profile = await prisma.profiles.findUnique({
+        where: { user_id: user.id },
+    });
+
+    return profile ? profile.id : null;
+}

@@ -1,10 +1,12 @@
 "use server";
 
+import { getCurrentProfileId } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 export async function handleCreateConversation(formData: FormData) {
-    const currentProfileId = BigInt(4); // TODO: replace with session variable
+    const currentProfileId = await getCurrentProfileId();
+    if (!currentProfileId) throw new Error("Not authenticated or profile missing");
 
     const selectedProfileNames =
         formData
