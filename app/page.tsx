@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { getUsername, logout } from "./login/actions";
 import Link from "next/link";
+import ConversationsPage from "./conversation/page";
 
 export default async function Home() {
     const supabase = await createClient();
@@ -23,10 +24,11 @@ export default async function Home() {
         <div className="font-sans flex flex-col justify-center m-auto w-fit mt-20">
             <h1 className="text-2xl font-bold">Welcome to the Chat App</h1>
             <div className="mt-6">
+                <ConversationsPage />
                 <Button className="cursor-pointer mb-5">
                     <Link href="/conversation/create">+ &nbsp; Create New Conversation</Link>
                 </Button>
-                <h2 className="text-xl font-semibold mb-2">Messages:</h2>
+                {/* <h2 className="text-xl font-semibold mb-2">Messages:</h2>
                 <ul className="list-none">
                     {messages.map((message) => (
                         <li key={message.id}>
@@ -49,7 +51,7 @@ export default async function Home() {
                             </div>
                         </li>
                     ))}
-                </ul>
+                </ul> */}
             </div>
         </div>
     );

@@ -42,7 +42,7 @@ export default async function ConversationsPage() {
     });
 
     return (
-        <div className="p-6">
+        <div className="py-6">
             <h1 className="text-xl font-bold mb-4">Your Conversations</h1>
 
             {conversations.length === 0 && <p className="text-muted-foreground">No conversations yet.</p>}

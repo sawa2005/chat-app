@@ -19,7 +19,6 @@ export default async function CreateConversationPage() {
     return (
         <div className="font-sans flex flex-col justify-center m-auto w-fit mt-20">
             <h1 className="text-2xl font-bold">Create a New Conversation</h1>
-            <p className="mt-4">This is a placeholder page for creating a new conversation.</p>
             <form action={handleCreateConversation} className="font-sans flex flex-col gap-3 p-5 max-w-md m-auto mt-10">
                 <div className="flex flex-col gap-1">
                     <Label htmlFor="selected-profile-names">Who do you want to message?</Label>
