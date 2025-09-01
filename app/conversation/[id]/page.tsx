@@ -5,12 +5,16 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Messages from "@/components/messages";
 interface ConversationPageProps {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
+// TODO: add functionality for editing conversation name.
+// TODO: add functionality for adding members to conversations.
+
 export default async function ConversationPage({ params }: ConversationPageProps) {
-    const { id } = params;
+    const { id } = await params;
     const currentProfileId = await getCurrentProfileId();
 
     if (!currentProfileId) return null; // TODO: handle this neater
@@ -23,6 +27,10 @@ export default async function ConversationPage({ params }: ConversationPageProps
     }
 
     const username = await getUsername(userData.user.id);
+
+    if (!username) {
+        redirect("/login");
+    }
 
     const conversation = await prisma.conversations.findUnique({
         where: { id },
@@ -54,33 +62,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
                 ))}
             </ul>
 
-            <h2 className="text-lg font-semibold mt-4">Messages</h2>
-            <ul className="list-none">
-                {conversation.messages.map((message) => (
-                    <li
-                        key={message.id}
-                        className={"max-w-9/10 " + (message.sender.username === username ? "ml-auto" : "")}
-                    >
-                        <p className={(message.sender.username === username ? "text-right" : "") + " text-xs mb-1"}>
-                            {(message.sender.username === username ? "You" : message.sender.username) +
-                                " - " +
-                                message.created_at.toLocaleDateString() +
-                                " / " +
-                                message.created_at.toLocaleTimeString()}
-                        </p>
-                        <div
-                            className={
-                                (message.sender.username !== username
-                                    ? "bg-accent rounded-tl-none"
-                                    : "rounded-tr-none ml-auto") +
-                                " py-2 px-4 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit"
-                            }
-                        >
-                            {message.content}
-                        </div>
-                    </li>
-                ))}
-            </ul>
+            <Messages conversationId={conversation.id} currentUsername={username} />
 
             <form
                 action={async (formData) => {
