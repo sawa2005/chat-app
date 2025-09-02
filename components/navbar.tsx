@@ -9,6 +9,14 @@ import {
     NavigationMenuViewport,
 } from "@/components/ui/navigation-menu";
 
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -21,8 +29,6 @@ export default async function Navigation() {
     const { data, error } = await supabase.auth.getUser();
 
     const currentUserEmail = data.user?.email;
-
-    // TODO: replace right side of nevigation menu with dropdown menu
 
     return (
         <NavigationMenu className="w-full p-3 font-sans font-semibold justify-between max-w-none">
@@ -38,55 +44,58 @@ export default async function Navigation() {
                     </NavigationMenuLink>
                 </NavigationMenuItem>
             </NavigationMenuList>
-            <NavigationMenuList>
-                {currentUserEmail ? (
-                    <>
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger>Profile</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <ul className="grid w-[220px] gap-4 mr-auto">
-                                    <li>
-                                        <div>
-                                            <p className="my-2 text-sm font-mono text-muted-foreground text-center">
-                                                {currentUserEmail}
-                                            </p>
-                                        </div>
-                                        <NavigationMenuLink asChild>
-                                            <Link href="/profile/edit">Edit Profile</Link>
-                                        </NavigationMenuLink>
-                                        <NavigationMenuLink asChild>
-                                            <Link href="#">Upload Avatars</Link>
-                                        </NavigationMenuLink>
-                                        <NavigationMenuLink asChild>
-                                            <Link href="#">Your Chats</Link>
-                                        </NavigationMenuLink>
-                                    </li>
-                                </ul>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
+            {currentUserEmail ? (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="cursor-pointer">
+                            Profile
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 font-sans">
+                        <div className="px-2 py-1.5 text-sm font-mono text-muted-foreground text-center">
+                            {currentUserEmail}
+                        </div>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/profile/edit" className="cursor-pointer">
+                                Edit Profile
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                            <Link href="#">Upload Avatars</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                            <Link href="#">Your Chats</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
                             <form action={logout}>
-                                <Button className="cursor-pointer" type="submit">
+                                <button type="submit" className="w-full text-left cursor-pointer">
                                     Logout
-                                </Button>
+                                </button>
                             </form>
-                        </NavigationMenuItem>
-                    </>
-                ) : (
-                    <>
-                        <NavigationMenuItem>
-                            <NavigationMenuLink asChild>
-                                <Link href="/login">Log In</Link>
-                            </NavigationMenuLink>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                            <Button>
-                                <Link href="/login">Sign Up</Link>
-                            </Button>
-                        </NavigationMenuItem>
-                    </>
-                )}
-            </NavigationMenuList>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="cursor-pointer">
+                            Log In
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 font-sans">
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                            <Link href="/login">Existing Account</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                            <Link href="/login">
+                                <span className="font-semibold">Sign Up</span>
+                            </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
         </NavigationMenu>
     );
 }
