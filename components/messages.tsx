@@ -83,7 +83,9 @@ export default function Messages({
 
                 message.created_at = new Date(message.created_at);
 
-                setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
+                setMessages((prev) =>
+                    prev.find((m) => m.id.toString() === message.id.toString()) ? prev : [...prev, message]
+                );
             })
             .subscribe();
 
@@ -98,7 +100,7 @@ export default function Messages({
             <ul className="list-none">
                 {messages.map((message) => (
                     <li
-                        key={message.id.toString()}
+                        key={message.id}
                         className={"max-w-9/10 " + (message.sender.username === currentUsername ? "ml-auto" : "")}
                     >
                         <p
@@ -131,7 +133,9 @@ export default function Messages({
                 currentUsername={currentUsername}
                 sendMessage={sendMessage}
                 onNewMessage={(msg) =>
-                    setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]))
+                    setMessages((prev) =>
+                        prev.some((m) => m.id.toString() === msg.id.toString()) ? prev : [...prev, msg]
+                    )
                 }
             />
         </div>
