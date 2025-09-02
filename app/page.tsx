@@ -24,7 +24,7 @@ export default async function Home() {
 
     return (
         <div className="font-sans flex flex-col justify-center m-auto mt-20">
-            <h1 className="text-2xl font-bold">Welcome to the Chat App</h1>
+            <h1 className="text-7xl font-bold">Welcome to the Chat App</h1>
             <div className="mt-6">
                 <ConversationsPage />
                 <Button className="cursor-pointer mb-5">

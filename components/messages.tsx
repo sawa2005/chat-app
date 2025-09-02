@@ -33,7 +33,6 @@ export default function Messages({
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // TODO: add loading state and element.
     // TODO: add different margin for consecutive messages by the same user.
 
     // Scroll to bottom when messages change

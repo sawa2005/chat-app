@@ -42,8 +42,8 @@ export default async function ConversationsPage() {
     });
 
     return (
-        <div className="py-6 max-w-2xl">
-            <h1 className="text-xl font-bold mb-4">Your Conversations</h1>
+        <div className="py-6 max-w-2xl mt-3">
+            <h2 className="text-2xl mb-4 font-semibold">Your Conversations</h2>
 
             {conversations.length === 0 && <p className="text-muted-foreground">No conversations yet.</p>}
 
@@ -53,14 +53,20 @@ export default async function ConversationsPage() {
                     return (
                         <li key={c.id} className="border rounded-lg p-4 shadow-sm">
                             <Link href={`/conversation/${c.id}`} className="block">
-                                <h2 className="font-semibold text-lg">
+                                <h3 className="font-normal text-lg">
                                     {c.name ?? c.conversation_members.map((m) => m.profiles?.username).join(", ")}
-                                </h2>
+                                </h3>
                                 {lastMsg && (
-                                    <p className="text-sm text-muted-foreground w-full max-w-full truncate">
-                                        <span className="font-medium">{lastMsg.sender.username}:</span>{" "}
-                                        {lastMsg.content}
-                                    </p>
+                                    <div className="flex justify-between w-full max-w-full">
+                                        <p className="text-sm text-muted-foreground truncate">
+                                            <span className="font-medium">{lastMsg.sender.username}:</span>{" "}
+                                            {lastMsg.content}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground font-mono">
+                                            {/* TODO: time when today, date when older */}
+                                            {lastMsg.created_at.toLocaleDateString()}
+                                        </p>
+                                    </div>
                                 )}
                             </Link>
                         </li>

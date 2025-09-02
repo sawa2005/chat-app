@@ -22,6 +22,8 @@ export default async function Navigation() {
 
     const currentUserEmail = data.user?.email;
 
+    // TODO: replace right side of nevigation menu with dropdown menu
+
     return (
         <NavigationMenu className="w-full p-3 font-sans font-semibold justify-between max-w-none">
             <NavigationMenuList>
@@ -42,7 +44,7 @@ export default async function Navigation() {
                         <NavigationMenuItem>
                             <NavigationMenuTrigger>Profile</NavigationMenuTrigger>
                             <NavigationMenuContent>
-                                <ul className="grid w-[220px] gap-4">
+                                <ul className="grid w-[220px] gap-4 mr-auto">
                                     <li>
                                         <div>
                                             <p className="my-2 text-sm font-mono text-muted-foreground text-center">
