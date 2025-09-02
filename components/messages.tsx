@@ -2,6 +2,8 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import { sendMessage } from "@/app/conversation/create/actions";
+import SendMessageForm from "./send-message-form";
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -19,9 +21,11 @@ type Message = {
 export default function Messages({
     conversationId,
     currentUsername,
+    currentProfileId,
 }: {
     conversationId: string;
     currentUsername: string;
+    currentProfileId: bigint;
 }) {
     const [messages, setMessages] = useState<Message[]>([]);
 
@@ -71,25 +75,20 @@ export default function Messages({
         }
         loadInitMessages();
 
-        // listen for realtime changes
-        const channel = supabase
-            .channel("messages")
-            .on(
-                "postgres_changes",
-                {
-                    event: "INSERT",
-                    schema: "public",
-                    table: "messages",
-                    filter: `conversation_id=eq.${conversationId}`,
-                },
-                (payload) => {
-                    setMessages((prev) => [...prev, payload.new as Message]);
-                }
-            )
+        const broadcastChannel = supabase.channel(`conversation-${conversationId}`);
+
+        broadcastChannel
+            .on("broadcast", { event: "message" }, (payload) => {
+                const message = payload.payload as Message;
+
+                message.created_at = new Date(message.created_at);
+
+                setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
+            })
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            supabase.removeChannel(broadcastChannel);
         };
     }, [conversationId]);
 
@@ -99,7 +98,7 @@ export default function Messages({
             <ul className="list-none">
                 {messages.map((message) => (
                     <li
-                        key={message.id}
+                        key={message.id.toString()}
                         className={"max-w-9/10 " + (message.sender.username === currentUsername ? "ml-auto" : "")}
                     >
                         <p
@@ -126,6 +125,15 @@ export default function Messages({
                     </li>
                 ))}
             </ul>
+            <SendMessageForm
+                conversationId={conversationId}
+                currentProfileId={currentProfileId}
+                currentUsername={currentUsername}
+                sendMessage={sendMessage}
+                onNewMessage={(msg) =>
+                    setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]))
+                }
+            />
         </div>
     );
 }

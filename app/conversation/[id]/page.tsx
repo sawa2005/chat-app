@@ -1,10 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { sendMessage } from "../create/actions";
 import { getCurrentProfileId, getUsername } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import Messages from "@/components/messages";
 interface ConversationPageProps {
     params: Promise<{ id: string }>;
@@ -62,24 +59,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
                 ))}
             </ul>
 
-            <Messages conversationId={conversation.id} currentUsername={username} />
-
-            <form
-                action={async (formData) => {
-                    // TODO: put this in a seperate file to make it neater
-                    "use server";
-                    const content = formData.get("content")?.toString();
-                    if (!content) return;
-
-                    await sendMessage(id, currentProfileId, content);
-                }}
-                className="flex gap-1 mt-6"
-            >
-                <Input name="content" type="text" placeholder="Type your message..." className="px-4 py-6" />
-                <Button type="submit" className="cursor-pointer py-6">
-                    Send
-                </Button>
-            </form>
+            <Messages conversationId={conversation.id} currentUsername={username} currentProfileId={currentProfileId} />
         </div>
     );
 }
