@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { sendMessage } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
+import { useChatScroll } from "@/hooks/use-chat-scroll";
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -27,11 +28,13 @@ export default function Messages({
     currentUsername: string;
     currentProfileId: bigint;
 }) {
+    const { containerRef, scrollToBottom } = useChatScroll();
     const [messages, setMessages] = useState<Message[]>([]);
 
+    // Scroll to bottom when messages change
     useEffect(() => {
-        console.log("messages: ", messages);
-    }, [messages, setMessages]);
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
 
     useEffect(() => {
         async function loadInitMessages() {
@@ -97,36 +100,38 @@ export default function Messages({
     return (
         <div>
             <h2 className="text-lg font-semibold mt-4">Messages</h2>
-            <ul className="list-none">
-                {messages.map((message) => (
-                    <li
-                        key={message.id}
-                        className={"max-w-9/10 " + (message.sender.username === currentUsername ? "ml-auto" : "")}
-                    >
-                        <p
-                            className={
-                                (message.sender.username === currentUsername ? "text-right" : "") + " text-xs mb-1"
-                            }
+            <div ref={containerRef} className="max-h-[500px] pr-4 mt-5 overflow-y-auto">
+                <ul className="list-none">
+                    {messages.map((message) => (
+                        <li
+                            key={message.id}
+                            className={"max-w-9/10 " + (message.sender.username === currentUsername ? "ml-auto" : "")}
                         >
-                            {(message.sender.username === currentUsername ? "You" : message.sender.username) +
-                                " / " +
-                                message.created_at.toLocaleDateString() +
-                                " - " +
-                                message.created_at.toLocaleTimeString()}
-                        </p>
-                        <div
-                            className={
-                                (message.sender.username !== currentUsername
-                                    ? "bg-accent rounded-tl-none"
-                                    : "rounded-tr-none ml-auto") +
-                                " py-2 px-4 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit"
-                            }
-                        >
-                            {message.content}
-                        </div>
-                    </li>
-                ))}
-            </ul>
+                            <p
+                                className={
+                                    (message.sender.username === currentUsername ? "text-right" : "") + " text-xs mb-1"
+                                }
+                            >
+                                {(message.sender.username === currentUsername ? "You" : message.sender.username) +
+                                    " / " +
+                                    message.created_at.toLocaleDateString() +
+                                    " - " +
+                                    message.created_at.toLocaleTimeString()}
+                            </p>
+                            <div
+                                className={
+                                    (message.sender.username !== currentUsername
+                                        ? "bg-accent rounded-tl-none"
+                                        : "rounded-tr-none ml-auto") +
+                                    " py-2 px-4 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit"
+                                }
+                            >
+                                {message.content}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
             <SendMessageForm
                 conversationId={conversationId}
                 currentProfileId={currentProfileId}
