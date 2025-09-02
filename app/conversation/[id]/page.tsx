@@ -47,7 +47,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
     }
 
     return (
-        <div className="p-6 font-sans">
+        <div className="font-sans">
             <p className="text-xs font-mono text-muted-foreground">/ conversation</p>
             <h1 className="text-xl font-bold mb-4">{conversation.name ?? "(unnamed)"}</h1>
 

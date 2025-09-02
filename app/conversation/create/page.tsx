@@ -27,6 +27,7 @@ export default async function CreateConversationPage() {
                     </p>
                     <Input id="selected-profile-names" name="selected-profile-names" type="text" required />
                 </div>
+                {/* TODO: add placeholder which automatically shows the selected usernames in the group name */}
                 <div className="flex flex-col gap-1">
                     <Label htmlFor="group-name">What do you want to call this conversation?</Label>
                     <p className="text-xs font-mono text-muted-foreground">

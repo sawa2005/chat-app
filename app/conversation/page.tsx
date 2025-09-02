@@ -42,12 +42,12 @@ export default async function ConversationsPage() {
     });
 
     return (
-        <div className="py-6">
+        <div className="py-6 max-w-2xl">
             <h1 className="text-xl font-bold mb-4">Your Conversations</h1>
 
             {conversations.length === 0 && <p className="text-muted-foreground">No conversations yet.</p>}
 
-            <ul className="space-y-4">
+            <ul className="space-y-4 w-100%">
                 {conversations.map((c) => {
                     const lastMsg = c.messages[0];
                     return (
@@ -57,7 +57,7 @@ export default async function ConversationsPage() {
                                     {c.name ?? c.conversation_members.map((m) => m.profiles?.username).join(", ")}
                                 </h2>
                                 {lastMsg && (
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground w-full max-w-full truncate">
                                         <span className="font-medium">{lastMsg.sender.username}:</span>{" "}
                                         {lastMsg.content}
                                     </p>
