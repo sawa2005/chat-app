@@ -45,14 +45,14 @@ export default async function Navigation() {
                 </NavigationMenuItem>
             </NavigationMenuList>
             {currentUserEmail ? (
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="cursor-pointer">
                             Profile
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 font-sans">
-                        <div className="px-2 py-1.5 text-sm font-mono text-muted-foreground text-center">
+                        <div className="px-2 py-1.5 text-sm font-mono text-muted-foreground text-center truncate">
                             {currentUserEmail}
                         </div>
                         <DropdownMenuSeparator />

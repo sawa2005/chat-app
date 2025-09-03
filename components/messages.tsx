@@ -20,6 +20,14 @@ type Message = {
     };
 };
 
+function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
+    if (!prev) return false;
+    if (prev.sender.id !== current.sender.id) return false;
+
+    const diffMs = current.created_at.getTime() - prev.created_at.getTime();
+    return diffMs < cutoffMinutes * 60 * 1000;
+}
+
 export default function Messages({
     conversationId,
     currentUsername,
@@ -116,39 +124,72 @@ export default function Messages({
                     <Skeleton className="h-[80px] w-[55%] rounded-xl mt-3 ml-auto" />
                 </div>
             ) : (
-                <div ref={containerRef} className="max-h-[500px] pr-4 mt-5 overflow-y-auto">
+                <div ref={containerRef} className="flex-1 max-h-[calc(100vh-400px)] pr-4 mt-5 overflow-y-auto">
                     <ul className="list-none">
-                        {messages.map((message) => (
-                            <li
-                                key={message.id}
-                                className={
-                                    "max-w-9/10 " + (message.sender.username === currentUsername ? "ml-auto" : "")
-                                }
-                            >
-                                <p
+                        {messages.map((message, i) => {
+                            const prevMsg = messages[i - 1];
+                            const isConsecutive = isConsecutiveMessage(prevMsg, message);
+
+                            return (
+                                <li
+                                    key={message.id}
                                     className={
-                                        (message.sender.username === currentUsername ? "text-right" : "") +
-                                        " text-xs mb-1"
+                                        "max-w-9/10" +
+                                        (message.sender.username === currentUsername ? "ml-auto" : "") +
+                                        (isConsecutive ? " mt-[-10px]" : " mt-5")
                                     }
                                 >
-                                    {(message.sender.username === currentUsername ? "You" : message.sender.username) +
-                                        " / " +
-                                        message.created_at.toLocaleDateString() +
-                                        " - " +
-                                        message.created_at.toLocaleTimeString()}
-                                </p>
-                                <div
-                                    className={
-                                        (message.sender.username !== currentUsername
-                                            ? "bg-accent rounded-tl-none"
-                                            : "rounded-tr-none ml-auto") +
-                                        " py-2 px-4 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%]"
-                                    }
-                                >
-                                    {message.content}
-                                </div>
-                            </li>
-                        ))}
+                                    {!isConsecutive ? (
+                                        <p
+                                            className={
+                                                (message.sender.username === currentUsername ? "text-right" : "") +
+                                                " text-xs mb-1"
+                                            }
+                                        >
+                                            {(message.sender.username === currentUsername
+                                                ? "You"
+                                                : message.sender.username) +
+                                                " / " +
+                                                message.created_at.toLocaleDateString() +
+                                                " - " +
+                                                message.created_at.toLocaleTimeString()}
+                                        </p>
+                                    ) : (
+                                        <p
+                                            className={
+                                                (message.sender.username === currentUsername ? "text-right" : "") +
+                                                " text-xs mb-1 hidden group-hover:block"
+                                            }
+                                        >
+                                            {message.created_at.toLocaleTimeString()}
+                                        </p>
+                                    )}
+                                    <div
+                                        className={
+                                            "group relative " +
+                                            (message.sender.username !== currentUsername
+                                                ? "bg-accent rounded-tl-none"
+                                                : "rounded-tr-none ml-auto") +
+                                            " py-2 px-4 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%]"
+                                        }
+                                    >
+                                        {message.content}
+
+                                        {/* 👇 timestamp only shows on hover */}
+                                        {isConsecutive && (
+                                            <p
+                                                className={
+                                                    (message.sender.username === currentUsername ? "text-right" : "") +
+                                                    " absolute -bottom-5 right-0 text-xs text-muted-foreground hidden group-hover:block"
+                                                }
+                                            >
+                                                {message.created_at.toLocaleTimeString()}
+                                            </p>
+                                        )}
+                                    </div>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             )}
