@@ -94,13 +94,11 @@ export async function updateProfile(formData: FormData) {
     let avatar_url: string | null = null;
 
     if (avatarFile && avatarFile.size > 0) {
-        const fileExt = avatarFile.name.split(".").pop();
-        const fileName = `${user.id}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
+        const filePath = `avatars/${avatarFile.name}`;
 
         const { error: uploadError } = await supabase.storage
             .from("avatars")
-            .upload(filePath, avatarFile, { upsert: true });
+            .upload(filePath, avatarFile, { contentType: "image/jpeg", upsert: true });
 
         if (uploadError) {
             console.error("Avatar upload error:", uploadError);
@@ -109,10 +107,10 @@ export async function updateProfile(formData: FormData) {
         }
     }
 
-    const updates: { username?: string; display_name?: string | null; avatar_url?: string | null } = {};
+    const updates: { username?: string; display_name?: string | null; avatar?: string | null } = {};
     if (username) updates.username = username;
     if (display_name !== null) updates.display_name = display_name;
-    if (avatar_url !== null) updates.avatar_url = avatar_url;
+    if (avatar_url !== null) updates.avatar = avatar_url;
 
     try {
         await prisma.profiles.update({

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile, checkUsernameAvailability } from "@/app/login/actions";
 import { useEffect, useState } from "react";
+import AvatarUpload from "./avatar-upload";
 
 // Profile properties
 interface Profile {
@@ -112,7 +113,13 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
             return;
         }
 
-        await updateProfile(new FormData(e.currentTarget as HTMLFormElement));
+        const formData = new FormData(e.currentTarget as HTMLFormElement);
+
+        if (avatarFile) {
+            formData.append("avatar", avatarFile);
+        }
+
+        await updateProfile(formData);
     };
 
     const isDisabled = !!error;
@@ -180,19 +187,7 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
                     onChange={(e) => setDisplayName(e.target.value)}
                 />
             </div>
-            <div className="flex flex-col gap-1">
-                <Label htmlFor="avatar">Avatar</Label>
-                <p className="text-xs font-mono text-muted-foreground">/ upload your avatar image</p>
-                <Input
-                    id="avatar"
-                    name="avatar"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="file:font-sans file:font-semibold file:text-md!important file:mr-3 file:text-black font-mono text-sm text-muted-foreground"
-                    disabled
-                />
-            </div>
+            <AvatarUpload username={username} onAvatarReady={setAvatarFile} />
             <Button className="cursor-pointer" type="submit" disabled={isDisabled}>
                 Update Profile
             </Button>
