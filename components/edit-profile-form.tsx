@@ -116,7 +116,7 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
         const formData = new FormData(e.currentTarget as HTMLFormElement);
 
         if (avatarFile) {
-            formData.append("avatar", avatarFile);
+            formData.append("avatar", avatarFile, avatarFile.name);
         }
 
         await updateProfile(formData);

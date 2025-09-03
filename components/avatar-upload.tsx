@@ -47,7 +47,6 @@ export default function AvatarUpload({ username, onAvatarReady }: AvatarUploadPr
             <p className="text-xs font-mono text-muted-foreground">/ upload your avatar image</p>
             <Input
                 id="avatar"
-                name="avatar"
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
