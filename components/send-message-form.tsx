@@ -1,12 +1,13 @@
 "use client";
 
 import { createClient } from "@/lib/client";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { sendMessage } from "@/app/conversation/create/actions";
 import { getCurrentProfileId } from "@/app/login/actions";
 import Image from "next/image";
+import { Image as ImageIcon } from "lucide-react";
 
 const supabase = createClient();
 
@@ -44,6 +45,12 @@ export default function SendMessageForm({
     const [imgPreview, setImgPreview] = useState<string | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
+
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const handleIconClick = () => {
+        fileInputRef.current?.click();
+    };
 
     async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
         const uploadedfile = e.target.files?.[0];
@@ -116,27 +123,48 @@ export default function SendMessageForm({
 
         setContent("");
         setImgPreview(null);
+        setFile(null);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""; // reset file input
+        }
+
         setIsPending(false);
     }
 
+    // TODO: file upload cancel button
+    // TODO: allow image message with no content
+    // TODO: style images in chat bubbles
+
     return (
-        <form onSubmit={handleSubmit} className="flex gap-1 mt-6">
-            <Input
-                name="content"
-                type="text"
-                placeholder="Type your message..."
-                className="px-4 py-6"
-                disabled={isPending}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-            />
-            <Input type="file" accept="image/*" onChange={handleFileChange} />
-            {imgPreview && (
-                <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />
-            )}
-            <Button type="submit" className="cursor-pointer py-6" disabled={isPending || uploading}>
-                {isPending ? "Sending..." : uploading ? "Uploading..." : "Send"}
-            </Button>
+        <form onSubmit={handleSubmit}>
+            <div className="relative flex gap-1 mt-6">
+                <Input
+                    name="content"
+                    type="text"
+                    placeholder="Type your message..."
+                    className="px-4 py-6 pr-10"
+                    disabled={isPending}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                />
+                <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                {/* Icon inside input */}
+                <button
+                    type="button"
+                    onClick={handleIconClick}
+                    className="absolute right-21 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                >
+                    <ImageIcon size={20} />
+                </button>
+
+                {imgPreview && (
+                    <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />
+                )}
+                <Button type="submit" className="cursor-pointer py-6" disabled={isPending || uploading}>
+                    {isPending ? "Sending..." : uploading ? "Uploading..." : "Send"}
+                </Button>
+            </div>
         </form>
     );
 }
