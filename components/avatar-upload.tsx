@@ -12,12 +12,13 @@ import { Check } from "lucide-react";
 interface AvatarUploadProps {
     username: string;
     onAvatarReady: (file: File | null) => void;
+    existingAvatarUrl: string | null;
 }
 
-export default function AvatarUpload({ username, onAvatarReady }: AvatarUploadProps) {
+export default function AvatarUpload({ username, onAvatarReady, existingAvatarUrl }: AvatarUploadProps) {
     const [imageSrc, setImageSrc] = useState<string | null>(null);
     const [croppedArea, setCroppedArea] = useState<Area | null>(null);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(existingAvatarUrl);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
 

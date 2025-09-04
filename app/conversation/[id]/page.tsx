@@ -3,6 +3,7 @@ import { getCurrentProfileId, getUsername } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Messages from "@/components/messages";
+import Avatar from "@/components/avatar";
 interface ConversationPageProps {
     params: Promise<{ id: string }>;
 }
@@ -52,12 +53,14 @@ export default async function ConversationPage({ params }: ConversationPageProps
             <h1 className="text-xl font-bold mb-4">{conversation.name ?? "(unnamed)"}</h1>
 
             <h2 className="text-lg font-semibold mt-4">Members</h2>
-            <p className="text-xs font-mono text-muted-foreground">/ placeholder until avatars</p>
-            <ul className="list-disc list-inside">
+            <p className="text-xs font-mono text-muted-foreground">
+                / {conversation.conversation_members.length} members
+            </p>
+            <div className="flex gap-3">
                 {conversation.conversation_members.map((m) => (
-                    <li key={m.profile_id}>{m.profiles?.username}</li>
+                    <Avatar key={m.profile_id} size={35} avatarUrl={m.profiles.avatar} username={m.profiles.username} />
                 ))}
-            </ul>
+            </div>
 
             <Messages conversationId={conversation.id} currentUsername={username} currentProfileId={currentProfileId} />
         </div>

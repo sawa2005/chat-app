@@ -53,9 +53,15 @@ export default async function ConversationsPage() {
                     return (
                         <li key={c.id} className="border rounded-lg p-4 shadow-sm">
                             <Link href={`/conversation/${c.id}`} className="block">
-                                <h3 className="font-normal text-lg">
-                                    {c.name ?? c.conversation_members.map((m) => m.profiles?.username).join(", ")}
-                                </h3>
+                                <div className="flex justify-between">
+                                    <h3 className="font-normal text-lg">
+                                        {c.name ?? c.conversation_members.map((m) => m.profiles?.username).join(", ")}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        {c.conversation_members.length} members
+                                    </p>
+                                </div>
+
                                 {lastMsg && (
                                     <div className="flex justify-between w-full max-w-full">
                                         <p className="text-sm text-muted-foreground truncate">
