@@ -25,8 +25,6 @@ interface Props {
     oldUsername?: string;
 }
 
-// TODO: add fetching of avatar when one exists.
-
 export default function EditProfileForm({ profile, userEmail, userId, oldUsername }: Props) {
     const [username, setUsername] = useState(profile.username || "");
     const [displayName, setDisplayName] = useState(profile.display_name || "");

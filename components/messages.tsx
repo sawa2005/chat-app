@@ -6,6 +6,7 @@ import { sendMessage } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -18,6 +19,7 @@ type Message = {
         id: bigint;
         username: string;
     };
+    image_url: string | null;
 };
 
 function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
@@ -57,6 +59,7 @@ export default function Messages({
                     conversation_id,
                     content,
                     created_at,
+                    image_url,
                     sender:profiles!fk_messages_sender (
                         id,
                         username
@@ -79,6 +82,7 @@ export default function Messages({
                             content: string;
                             created_at: string;
                             sender: { id: bigint; username: string }[] | { id: bigint; username: string };
+                            image_url: string | null;
                         }[]
                     ).map((msg) => ({
                         ...msg,
@@ -175,7 +179,16 @@ export default function Messages({
                                     >
                                         {message.content}
 
-                                        {/* 👇 timestamp only shows on hover */}
+                                        {message.image_url && (
+                                            <Image
+                                                src={message.image_url}
+                                                alt="Message attachment"
+                                                fill
+                                                unoptimized
+                                                className="object-contain rounded"
+                                            />
+                                        )}
+
                                         {isConsecutive && (
                                             <p
                                                 className={

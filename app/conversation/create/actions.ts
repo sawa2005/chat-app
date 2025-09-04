@@ -75,14 +75,27 @@ export async function createConversation(
     return conversation.id;
 }
 
-export async function sendMessage(conversationId: string, senderId: bigint, content: string) {
-    const message = await prisma.messages.create({
-        data: {
-            conversation_id: conversationId,
-            sender_id: senderId,
-            content,
-        },
-    });
+export async function sendMessage(conversationId: string, senderId: bigint, content: string, imageUrl: string | null) {
+    let message;
+
+    if (imageUrl) {
+        message = await prisma.messages.create({
+            data: {
+                conversation_id: conversationId,
+                sender_id: senderId,
+                content,
+                image_url: imageUrl,
+            },
+        });
+    } else {
+        message = await prisma.messages.create({
+            data: {
+                conversation_id: conversationId,
+                sender_id: senderId,
+                content,
+            },
+        });
+    }
 
     return message;
 }
