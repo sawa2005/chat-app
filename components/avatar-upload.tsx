@@ -4,9 +4,10 @@ import { ChangeEvent, useState } from "react";
 import Cropper, { Area } from "react-easy-crop";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
+import { Button } from "./ui/button";
 import { getCroppedImg } from "@/utils/crop-image";
-import { updateProfile } from "@/app/login/actions";
+import Avatar from "./avatar";
+import { Check } from "lucide-react";
 
 interface AvatarUploadProps {
     username: string;
@@ -17,6 +18,8 @@ export default function AvatarUpload({ username, onAvatarReady }: AvatarUploadPr
     const [imageSrc, setImageSrc] = useState<string | null>(null);
     const [croppedArea, setCroppedArea] = useState<Area | null>(null);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0] ?? null;
@@ -42,46 +45,44 @@ export default function AvatarUpload({ username, onAvatarReady }: AvatarUploadPr
     };
 
     return (
-        <div className="flex flex-col gap-1">
-            <Label htmlFor="avatar">Avatar</Label>
-            <p className="text-xs font-mono text-muted-foreground">/ upload your avatar image</p>
-            <Input
-                id="avatar"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="file:font-sans file:font-semibold file:text-md!important file:mr-3 file:text-black font-mono text-sm text-muted-foreground"
-            />
-
-            {imageSrc && (
-                <div className="relative w-64 h-64 bg-gray-200">
-                    <Cropper
-                        image={imageSrc}
-                        crop={{ x: 0, y: 0 }}
-                        zoom={1}
-                        aspect={1}
-                        onCropChange={() => {}}
-                        onCropComplete={(_, croppedAreaPixels) => setCroppedArea(croppedAreaPixels)}
-                        onZoomChange={() => {}}
+        <div className="flex flex-col gap-1 border-1 rounded-md px-4 py-2 shadow-xs">
+            <div className="flex gap-5 items-center">
+                <div>
+                    <Label htmlFor="avatar">Avatar</Label>
+                    <p className="text-xs font-mono text-muted-foreground mb-3">/ upload your avatar image</p>
+                    <Input
+                        id="avatar"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="file:font-sans file:font-semibold file:text-md!important file:mr-3 file:text-black font-mono text-sm text-muted-foreground cursor-pointer file:cursor-pointer"
                     />
-                    <button
-                        type="button"
-                        onClick={handleSave}
-                        className="absolute bottom-2 left-2 bg-blue-500 text-white px-3 py-1 rounded"
-                    >
-                        Save Avatar
-                    </button>
                 </div>
-            )}
 
-            {avatarUrl && (
-                <Image
-                    src={avatarUrl}
-                    alt="User Avatar"
-                    className="mt-2 w-24 h-24 rounded-full object-cover"
-                    width={100}
-                    height={100}
-                />
+                <Avatar size={100} avatarUrl={avatarUrl} username={username} />
+            </div>
+            {imageSrc && (
+                <div className="w-full flex justify-center my-3">
+                    <div className="relative w-64 h-64 bg-gray-200 rounded-xl overflow-hidden">
+                        <Cropper
+                            image={imageSrc}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={1}
+                            onCropChange={setCrop}
+                            onCropComplete={(_, croppedAreaPixels) => setCroppedArea(croppedAreaPixels)}
+                            onZoomChange={setZoom}
+                            cropShape={"round"}
+                        />
+                        <Button
+                            type="button"
+                            onClick={handleSave}
+                            className="absolute bottom-2 right-2 bg-green-800 border-1 border-white cursor-pointer"
+                        >
+                            <Check className="w-5 h-5" />
+                        </Button>
+                    </div>
+                </div>
             )}
         </div>
     );

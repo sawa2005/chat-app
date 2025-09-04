@@ -25,6 +25,8 @@ interface Props {
     oldUsername?: string;
 }
 
+// TODO: add fetching of avatar when one exists.
+
 export default function EditProfileForm({ profile, userEmail, userId, oldUsername }: Props) {
     const [username, setUsername] = useState(profile.username || "");
     const [displayName, setDisplayName] = useState(profile.display_name || "");
@@ -37,12 +39,6 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
     const [messagesVisible, setMessagesVisible] = useState(true);
     let checkTimeout: NodeJS.Timeout;
     let lastCheckedValue = "";
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            setAvatarFile(e.target.files[0]);
-        }
-    };
 
     const validateUsername = (value: string) => {
         const usernameRegex = /^[a-zA-Z0-9_]{4,20}$/;
