@@ -42,7 +42,7 @@ export default function ConversationTitle({ id, initialName }: { id: string; ini
                             value={name}
                             placeholder={existingName}
                             onChange={(e) => setName(e.target.value)}
-                            className="text-xl font-bold mb-4 border-0 shadow-none p-0 h-fit"
+                            className="text-xl font-bold mb-4 border-0 shadow-none p-0 h-fit md:!text-xl"
                         />
                     </div>
 

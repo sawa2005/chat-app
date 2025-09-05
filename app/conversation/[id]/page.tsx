@@ -52,7 +52,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
         <div className="font-sans">
             <ConversationTitle id={conversation.id} initialName={conversation.name} />
 
-            <h2 className="text-lg font-semibold mt-4">Members</h2>
+            <h2 className="text-lg font-semibold">Members</h2>
             <p className="text-xs font-mono text-muted-foreground">
                 / {conversation.conversation_members.length} members
             </p>

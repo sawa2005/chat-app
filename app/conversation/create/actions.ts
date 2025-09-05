@@ -6,18 +6,28 @@ import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
 
 export async function updateConversationName(conversationId: string, newName: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    const profileId = await getCurrentProfileId();
 
     if (newName === "") return;
+    if (!profileId) throw new Error("Unauthorized");
 
-    if (!user) throw new Error("Unauthorized");
+    const profile = await prisma.profiles.findUnique({
+        where: { id: profileId },
+        select: { username: true },
+    });
+    if (!profile) throw new Error("Profile not found");
 
     const updated = await prisma.conversations.update({
         where: { id: conversationId },
         data: { name: newName },
+    });
+
+    await prisma.messages.create({
+        data: {
+            conversation_id: conversationId,
+            content: `${profile.username} changed the conversation name to ${newName}.`,
+            type: "info",
+        },
     });
 
     return updated;

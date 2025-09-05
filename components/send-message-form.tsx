@@ -22,10 +22,11 @@ type SendMessageFormProps = {
         content: string;
         created_at: Date;
         sender: {
-            id: bigint;
+            id: bigint | null;
             username: string;
         };
         image_url: string | null;
+        type: string;
     }) => void;
 };
 
@@ -103,6 +104,7 @@ export default function SendMessageForm({
                 username: currentUsername,
             },
             ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
+            type: newMessage.type || "message",
         });
 
         supabase.channel(`conversation-${conversationId}`).send({
@@ -114,10 +116,11 @@ export default function SendMessageForm({
                 content: newMessage.content ?? "",
                 created_at: new Date(newMessage.created_at),
                 sender: {
-                    id: newMessage.sender_id.toString(),
+                    id: newMessage.sender_id?.toString(),
                     username: currentUsername,
                 },
                 ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
+                type: newMessage.type || "message",
             },
         });
 
