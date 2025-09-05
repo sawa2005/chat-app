@@ -4,12 +4,13 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Messages from "@/components/messages";
 import Avatar from "@/components/avatar";
+import ConversationTitle from "@/components/conversation-title";
 interface ConversationPageProps {
     params: Promise<{ id: string }>;
 }
 
-// TODO: add functionality for editing conversation name.
 // TODO: add functionality for adding members to conversations.
+// TODO: add info messages when conversation is edited (title, members etc.)
 
 export default async function ConversationPage({ params }: ConversationPageProps) {
     const { id } = await params;
@@ -49,8 +50,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
 
     return (
         <div className="font-sans">
-            <p className="text-xs font-mono text-muted-foreground">/ conversation</p>
-            <h1 className="text-xl font-bold mb-4">{conversation.name ?? "(unnamed)"}</h1>
+            <ConversationTitle id={conversation.id} initialName={conversation.name} />
 
             <h2 className="text-lg font-semibold mt-4">Members</h2>
             <p className="text-xs font-mono text-muted-foreground">

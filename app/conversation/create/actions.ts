@@ -2,7 +2,26 @@
 
 import { getCurrentProfileId } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
+
+export async function updateConversationName(conversationId: string, newName: string) {
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (newName === "") return;
+
+    if (!user) throw new Error("Unauthorized");
+
+    const updated = await prisma.conversations.update({
+        where: { id: conversationId },
+        data: { name: newName },
+    });
+
+    return updated;
+}
 
 export async function handleCreateConversation(formData: FormData) {
     const currentProfileId = await getCurrentProfileId();
