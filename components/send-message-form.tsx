@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { sendMessage } from "@/app/conversation/create/actions";
 import { getCurrentProfileId } from "@/app/login/actions";
 import Image from "next/image";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, X } from "lucide-react";
 
 const supabase = createClient();
 
@@ -132,6 +132,13 @@ export default function SendMessageForm({
         setIsPending(false);
     }
 
+    function handleUploadCancel() {
+        setIsPending(false);
+        setImgPreview(null);
+        setFile(null);
+        setUploading(false);
+    }
+
     // TODO: file upload cancel button
     // TODO: allow image message with no content
     // TODO: style images in chat bubbles
@@ -150,13 +157,23 @@ export default function SendMessageForm({
                 />
                 <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                 {/* Icon inside input */}
-                <button
-                    type="button"
-                    onClick={handleIconClick}
-                    className="absolute right-21 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
-                >
-                    <ImageIcon size={20} />
-                </button>
+                {imgPreview ? (
+                    <button
+                        type="button"
+                        onClick={handleUploadCancel}
+                        className="absolute right-34 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
+                    >
+                        <X size={20} />
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={handleIconClick}
+                        className="absolute right-21 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
+                    >
+                        <ImageIcon size={20} />
+                    </button>
+                )}
 
                 {imgPreview && (
                     <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />

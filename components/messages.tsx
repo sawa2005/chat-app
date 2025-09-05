@@ -6,7 +6,7 @@ import { sendMessage } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
-import Image from "next/image";
+import ChatImage from "@/components/chat-image";
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -174,19 +174,13 @@ export default function Messages({
                                             (message.sender.username !== currentUsername
                                                 ? "bg-accent rounded-tl-none"
                                                 : "rounded-tr-none ml-auto") +
-                                            " py-2 px-4 rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%]"
+                                            " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%]"
                                         }
                                     >
-                                        {message.content}
+                                        <p className="py-2 px-4">{message.content}</p>
 
                                         {message.image_url && (
-                                            <Image
-                                                src={message.image_url}
-                                                alt="Message attachment"
-                                                fill
-                                                unoptimized
-                                                className="object-contain rounded"
-                                            />
+                                            <ChatImage src={message.image_url} alt="Message attachment" />
                                         )}
 
                                         {isConsecutive && (
