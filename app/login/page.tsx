@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// TODO: better error messages for form validation failure (like password incorrect etc.)
+
 export default function LoginPage() {
     return (
         <form className="font-sans flex flex-col gap-3 p-5 max-w-md m-auto mt-10" method="post">

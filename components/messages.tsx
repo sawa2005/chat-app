@@ -44,6 +44,7 @@ export default function Messages({
     const [loading, setLoading] = useState(true);
 
     // TODO: add different margin for consecutive messages by the same user.
+    // TODO: if height is too small to show messages, collapse header and members.
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -174,10 +175,10 @@ export default function Messages({
                                             (message.sender.username !== currentUsername
                                                 ? "bg-accent rounded-tl-none"
                                                 : "rounded-tr-none ml-auto") +
-                                            " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%]"
+                                            " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
                                         }
                                     >
-                                        <p className="py-2 px-4">{message.content}</p>
+                                        {message.content && <p className="py-2 px-4">{message.content}</p>}
 
                                         {message.image_url && (
                                             <ChatImage src={message.image_url} alt="Message attachment" />

@@ -145,36 +145,33 @@ export default function SendMessageForm({
 
     return (
         <form onSubmit={handleSubmit}>
-            <div className="relative flex gap-1 mt-6">
-                <Input
-                    name="content"
-                    type="text"
-                    placeholder="Type your message..."
-                    className="px-4 py-6 pr-10"
-                    disabled={isPending}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                />
-                <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-                {/* Icon inside input */}
-                {imgPreview ? (
+            <div className="flex gap-1 mt-6">
+                <div className="relative flex gap-1 w-full">
+                    <Input
+                        name="content"
+                        type="text"
+                        placeholder="Type your message..."
+                        className="px-4 py-6 pr-10"
+                        disabled={isPending}
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                    />
+                    <Input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                    />
+                    {/* Icon inside input */}
                     <button
                         type="button"
-                        onClick={handleUploadCancel}
-                        className="absolute right-34 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
+                        onClick={imgPreview ? handleUploadCancel : handleIconClick}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
                     >
-                        <X size={20} />
+                        {imgPreview ? <X size={20} /> : <ImageIcon size={20} />}
                     </button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={handleIconClick}
-                        className="absolute right-21 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
-                    >
-                        <ImageIcon size={20} />
-                    </button>
-                )}
-
+                </div>
                 {imgPreview && (
                     <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />
                 )}
