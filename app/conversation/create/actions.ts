@@ -25,7 +25,7 @@ export async function updateConversationName(conversationId: string, newName: st
     await prisma.messages.create({
         data: {
             conversation_id: conversationId,
-            content: `${profile.username} changed the conversation name to ${newName}.`,
+            content: `${profile.username} changed the conversation name to '${newName}'.`,
             type: "info",
         },
     });

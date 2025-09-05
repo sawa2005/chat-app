@@ -138,7 +138,14 @@ export default function Messages({
                         {messages.map((message, i) => {
                             if (message.type === "info") {
                                 console.log("info message:", message);
-                                return <li key={message.id}>{message.content}</li>;
+                                return (
+                                    <li
+                                        key={message.id}
+                                        className="text-xs font-mono text-muted-foreground m-auto block w-fit my-10 text-center"
+                                    >
+                                        {message.content}
+                                    </li>
+                                );
                             } else if (message.type === "message") {
                                 console.log("message:", message);
                                 const prevMsg = messages[i - 1];
