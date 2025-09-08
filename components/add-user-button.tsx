@@ -19,7 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// TODO: style button to match leave button.
 export function AddUserButton({
     conversationId,
     addedByProfileId,
@@ -46,7 +45,9 @@ export function AddUserButton({
         <DropdownMenuItem asChild className="cursor-pointer">
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant="outline">Add User</Button>
+                    <Button variant="ghost" className="w-full justify-start cursor-pointer">
+                        Add User
+                    </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>

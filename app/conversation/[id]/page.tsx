@@ -24,6 +24,9 @@ interface ConversationPageProps {
 
 // TODO: add functionality for leaving conversations.
 // TODO: add UI refresh on member add.
+// TODO: broadcast info messages and changes like members / conversation title.
+// TODO: add typing indicators.
+// TODO: add reactions.
 
 export default async function ConversationPage({ params }: ConversationPageProps) {
     const { id } = await params;
@@ -71,7 +74,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
                             <Ellipsis size={20} />
                         </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 font-sans">
+                    <DropdownMenuContent align="end" className="max-w-56 w-fit font-sans">
                         <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
                         <LeaveButton conversationId={conversation.id} profileId={currentProfileId} />
                     </DropdownMenuContent>

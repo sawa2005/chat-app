@@ -30,9 +30,8 @@ type SendMessageFormProps = {
     }) => void;
 };
 
-// TODO: fix row-level security error on upload
-// TODO: style image upload with icon etc.
-// TODO: image upload only on message send.
+// TODO: add emoji picker
+// TODO: add gif picker
 
 export default function SendMessageForm({
     conversationId,
@@ -141,10 +140,6 @@ export default function SendMessageForm({
         setFile(null);
         setUploading(false);
     }
-
-    // TODO: file upload cancel button
-    // TODO: allow image message with no content
-    // TODO: style images in chat bubbles
 
     return (
         <form onSubmit={handleSubmit}>

@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { leaveConversation } from "@/app/conversation/create/actions";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 interface LeaveButtonProps {
     conversationId: string;
@@ -10,6 +11,7 @@ interface LeaveButtonProps {
 }
 
 // TODO: use shadcn alert dialog instead of confirm.
+
 export default function LeaveButton({ conversationId, profileId }: LeaveButtonProps) {
     const [isPending, startTransition] = useTransition();
 
@@ -34,9 +36,14 @@ export default function LeaveButton({ conversationId, profileId }: LeaveButtonPr
 
     return (
         <DropdownMenuItem asChild className="cursor-pointer">
-            <button className="w-full text-red-700" onClick={handleLeave} disabled={isPending}>
+            <Button
+                variant="ghost"
+                className="w-full text-red-700 justify-start cursor-pointer hover:border-none px-4"
+                onClick={handleLeave}
+                disabled={isPending}
+            >
                 {isPending ? "Leaving..." : "Leave Conversation"}
-            </button>
+            </Button>
         </DropdownMenuItem>
     );
 }

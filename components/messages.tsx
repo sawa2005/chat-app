@@ -25,6 +25,7 @@ type Message = {
 
 function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
+    if (!prev.sender) return false;
     if (prev.sender.id !== current.sender.id) return false;
 
     const diffMs = current.created_at.getTime() - prev.created_at.getTime();
@@ -44,9 +45,9 @@ export default function Messages({
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // TODO: add different margin for consecutive messages by the same user.
     // TODO: if height is too small to show messages, collapse header and members.
     // TODO: fix initial scroll position when first loading.
+    // TODO: add message edit and delete.
 
     // Scroll to bottom when messages change
     useEffect(() => {
