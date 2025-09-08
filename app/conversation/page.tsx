@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
+import { Image as ImageIcon } from "lucide-react";
 
 export default async function ConversationsPage() {
     const supabase = await createClient();
@@ -50,6 +51,7 @@ export default async function ConversationsPage() {
             <ul className="space-y-4 w-100%">
                 {conversations.map((c) => {
                     const lastMsg = c.messages[0];
+                    console.log("lastMsg:", lastMsg);
                     return (
                         <li key={c.id} className="border rounded-lg p-4 shadow-sm">
                             <Link href={`/conversation/${c.id}`} className="block">
@@ -62,12 +64,31 @@ export default async function ConversationsPage() {
                                     </p>
                                 </div>
 
-                                {lastMsg && (
+                                {lastMsg && lastMsg.type === "message" && (
                                     <div className="flex justify-between w-full max-w-full">
-                                        <p className="text-sm text-muted-foreground truncate">
-                                            <span className="font-medium">{lastMsg.sender.username}:</span>{" "}
-                                            {lastMsg.content}
+                                        <div className="flex just w-full max-w-[70%] items-center gap-1">
+                                            <p className="text-sm text-muted-foreground truncate max-w-[95%] overflow-hidden">
+                                                <span className="font-medium">{lastMsg.sender?.username}:</span>{" "}
+                                                {lastMsg.content}
+                                            </p>
+                                            {lastMsg.image_url && (
+                                                <ImageIcon className="text-muted-foreground" size={15} />
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-muted-foreground font-mono">
+                                            {/* TODO: time when today, date when older */}
+                                            {lastMsg.created_at.toLocaleDateString()}
                                         </p>
+                                    </div>
+                                )}
+
+                                {lastMsg && lastMsg.type === "info" && (
+                                    <div className="flex justify-between w-full max-w-full">
+                                        <div className="flex just w-full max-w-[70%] items-center gap-1">
+                                            <p className="text-sm text-muted-foreground truncate max-w-[95%] overflow-hidden">
+                                                {lastMsg.content}
+                                            </p>
+                                        </div>
                                         <p className="text-sm text-muted-foreground font-mono">
                                             {/* TODO: time when today, date when older */}
                                             {lastMsg.created_at.toLocaleDateString()}

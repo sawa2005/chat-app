@@ -2,8 +2,61 @@
 
 import { getCurrentProfileId } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
+
+export async function addMemberToConversation(conversationId: string, username: string, addedBy: bigint) {
+    const newUser = await prisma.profiles.findUnique({ where: { username } });
+    if (!newUser) {
+        throw new Error(`User with username: '${username}' not found.`);
+    }
+
+    const existing = await prisma.conversation_members.findFirst({
+        where: {
+            conversation_id: conversationId,
+            profile_id: newUser.id,
+        },
+    });
+
+    if (existing) throw new Error(`${newUser.username} is already in the conversation.`);
+
+    await prisma.conversation_members.create({
+        data: {
+            conversation_id: conversationId,
+            profile_id: newUser.id,
+        },
+    });
+
+    const addedByUser = await prisma.profiles.findUnique({ where: { id: addedBy } });
+
+    await prisma.messages.create({
+        data: {
+            conversation_id: conversationId,
+            content: `${addedByUser?.username} added ${newUser.username} to the conversation.`,
+            type: "info",
+        },
+    });
+}
+
+export async function leaveConversation(conversationId: string, profileId: bigint) {
+    await prisma.conversation_members.delete({
+        where: {
+            conversation_id_profile_id: {
+                conversation_id: conversationId,
+                profile_id: profileId,
+            },
+        },
+    });
+
+    const user = await prisma.profiles.findUnique({ where: { id: profileId } });
+
+    await prisma.messages.create({
+        data: {
+            conversation_id: conversationId,
+            content: `${user?.username} left the conversation.`,
+            type: "info",
+        },
+    });
+}
 
 export async function updateConversationName(conversationId: string, newName: string) {
     const profileId = await getCurrentProfileId();

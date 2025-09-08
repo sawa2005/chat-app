@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 // TODO: better error messages for form validation failure (like password incorrect etc.)
+// TODO: most likely split login and sign up or make it clearer.
+// TODO: show message that confirmation is needed to sign in after sign up.
 
 export default function LoginPage() {
     return (

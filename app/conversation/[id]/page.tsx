@@ -5,12 +5,25 @@ import { redirect } from "next/navigation";
 import Messages from "@/components/messages";
 import Avatar from "@/components/avatar";
 import ConversationTitle from "@/components/conversation-title";
+import LeaveButton from "@/components/leave-button";
+
+import { Ellipsis } from "lucide-react";
+
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { AddUserButton } from "@/components/add-user-button";
+
 interface ConversationPageProps {
     params: Promise<{ id: string }>;
 }
 
-// TODO: add functionality for adding members to conversations.
-// TODO: add info messages when conversation is edited (title, members etc.)
+// TODO: add functionality for leaving conversations.
+// TODO: add UI refresh on member add.
 
 export default async function ConversationPage({ params }: ConversationPageProps) {
     const { id } = await params;
@@ -50,7 +63,20 @@ export default async function ConversationPage({ params }: ConversationPageProps
 
     return (
         <div className="font-sans">
-            <ConversationTitle id={conversation.id} initialName={conversation.name} />
+            <div className="flex justify-between w-full">
+                <ConversationTitle id={conversation.id} initialName={conversation.name} />
+                <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                        <button className="text-muted-foreground hover:text-primary cursor-pointer mb-auto">
+                            <Ellipsis size={20} />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 font-sans">
+                        <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
+                        <LeaveButton conversationId={conversation.id} profileId={currentProfileId} />
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
 
             <h2 className="text-lg font-semibold">Members</h2>
             <p className="text-xs font-mono text-muted-foreground">
