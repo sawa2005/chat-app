@@ -27,6 +27,8 @@ interface ConversationPageProps {
 // TODO: broadcast info messages and changes like members / conversation title.
 // TODO: add typing indicators.
 // TODO: add reactions.
+// TODO: add reply functionality.
+// TODO: add read messages and notifications.
 
 export default async function ConversationPage({ params }: ConversationPageProps) {
     const { id } = await params;
