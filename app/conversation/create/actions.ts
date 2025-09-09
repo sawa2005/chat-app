@@ -3,6 +3,7 @@
 import { getCurrentProfileId } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { broadcastMessage } from "@/lib/broadcast";
 
 export async function addMemberToConversation(conversationId: string, username: string, addedBy: bigint) {
     const newUser = await prisma.profiles.findUnique({ where: { username } });
@@ -28,13 +29,15 @@ export async function addMemberToConversation(conversationId: string, username: 
 
     const addedByUser = await prisma.profiles.findUnique({ where: { id: addedBy } });
 
-    await prisma.messages.create({
+    const msg = await prisma.messages.create({
         data: {
             conversation_id: conversationId,
             content: `${addedByUser?.username} added ${newUser.username} to the conversation.`,
             type: "info",
         },
     });
+
+    await broadcastMessage(conversationId, msg);
 }
 
 export async function leaveConversation(conversationId: string, profileId: bigint) {
@@ -49,13 +52,15 @@ export async function leaveConversation(conversationId: string, profileId: bigin
 
     const user = await prisma.profiles.findUnique({ where: { id: profileId } });
 
-    await prisma.messages.create({
+    const msg = await prisma.messages.create({
         data: {
             conversation_id: conversationId,
             content: `${user?.username} left the conversation.`,
             type: "info",
         },
     });
+
+    await broadcastMessage(conversationId, msg);
 }
 
 export async function updateConversationName(conversationId: string, newName: string) {

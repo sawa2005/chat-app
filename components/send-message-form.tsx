@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { sendMessage } from "@/app/conversation/create/actions";
 import { getCurrentProfileId } from "@/app/login/actions";
+import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
 import { Image as ImageIcon, X } from "lucide-react";
 
@@ -103,25 +104,12 @@ export default function SendMessageForm({
                 username: currentUsername,
             },
             ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
-            type: newMessage.type || "message",
+            type: newMessage.type ?? "message",
         });
 
-        supabase.channel(`conversation-${conversationId}`).send({
-            type: "broadcast",
-            event: "message",
-            payload: {
-                id: newMessage.id.toString(),
-                conversation_id: newMessage.conversation_id.toString(),
-                content: newMessage.content ?? "",
-                created_at: new Date(newMessage.created_at),
-                sender: {
-                    id: newMessage.sender_id?.toString(),
-                    username: currentUsername,
-                },
-                ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
-                type: newMessage.type || "message",
-            },
-        });
+        console.log("Broadcast sent:", newMessage);
+
+        await broadcastMessage(conversationId, newMessage, uploadedImageUrl);
 
         setContent("");
         setImgPreview(null);

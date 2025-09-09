@@ -18,15 +18,16 @@ type Message = {
     sender: {
         id: bigint | null;
         username: string;
-    };
+    } | null;
     image_url: string | null;
     type: string;
 };
 
 function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
+    if (prev.type === "info" || current.type === "info") return false;
     if (!prev.sender) return false;
-    if (prev.sender.id !== current.sender.id) return false;
+    if (prev.sender.id !== current.sender?.id) return false;
 
     const diffMs = current.created_at.getTime() - prev.created_at.getTime();
     return diffMs < cutoffMinutes * 60 * 1000;
@@ -48,6 +49,7 @@ export default function Messages({
     // TODO: if height is too small to show messages, collapse header and members.
     // TODO: fix initial scroll position when first loading.
     // TODO: add message edit and delete.
+    // TODO: live update members on add and leave.
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -106,6 +108,8 @@ export default function Messages({
 
         broadcastChannel
             .on("broadcast", { event: "message" }, (payload) => {
+                console.log("Broadcast received:", payload.payload);
+
                 const message = payload.payload as Message;
 
                 message.created_at = new Date(message.created_at);
@@ -137,7 +141,7 @@ export default function Messages({
                     <ul className="list-none">
                         {messages.map((message, i) => {
                             if (message.type === "info") {
-                                console.log("info message:", message);
+                                // console.log("info message:", message);
                                 return (
                                     <li
                                         key={message.id}
@@ -147,7 +151,7 @@ export default function Messages({
                                     </li>
                                 );
                             } else if (message.type === "message") {
-                                console.log("message:", message);
+                                // console.log("message:", message);
                                 const prevMsg = messages[i - 1];
                                 const isConsecutive = isConsecutiveMessage(prevMsg, message);
 
@@ -156,20 +160,20 @@ export default function Messages({
                                         key={message.id}
                                         className={
                                             "max-w-9/10" +
-                                            (message.sender.username === currentUsername ? "ml-auto" : "") +
+                                            (message.sender?.username === currentUsername ? "ml-auto" : "") +
                                             (isConsecutive ? " mt-[-10px]" : " mt-5")
                                         }
                                     >
                                         {!isConsecutive ? (
                                             <p
                                                 className={
-                                                    (message.sender.username === currentUsername ? "text-right" : "") +
+                                                    (message.sender?.username === currentUsername ? "text-right" : "") +
                                                     " text-xs mb-1"
                                                 }
                                             >
-                                                {(message.sender.username === currentUsername
+                                                {(message.sender?.username === currentUsername
                                                     ? "You"
-                                                    : message.sender.username) +
+                                                    : message.sender?.username) +
                                                     " / " +
                                                     message.created_at.toLocaleDateString() +
                                                     " - " +
@@ -178,7 +182,7 @@ export default function Messages({
                                         ) : (
                                             <p
                                                 className={
-                                                    (message.sender.username === currentUsername ? "text-right" : "") +
+                                                    (message.sender?.username === currentUsername ? "text-right" : "") +
                                                     " text-xs mb-1 hidden group-hover:block"
                                                 }
                                             >
@@ -188,7 +192,7 @@ export default function Messages({
                                         <div
                                             className={
                                                 "group relative " +
-                                                (message.sender.username !== currentUsername
+                                                (message.sender?.username !== currentUsername
                                                     ? "bg-accent rounded-tl-none"
                                                     : "rounded-tr-none ml-auto") +
                                                 " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
@@ -203,7 +207,7 @@ export default function Messages({
                                             {isConsecutive && (
                                                 <p
                                                     className={
-                                                        (message.sender.username === currentUsername
+                                                        (message.sender?.username === currentUsername
                                                             ? "text-right"
                                                             : "") +
                                                         " absolute -bottom-5 right-0 text-xs text-muted-foreground hidden group-hover:block"

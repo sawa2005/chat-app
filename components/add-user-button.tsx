@@ -29,6 +29,7 @@ export function AddUserButton({
     addedByProfileId: bigint;
 }) {
     const [username, setUsername] = useState("");
+    const [open, setOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     const handleAdd = () => {
@@ -36,6 +37,7 @@ export function AddUserButton({
             try {
                 await addMemberToConversation(conversationId, username, addedByProfileId);
                 setUsername("");
+                setOpen(false);
             } catch (err) {
                 // TODO: show this error in the frontend.
                 console.error("Failed to add user:", err);
@@ -45,7 +47,7 @@ export function AddUserButton({
 
     return (
         <DropdownMenuItem asChild className="cursor-pointer">
-            <Dialog>
+            <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                     <Button variant="ghost" className="w-full justify-start cursor-pointer">
                         Add User
