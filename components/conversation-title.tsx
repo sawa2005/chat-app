@@ -33,7 +33,7 @@ export default function ConversationTitle({ id, initialName }: { id: string; ini
     }
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
             {editing ? (
                 <>
                     <div>
@@ -42,7 +42,7 @@ export default function ConversationTitle({ id, initialName }: { id: string; ini
                             value={name}
                             placeholder={existingName}
                             onChange={(e) => setName(e.target.value)}
-                            className="text-xl font-bold mb-4 border-0 shadow-none p-0 h-fit md:!text-xl"
+                            className="text-xl font-bold border-0 shadow-none p-0 h-fit md:!text-xl"
                         />
                     </div>
 
@@ -58,10 +58,10 @@ export default function ConversationTitle({ id, initialName }: { id: string; ini
                 <>
                     <div>
                         <p className="text-xs font-mono text-muted-foreground">/ conversation</p>
-                        <h1 className="text-xl font-bold mb-4">{name}</h1>
+                        <h1 className="text-xl font-bold">{name}</h1>
                     </div>
                     <button onClick={startEditing} className="text-muted-foreground hover:text-primary cursor-pointer">
-                        <SquarePen size={15} />
+                        <SquarePen size={15} className="mb-1" />
                     </button>
                 </>
             )}

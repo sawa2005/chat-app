@@ -122,8 +122,7 @@ export default function Messages({
     }, [conversationId]);
 
     return (
-        <div>
-            <h2 className="text-lg font-semibold mt-4">Messages</h2>
+        <div className="flex flex-col flex-1 min-h-0">
             {loading ? (
                 <div className="mt-4">
                     <Skeleton className="h-[50px] w-[50%] rounded-xl" />
@@ -134,7 +133,7 @@ export default function Messages({
                     <Skeleton className="h-[80px] w-[55%] rounded-xl mt-3 ml-auto" />
                 </div>
             ) : (
-                <div ref={containerRef} className="flex-1 max-h-[calc(100vh-400px)] pr-4 mt-5 overflow-y-auto">
+                <div ref={containerRef} className="flex-1 min-h-0 pr-4 mt-5 overflow-y-auto">
                     <ul className="list-none">
                         {messages.map((message, i) => {
                             if (message.type === "info") {

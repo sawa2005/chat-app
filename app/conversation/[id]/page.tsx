@@ -3,26 +3,12 @@ import { getCurrentProfileId, getUsername } from "@/app/login/actions";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Messages from "@/components/messages";
-import Avatar from "@/components/avatar";
-import ConversationTitle from "@/components/conversation-title";
-import LeaveButton from "@/components/leave-button";
-
-import { Ellipsis } from "lucide-react";
-
-import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { AddUserButton } from "@/components/add-user-button";
+import ConversationHeader from "@/components/conversation-header";
 
 interface ConversationPageProps {
     params: Promise<{ id: string }>;
 }
 
-// TODO: add functionality for leaving conversations.
 // TODO: add UI refresh on member add.
 // TODO: broadcast info messages and changes like members / conversation title.
 // TODO: add typing indicators.
@@ -67,32 +53,8 @@ export default async function ConversationPage({ params }: ConversationPageProps
     }
 
     return (
-        <div className="font-sans">
-            <div className="flex justify-between w-full">
-                <ConversationTitle id={conversation.id} initialName={conversation.name} />
-                <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger asChild>
-                        <button className="text-muted-foreground hover:text-primary cursor-pointer mb-auto">
-                            <Ellipsis size={20} />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="max-w-56 w-fit font-sans">
-                        <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
-                        <LeaveButton conversationId={conversation.id} profileId={currentProfileId} />
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-
-            <h2 className="text-lg font-semibold">Members</h2>
-            <p className="text-xs font-mono text-muted-foreground">
-                / {conversation.conversation_members.length} members
-            </p>
-            <div className="flex gap-3">
-                {conversation.conversation_members.map((m) => (
-                    <Avatar key={m.profile_id} size={35} avatarUrl={m.profiles.avatar} username={m.profiles.username} />
-                ))}
-            </div>
-
+        <div className="font-sans flex flex-col h-[85vh]">
+            <ConversationHeader conversation={conversation} currentProfileId={currentProfileId} />
             <Messages conversationId={conversation.id} currentUsername={username} currentProfileId={currentProfileId} />
         </div>
     );

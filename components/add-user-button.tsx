@@ -19,6 +19,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// TODO: fix dialog narrowing the page behind.
+// TODO: style dialog.
+
 export function AddUserButton({
     conversationId,
     addedByProfileId,
