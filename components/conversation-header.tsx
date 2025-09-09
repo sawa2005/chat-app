@@ -51,7 +51,10 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="max-w-56 w-fit font-sans">
-                            <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
+                            <DropdownMenuItem asChild className="cursor-pointer">
+                                <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
+                            </DropdownMenuItem>
+
                             <LeaveButton conversationId={conversation.id} profileId={currentProfileId} />
                         </DropdownMenuContent>
                     </DropdownMenu>

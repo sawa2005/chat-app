@@ -19,7 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// TODO: fix dialog narrowing the page behind.
 // TODO: style dialog.
 
 export function AddUserButton({
@@ -52,20 +51,24 @@ export function AddUserButton({
                         Add User
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[425px] font-sans">
                     <DialogHeader>
-                        <DialogTitle>Add user to this conversation.</DialogTitle>
-                        <DialogDescription>Enter a single username and click add to confirm.</DialogDescription>
+                        <DialogTitle>Add user</DialogTitle>
+                        <DialogDescription className="text-xs font-mono text-muted-foreground">
+                            / enter a single username and click add to confirm.
+                        </DialogDescription>
                     </DialogHeader>
-                    <div>
-                        <Label>Username</Label>
+                    <div className="mt-3">
+                        <Label className="mb-2">Username</Label>
                         <Input name="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" className="cursor-pointer">
+                                Cancel
+                            </Button>
                         </DialogClose>
-                        <Button onClick={handleAdd} disabled={isPending || !username.trim()}>
+                        <Button onClick={handleAdd} disabled={isPending || !username.trim()} className="cursor-pointer">
                             {isPending ? "Adding..." : "Add"}
                         </Button>
                     </DialogFooter>
