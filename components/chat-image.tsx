@@ -4,9 +4,10 @@ import { useState } from "react";
 interface ChatImageProps {
     src: string;
     alt: string;
+    onLoadingComplete?: () => void;
 }
 
-export default function ChatImage({ src, alt }: ChatImageProps) {
+export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProps) {
     const [width, setWidth] = useState<number>();
     const [height, setHeight] = useState<number>();
 
@@ -24,6 +25,7 @@ export default function ChatImage({ src, alt }: ChatImageProps) {
                     setWidth(target.naturalWidth);
                     setHeight(target.naturalHeight);
                 }}
+                onLoadingComplete={onLoadingComplete}
             />
         </a>
     );
