@@ -3,7 +3,34 @@
 import { getCurrentProfileId } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { broadcastMessage } from "@/lib/broadcast";
+import { broadcastMember, broadcastMessage } from "@/lib/broadcast";
+import { createClient } from "@/lib/server";
+
+import { Member } from "@/components/conversation-header";
+
+export async function getConversationMembers(conversationId: string): Promise<Member[]> {
+    const members = await prisma.conversation_members.findMany({
+        where: { conversation_id: conversationId },
+        include: {
+            profiles: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                },
+            },
+        },
+    });
+
+    return members
+        .map((m) => m.profiles)
+        .filter((p): p is NonNullable<typeof p> => p !== null)
+        .map((p) => ({
+            id: p.id,
+            username: p.username,
+            avatar: p.avatar,
+        }));
+}
 
 export async function addMemberToConversation(conversationId: string, username: string, addedBy: bigint) {
     const newUser = await prisma.profiles.findUnique({ where: { username } });
@@ -38,6 +65,14 @@ export async function addMemberToConversation(conversationId: string, username: 
     });
 
     await broadcastMessage(conversationId, msg);
+
+    const member = {
+        id: newUser.id,
+        username: newUser.username,
+        avatar: newUser.avatar,
+    };
+
+    await broadcastMember(conversationId, member, "added");
 }
 
 export async function leaveConversation(conversationId: string, profileId: bigint) {
@@ -61,6 +96,7 @@ export async function leaveConversation(conversationId: string, profileId: bigin
     });
 
     await broadcastMessage(conversationId, msg);
+    await broadcastMember(conversationId, { id: profileId }, "removed");
 }
 
 export async function updateConversationName(conversationId: string, newName: string) {

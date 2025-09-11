@@ -1,4 +1,5 @@
 // lib/broadcast.ts
+import { Member } from "@/components/conversation-header";
 import { createClient } from "@/lib/client";
 
 const supabase = createClient();
@@ -49,6 +50,23 @@ export async function broadcastMessage(
     return supabase.channel(`conversation-${conversationId}`).send({
         type: "broadcast",
         event: "message",
+        payload,
+    });
+}
+
+export async function broadcastMember(
+    conversationId: string,
+    member: Member | { id: bigint },
+    action: "added" | "removed"
+) {
+    const payload = {
+        ...member,
+        id: member.id.toString(), // normalize bigint/number → string
+    };
+
+    return supabase.channel(`conversation-${conversationId}`).send({
+        type: "broadcast",
+        event: action === "added" ? "member_added" : "member_removed",
         payload,
     });
 }

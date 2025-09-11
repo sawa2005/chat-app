@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ChevronUp, ChevronDown, Ellipsis } from "lucide-react";
 
 import {
     DropdownMenu,
@@ -9,17 +10,24 @@ import {
     DropdownMenuItem,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-
-import { ChevronUp, Ellipsis } from "lucide-react";
-import { ChevronDown } from "lucide-react";
 import { AddUserButton } from "@/components/add-user-button";
 import Avatar from "@/components/avatar";
 import ConversationTitle from "@/components/conversation-title";
 import LeaveButton from "@/components/leave-button";
 
-import { Prisma } from "@prisma/client";
+import { Prisma as PrismaClient } from "@prisma/client";
 
-type ConversationWithRelations = Prisma.conversationsGetPayload<{
+import { getConversationMembers } from "@/app/conversation/create/actions";
+import { createClient } from "@/lib/client";
+
+// TODO: put types in seperate /types folder.
+export type Member = {
+    id: bigint;
+    username: string;
+    avatar: string | null;
+};
+
+type ConversationWithRelations = PrismaClient.conversationsGetPayload<{
     include: {
         conversation_members: {
             include: { profiles: true };
@@ -36,8 +44,46 @@ type ConversationHeaderProps = {
     currentProfileId: bigint;
 };
 
+// TODO: add loading for members.
+
 export default function ConversationHeader({ conversation, currentProfileId }: ConversationHeaderProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [members, setMembers] = useState<Member[]>([]);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const fetchMembers = async () => {
+            const members = await getConversationMembers(conversation.id);
+            setMembers(members);
+            console.log("setMembers:", members);
+        };
+
+        fetchMembers();
+    }, [conversation.id]);
+
+    useEffect(() => {
+        const channel = supabase
+            .channel(`conversation-${conversation.id}`)
+            .on("broadcast", { event: "member_added" }, ({ payload }) => {
+                console.log("Member added!");
+                setMembers((prev) => [
+                    ...prev,
+                    {
+                        ...payload,
+                        id: payload.id.toString(), // normalize to string
+                    } as Member,
+                ]);
+            })
+            .on("broadcast", { event: "member_removed" }, ({ payload }) => {
+                console.log("Member removed!");
+                setMembers((prev) => prev.filter((m) => m.id.toString() !== payload.id.toString()));
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [conversation.id, supabase, setMembers]);
 
     if (isExpanded === false) {
         return (
@@ -92,17 +138,10 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                 </button>
                 <div>
                     <h2 className="text-lg font-semibold">Members</h2>
-                    <p className="text-xs font-mono text-muted-foreground">
-                        / {conversation.conversation_members.length} members
-                    </p>
+                    <p className="text-xs font-mono text-muted-foreground">/ {members.length} members</p>
                     <div className="flex gap-3">
-                        {conversation.conversation_members.map((m) => (
-                            <Avatar
-                                key={m.profile_id}
-                                size={35}
-                                avatarUrl={m.profiles.avatar}
-                                username={m.profiles.username}
-                            />
+                        {members.map((m) => (
+                            <Avatar key={m.id} size={35} avatarUrl={m.avatar} username={m.username} />
                         ))}
                     </div>
                     <h2 className="text-lg font-semibold mt-4">Messages</h2>

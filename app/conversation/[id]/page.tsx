@@ -10,7 +10,6 @@ interface ConversationPageProps {
 }
 
 // TODO: add UI refresh on member add.
-// TODO: broadcast info messages and changes like members / conversation title.
 // TODO: add typing indicators.
 // TODO: add reactions.
 // TODO: add reply functionality.
