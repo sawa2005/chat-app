@@ -14,6 +14,7 @@ import { AddUserButton } from "@/components/add-user-button";
 import Avatar from "@/components/avatar";
 import ConversationTitle from "@/components/conversation-title";
 import LeaveButton from "@/components/leave-button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { Prisma as PrismaClient } from "@prisma/client";
 
@@ -49,6 +50,7 @@ type ConversationHeaderProps = {
 export default function ConversationHeader({ conversation, currentProfileId }: ConversationHeaderProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [members, setMembers] = useState<Member[]>([]);
+    const [loadingMembers, setLoadingMembers] = useState(true);
     const supabase = createClient();
 
     useEffect(() => {
@@ -56,6 +58,7 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
             const members = await getConversationMembers(conversation.id);
             setMembers(members);
             console.log("setMembers:", members);
+            setLoadingMembers(false);
         };
 
         fetchMembers();
@@ -138,11 +141,21 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                 </button>
                 <div>
                     <h2 className="text-lg font-semibold">Members</h2>
-                    <p className="text-xs font-mono text-muted-foreground">/ {members.length} members</p>
+                    <p className="text-xs font-mono text-muted-foreground">
+                        / {loadingMembers ? "loading..." : `${members.length} members`}
+                    </p>
                     <div className="flex gap-3">
-                        {members.map((m) => (
-                            <Avatar key={m.id} size={35} avatarUrl={m.avatar} username={m.username} />
-                        ))}
+                        {!loadingMembers ? (
+                            members.map((m) => (
+                                <Avatar key={m.id} size={35} avatarUrl={m.avatar} username={m.username} />
+                            ))
+                        ) : (
+                            <>
+                                <Skeleton className="h-9 w-9 rounded-full mt-2" />
+                                <Skeleton className="h-9 w-9 rounded-full mt-2" />
+                                <Skeleton className="h-9 w-9 rounded-full mt-2" />
+                            </>
+                        )}
                     </div>
                     <h2 className="text-lg font-semibold mt-4">Messages</h2>
                 </div>

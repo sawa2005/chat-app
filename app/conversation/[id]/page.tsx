@@ -9,7 +9,6 @@ interface ConversationPageProps {
     params: Promise<{ id: string }>;
 }
 
-// TODO: add UI refresh on member add.
 // TODO: add typing indicators.
 // TODO: add reactions.
 // TODO: add reply functionality.
