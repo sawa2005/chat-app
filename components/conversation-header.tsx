@@ -45,8 +45,6 @@ type ConversationHeaderProps = {
     currentProfileId: bigint;
 };
 
-// TODO: add loading for members.
-
 export default function ConversationHeader({ conversation, currentProfileId }: ConversationHeaderProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [members, setMembers] = useState<Member[]>([]);
