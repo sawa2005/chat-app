@@ -2,11 +2,13 @@
 
 import { createClient } from "@/lib/client";
 import { useEffect, useState } from "react";
-import { sendMessage } from "@/app/conversation/create/actions";
+import { editMessage, sendMessage, deleteMessage } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChatImage from "@/components/chat-image";
+import { Button } from "./ui/button";
+import { Pen, Trash, X } from "lucide-react";
 
 const supabase = createClient();
 
@@ -15,12 +17,14 @@ type Message = {
     conversation_id: string;
     content: string;
     created_at: Date;
+    edited_at: Date | null;
     sender: {
         id: bigint | null;
         username: string;
     } | null;
     image_url: string | null;
     type: string;
+    deleted: boolean;
 };
 
 function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
@@ -45,9 +49,13 @@ export default function Messages({
     const { containerRef, scrollToBottom } = useChatScroll();
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+    const [editContent, setEditContent] = useState("");
 
     // TODO: if height is too small to show messages, collapse header and members.
-    // TODO: add message edit and delete.
+    // TODO: consider switching message hover text to on click instead.
+    // TODO: split file into more components.
+    // TODO: change date format to date if old and time if newer.
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -56,6 +64,7 @@ export default function Messages({
 
     useEffect(() => {
         async function loadInitMessages() {
+            // TODO: replace this with prisma query.
             const { data, error } = await supabase
                 .from("messages")
                 .select(
@@ -63,12 +72,14 @@ export default function Messages({
                     conversation_id,
                     content,
                     created_at,
+                    edited_at,
                     image_url,
                     sender:profiles!fk_messages_sender (
                         id,
                         username
                     ),
-                    type`
+                    type,
+                    deleted`
                 )
                 .eq("conversation_id", conversationId)
                 .order("created_at", { ascending: true });
@@ -123,6 +134,14 @@ export default function Messages({
         };
     }, [conversationId]);
 
+    function handleDelete(messageId: bigint) {
+        deleteMessage(messageId)
+            .then(() => {
+                setMessages((prev) => prev.filter((m) => m.id !== messageId));
+            })
+            .catch((err) => console.error("Delete failed:", err));
+    }
+
     return (
         <div className="flex flex-col flex-1 min-h-0">
             {loading ? (
@@ -138,6 +157,8 @@ export default function Messages({
                 <div ref={containerRef} className="flex-1 min-h-0 pr-4 mt-5 overflow-y-auto">
                     <ul className="list-none">
                         {messages.map((message, i) => {
+                            const isEditing = editingMessageId === message.id.toString();
+
                             if (message.type === "info") {
                                 // console.log("info message:", message);
                                 return (
@@ -148,7 +169,7 @@ export default function Messages({
                                         {message.content}
                                     </li>
                                 );
-                            } else if (message.type === "message") {
+                            } else if (message.type === "message" && message.deleted === false) {
                                 // console.log("message:", message);
                                 const prevMsg = messages[i - 1];
                                 const isConsecutive = isConsecutiveMessage(prevMsg, message);
@@ -157,68 +178,182 @@ export default function Messages({
                                     <li
                                         key={message.id}
                                         className={
-                                            "max-w-9/10" +
+                                            "relative group max-w-9/10 " +
                                             (message.sender?.username === currentUsername ? "ml-auto" : "") +
                                             (isConsecutive ? " mt-[-10px]" : " mt-5")
                                         }
                                     >
                                         {!isConsecutive ? (
-                                            <p
+                                            <div
                                                 className={
-                                                    (message.sender?.username === currentUsername ? "text-right" : "") +
-                                                    " text-xs mb-1"
+                                                    (message.sender?.username === currentUsername
+                                                        ? "text-right justify-end"
+                                                        : "") + " text-xs mb-1 flex items-center"
                                                 }
                                             >
+                                                {message.sender?.username === currentUsername &&
+                                                    (editingMessageId === null ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    handleDelete(message.id);
+                                                                }}
+                                                                className="
+                                                            opacity-0 group-hover:opacity-100 mr-2
+                                                            text-muted-foreground hover:text-primary cursor-pointer"
+                                                                title="Delete Message"
+                                                            >
+                                                                <Trash size={15} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingMessageId(message.id.toString());
+                                                                    setEditContent(message.content);
+                                                                }}
+                                                                className="
+                                                            opacity-0 group-hover:opacity-100 mr-2
+                                                            text-muted-foreground hover:text-primary cursor-pointer"
+                                                                title="Edit Message"
+                                                            >
+                                                                <Pen size={15} />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingMessageId(null);
+                                                            }}
+                                                            className="opacity-0 group-hover:opacity-100 mr-2 text-muted-foreground hover:text-red-800 cursor-pointer"
+                                                            title="Edit Message"
+                                                        >
+                                                            <X size={20} />
+                                                        </button>
+                                                    ))}
                                                 {(message.sender?.username === currentUsername
                                                     ? "You"
                                                     : message.sender?.username) +
                                                     " / " +
                                                     message.created_at.toLocaleDateString() +
                                                     " - " +
-                                                    message.created_at.toLocaleTimeString()}
-                                            </p>
+                                                    message.created_at.toLocaleTimeString() +
+                                                    (message.edited_at !== null ? " (edited)" : "")}
+                                            </div>
                                         ) : (
-                                            <p
+                                            <div
                                                 className={
                                                     (message.sender?.username === currentUsername ? "text-right" : "") +
-                                                    " text-xs mb-1 hidden group-hover:block"
+                                                    " text-xs mb-1 hidden group-hover:flex justify-end items-center"
                                                 }
                                             >
+                                                {message.sender?.username === currentUsername &&
+                                                    (editingMessageId === null ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    handleDelete(message.id);
+                                                                }}
+                                                                className="
+                                                            opacity-0 group-hover:opacity-100 mr-2
+                                                            text-muted-foreground hover:text-primary cursor-pointer"
+                                                                title="Delete Message"
+                                                            >
+                                                                <Trash size={15} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingMessageId(message.id.toString());
+                                                                    setEditContent(message.content);
+                                                                }}
+                                                                className="
+                                                            opacity-0 group-hover:opacity-100 mr-2
+                                                            text-muted-foreground hover:text-primary cursor-pointer"
+                                                                title="Edit Message"
+                                                            >
+                                                                <Pen size={15} />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingMessageId(null);
+                                                            }}
+                                                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-800 cursor-pointer"
+                                                            title="Edit Message"
+                                                        >
+                                                            <X size={20} />
+                                                        </button>
+                                                    ))}
                                                 {message.created_at.toLocaleTimeString()}
-                                            </p>
+                                            </div>
                                         )}
-                                        <div
-                                            className={
-                                                "group relative " +
-                                                (message.sender?.username !== currentUsername
-                                                    ? "bg-accent rounded-tl-none"
-                                                    : "rounded-tr-none ml-auto") +
-                                                " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
-                                            }
-                                        >
-                                            {message.content && <p className="py-2 px-4">{message.content}</p>}
 
-                                            {message.image_url && (
-                                                <ChatImage
-                                                    src={message.image_url}
-                                                    alt="Message attachment"
-                                                    onLoadingComplete={() => scrollToBottom(false)}
-                                                />
-                                            )}
-
-                                            {isConsecutive && (
-                                                <p
-                                                    className={
-                                                        (message.sender?.username === currentUsername
-                                                            ? "text-right"
-                                                            : "") +
-                                                        " absolute -bottom-5 right-0 text-xs text-muted-foreground hidden group-hover:block"
-                                                    }
+                                        {isEditing ? (
+                                            <div
+                                                className={
+                                                    "group relative " +
+                                                    (message.sender?.username !== currentUsername
+                                                        ? "bg-accent rounded-tl-none"
+                                                        : "rounded-tr-none ml-auto") +
+                                                    " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
+                                                }
+                                            >
+                                                <form
+                                                    onSubmit={async (e) => {
+                                                        e.preventDefault();
+                                                        await editMessage(message.id, editContent);
+                                                        setEditingMessageId(null);
+                                                    }}
                                                 >
-                                                    {message.created_at.toLocaleTimeString()}
-                                                </p>
-                                            )}
-                                        </div>
+                                                    <input
+                                                        type="text"
+                                                        value={editContent}
+                                                        onChange={(e) => setEditContent(e.target.value)}
+                                                        autoFocus
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") setEditingMessageId(null);
+                                                        }}
+                                                        className="py-2 px-4"
+                                                    />
+                                                </form>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className={
+                                                    "group relative " +
+                                                    (message.sender?.username !== currentUsername
+                                                        ? "bg-accent rounded-tl-none"
+                                                        : "rounded-tr-none ml-auto") +
+                                                    " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
+                                                }
+                                            >
+                                                {message.content && (
+                                                    <div>
+                                                        <p className="py-2 px-4">{message.content}</p>
+                                                    </div>
+                                                )}
+
+                                                {message.image_url && (
+                                                    <ChatImage
+                                                        src={message.image_url}
+                                                        alt="Message attachment"
+                                                        onLoadingComplete={() => scrollToBottom(false)}
+                                                    />
+                                                )}
+
+                                                {isConsecutive && (
+                                                    <p
+                                                        className={
+                                                            (message.sender?.username === currentUsername
+                                                                ? "text-right"
+                                                                : "") +
+                                                            " absolute -bottom-5 right-0 text-xs text-muted-foreground hidden group-hover:block"
+                                                        }
+                                                    >
+                                                        {message.created_at.toLocaleTimeString()}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                     </li>
                                 );
                             }

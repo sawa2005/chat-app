@@ -22,12 +22,14 @@ type SendMessageFormProps = {
         conversation_id: string;
         content: string;
         created_at: Date;
+        edited_at: Date | null;
         sender: {
             id: bigint | null;
             username: string;
         };
         image_url: string | null;
         type: string;
+        deleted: boolean;
     }) => void;
 };
 
@@ -99,12 +101,14 @@ export default function SendMessageForm({
             conversation_id: newMessage.conversation_id,
             content: newMessage.content ?? "",
             created_at: new Date(newMessage.created_at),
+            edited_at: null,
             sender: {
                 id: newMessage.sender_id,
                 username: currentUsername,
             },
             ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
             type: newMessage.type ?? "message",
+            deleted: false,
         });
 
         console.log("Broadcast sent:", newMessage);

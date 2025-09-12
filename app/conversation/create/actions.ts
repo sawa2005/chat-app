@@ -8,6 +8,53 @@ import { createClient } from "@/lib/server";
 
 import { Member } from "@/components/conversation-header";
 
+export async function editMessage(messageId: bigint, newContent: string) {
+    const updated = await prisma.messages.update({
+        where: { id: messageId },
+        data: { content: newContent, edited_at: new Date() },
+    });
+
+    const supabase = createClient();
+    (await supabase).channel(`conversation-${updated.conversation_id}`).send({
+        type: "broadcast",
+        event: "message_edited",
+        payload: {
+            id: updated.id.toString(),
+            content: updated.content,
+            edited_at: updated.edited_at,
+        },
+    });
+
+    return updated;
+}
+
+export async function deleteMessage(messageId: bigint) {
+    const msg = await prisma.messages.update({
+        where: { id: messageId },
+        data: { deleted: true },
+    });
+
+    const supabase = await createClient();
+
+    /* TODO: not working, returns data: [] error: null
+    if (msg.image_url) {
+        const filePath = msg.image_url.replace(/^.*\/storage\/v1\/object\/public\/chat-uploads\//, "");
+        console.log("Attempting to delete image path:", filePath);
+
+        const { data, error } = await supabase.storage.from("chat-uploads").remove([filePath]);
+        console.log("Delete result:", { data, error });
+    }
+    */
+
+    supabase.channel(`conversation-${msg.conversation_id}`).send({
+        type: "broadcast",
+        event: "message_deleted",
+        payload: { id: msg.id.toString() },
+    });
+
+    return msg;
+}
+
 export async function getConversationMembers(conversationId: string): Promise<Member[]> {
     const members = await prisma.conversation_members.findMany({
         where: { conversation_id: conversationId },
