@@ -34,6 +34,9 @@ export default async function ConversationsPage() {
                 include: { profiles: true },
             },
             messages: {
+                where: {
+                    deleted: false,
+                },
                 take: 1,
                 orderBy: { created_at: "desc" },
                 include: { sender: true },

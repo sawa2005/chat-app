@@ -94,7 +94,13 @@ export default function SendMessageForm({
         }
 
         setIsPending(true);
-        const newMessage = await sendMessage(conversationId, currentProfileId, content, uploadedImageUrl);
+        const newMessage = await sendMessage(
+            conversationId,
+            currentProfileId,
+            currentUsername,
+            content,
+            uploadedImageUrl
+        );
 
         onNewMessage({
             id: newMessage.id,
@@ -113,7 +119,15 @@ export default function SendMessageForm({
 
         console.log("Broadcast sent:", newMessage);
 
-        await broadcastMessage(conversationId, newMessage, uploadedImageUrl);
+        await broadcastMessage(
+            conversationId,
+            {
+                ...newMessage,
+                sender_id: newMessage.sender.id,
+                sender_username: newMessage.sender.username,
+            },
+            uploadedImageUrl
+        );
 
         setContent("");
         setImgPreview(null);

@@ -245,29 +245,30 @@ export async function createConversation(
     return conversation.id;
 }
 
-export async function sendMessage(conversationId: string, senderId: bigint, content: string, imageUrl: string | null) {
-    let message;
+export async function sendMessage(
+    conversationId: string,
+    senderId: bigint,
+    senderUsername: string, // new
+    content: string,
+    imageUrl: string | null
+) {
+    const message = await prisma.messages.create({
+        data: {
+            conversation_id: conversationId,
+            sender_id: senderId,
+            content,
+            image_url: imageUrl,
+        },
+    });
 
-    if (imageUrl) {
-        message = await prisma.messages.create({
-            data: {
-                conversation_id: conversationId,
-                sender_id: senderId,
-                content,
-                image_url: imageUrl,
-            },
-        });
-    } else {
-        message = await prisma.messages.create({
-            data: {
-                conversation_id: conversationId,
-                sender_id: senderId,
-                content,
-            },
-        });
-    }
-
-    return message;
+    // Return the message + sender info
+    return {
+        ...message,
+        sender: {
+            id: senderId,
+            username: senderUsername,
+        },
+    };
 }
 
 export async function getUserConversations(profileId: bigint) {

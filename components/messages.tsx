@@ -113,24 +113,34 @@ export default function Messages({
         }
         loadInitMessages();
 
-        const broadcastChannel = supabase.channel(`conversation-${conversationId}`);
+        const channel = supabase
+            .channel(`conversation-${conversationId}`)
+            .on("broadcast", { event: "message" }, ({ payload }) => {
+                console.log("New Message broadcast:", payload);
 
-        broadcastChannel
-            .on("broadcast", { event: "message" }, (payload) => {
-                console.log("Broadcast received:", payload.payload);
+                const message: Message = {
+                    id: BigInt(payload.id),
+                    conversation_id: payload.conversation_id,
+                    content: payload.content ?? "",
+                    created_at: new Date(payload.created_at),
+                    edited_at: payload.edited_at ? new Date(payload.edited_at) : null,
+                    sender: payload.sender
+                        ? {
+                              id: payload.sender.id ? BigInt(payload.sender.id) : null,
+                              username: payload.sender.username ?? "",
+                          }
+                        : null,
+                    image_url: payload.image_url ?? null,
+                    type: payload.type ?? "message",
+                    deleted: payload.deleted ?? false,
+                };
 
-                const message = payload.payload as Message;
-
-                message.created_at = new Date(message.created_at);
-
-                setMessages((prev) =>
-                    prev.find((m) => m.id.toString() === message.id.toString()) ? prev : [...prev, message]
-                );
+                setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
             })
             .subscribe();
 
         return () => {
-            supabase.removeChannel(broadcastChannel);
+            supabase.removeChannel(channel);
         };
     }, [conversationId]);
 

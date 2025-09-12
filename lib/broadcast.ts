@@ -25,7 +25,7 @@ export async function broadcastMessage(
         content?: string | null;
         created_at: string | Date;
         sender_id?: string | number | bigint | null;
-        username?: string; // fallback removed
+        sender_username?: string; // fallback removed
         image_url?: string | null;
         type?: string | null;
     },
@@ -41,7 +41,7 @@ export async function broadcastMessage(
                 ? null
                 : {
                       id: newMessage.sender_id ? newMessage.sender_id.toString() : null,
-                      username: newMessage.username ?? "",
+                      username: newMessage.sender_username ?? "",
                   },
         image_url: uploadedImageUrl ?? newMessage.image_url ?? null,
         type: newMessage.type ?? "message",
