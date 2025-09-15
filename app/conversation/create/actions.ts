@@ -8,6 +8,40 @@ import { createClient } from "@/lib/server";
 
 import { Member } from "@/components/conversation-header";
 
+export async function loadInitMessages(conversationId: string) {
+    try {
+        const prismaMessages = await prisma.messages.findMany({
+            where: { conversation_id: conversationId },
+            orderBy: { created_at: "asc" },
+            select: {
+                id: true,
+                conversation_id: true,
+                content: true,
+                created_at: true,
+                edited_at: true,
+                image_url: true,
+                type: true,
+                deleted: true,
+                sender: { select: { id: true, username: true } },
+            },
+        });
+
+        if (prismaMessages) {
+            const messages = prismaMessages.map((msg) => ({
+                ...msg,
+                // convert IDs to bigint
+                id: BigInt(msg.id),
+                sender: msg.sender ? { id: BigInt(msg.sender.id), username: msg.sender.username } : null,
+                created_at: msg.created_at.toISOString(),
+            }));
+
+            return messages;
+        }
+    } catch (err) {
+        console.error("Error loading messages:", err);
+    }
+}
+
 export async function editMessage(messageId: bigint, newContent: string) {
     const updated = await prisma.messages.update({
         where: { id: messageId },

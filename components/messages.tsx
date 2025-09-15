@@ -7,8 +7,8 @@ import SendMessageForm from "./send-message-form";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChatImage from "@/components/chat-image";
-import { Button } from "./ui/button";
 import { Pen, Trash, X } from "lucide-react";
+import { loadInitMessages } from "@/app/conversation/create/actions";
 
 const supabase = createClient();
 
@@ -63,56 +63,33 @@ export default function Messages({
     }, [messages, scrollToBottom, loading]);
 
     useEffect(() => {
-        async function loadInitMessages() {
-            // TODO: replace this with prisma query.
-            const { data, error } = await supabase
-                .from("messages")
-                .select(
-                    `id,
-                    conversation_id,
-                    content,
-                    created_at,
-                    edited_at,
-                    image_url,
-                    sender:profiles!fk_messages_sender (
-                        id,
-                        username
-                    ),
-                    type,
-                    deleted`
-                )
-                .eq("conversation_id", conversationId)
-                .order("created_at", { ascending: true });
+        const getMessages = async () => {
+            const messages = await loadInitMessages(conversationId);
 
-            if (error || data === null) {
-                console.log("Error loading messages:", { data, error });
-                return;
-            }
+            setMessages(
+                (
+                    messages as {
+                        id: bigint;
+                        conversation_id: string;
+                        content: string;
+                        created_at: string;
+                        sender: { id: bigint; username: string }[] | { id: bigint; username: string };
+                        image_url: string | null;
+                        type: string;
+                    }[]
+                ).map((msg) => ({
+                    ...msg,
+                    sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
+                    created_at: new Date(msg.created_at),
+                })) as Message[]
+            );
 
-            if (data) {
-                setMessages(
-                    (
-                        data as {
-                            id: bigint;
-                            conversation_id: string;
-                            content: string;
-                            created_at: string;
-                            sender: { id: bigint; username: string }[] | { id: bigint; username: string };
-                            image_url: string | null;
-                            type: string;
-                        }[]
-                    ).map((msg) => ({
-                        ...msg,
-                        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
-                        created_at: new Date(msg.created_at),
-                    })) as Message[]
-                );
+            setLoading(false);
+        };
 
-                setLoading(false);
-            }
-        }
-        loadInitMessages();
+        getMessages().catch(console.error);
 
+        // TODO: add listener for message delete and edit.
         const channel = supabase
             .channel(`conversation-${conversationId}`)
             .on("broadcast", { event: "message" }, ({ payload }) => {
