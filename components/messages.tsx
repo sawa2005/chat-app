@@ -7,6 +7,7 @@ import SendMessageForm from "./send-message-form";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChatImage from "@/components/chat-image";
+import TypingIndicator from "./typing-indicator";
 import { Pen, Trash, X } from "lucide-react";
 import { loadInitMessages } from "@/app/conversation/create/actions";
 
@@ -51,6 +52,7 @@ export default function Messages({
     const [loading, setLoading] = useState(true);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
+    const [typers, setTypers] = useState<string[]>([]);
 
     // TODO: if height is too small to show messages, collapse header and members.
     // TODO: consider switching message hover text to on click instead.
@@ -60,7 +62,7 @@ export default function Messages({
     // Scroll to bottom when messages change
     useEffect(() => {
         scrollToBottom();
-    }, [messages, scrollToBottom, loading]);
+    }, [messages, scrollToBottom, loading, typers]);
 
     useEffect(() => {
         const getMessages = async () => {
@@ -133,6 +135,20 @@ export default function Messages({
 
                 setMessages((prev) => prev.map((m) => (m.id === BigInt(payload.id) ? { ...m, deleted: true } : m)));
             })
+            .on("broadcast", { event: "user_typing" }, ({ payload }) => {
+                console.log("User typing broadcast received:", payload);
+
+                const name = payload.username as string;
+
+                if (name === currentUsername) return;
+
+                setTypers((prev) => {
+                    // Add user, remove after 3 s
+                    if (prev.includes(name)) return prev;
+                    setTimeout(() => setTypers((p) => p.filter((n) => n !== name)), 3000);
+                    return [...prev, name];
+                });
+            })
             .subscribe();
 
         return () => {
@@ -149,7 +165,7 @@ export default function Messages({
     }
 
     return (
-        <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex flex-col flex-1 min-h-0 gap-5">
             {loading ? (
                 <div className="mt-4">
                     <Skeleton className="h-[50px] w-[50%] rounded-xl" />
@@ -367,6 +383,7 @@ export default function Messages({
                     </ul>
                 </div>
             )}
+            <TypingIndicator users={typers} />
             <SendMessageForm
                 conversationId={conversationId}
                 currentProfileId={currentProfileId}

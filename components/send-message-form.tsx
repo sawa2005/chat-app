@@ -51,6 +51,28 @@ export default function SendMessageForm({
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+    const channel = useRef(supabase.channel(`conversation-${conversationId}`));
+
+    let typingTimeout: NodeJS.Timeout | null = null;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setContent(e.target.value);
+
+        if (!typingTimeout) {
+            channel.current.send({
+                type: "broadcast",
+                event: "user_typing",
+                payload: { username: currentUsername },
+            });
+
+            console.log("Typing broadcast sent:", channel);
+
+            typingTimeout = setTimeout(() => {
+                typingTimeout = null;
+            }, 2000);
+        }
+    };
+
     const handleIconClick = () => {
         fileInputRef.current?.click();
     };
@@ -149,7 +171,7 @@ export default function SendMessageForm({
 
     return (
         <form onSubmit={handleSubmit}>
-            <div className="flex gap-1 mt-6">
+            <div className="flex gap-1">
                 <div className="relative flex gap-1 w-full">
                     <Input
                         name="content"
@@ -158,7 +180,7 @@ export default function SendMessageForm({
                         className="px-4 py-6 pr-10"
                         disabled={isPending}
                         value={content}
-                        onChange={(e) => setContent(e.target.value)}
+                        onChange={handleInputChange}
                     />
                     <Input
                         type="file"
