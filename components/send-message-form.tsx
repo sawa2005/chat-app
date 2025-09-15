@@ -33,6 +33,12 @@ type SendMessageFormProps = {
         type: string;
         deleted: boolean;
         parent_id: bigint | null;
+        messages: {
+            id: bigint;
+            content: string | null;
+            image_url: string | null;
+            sender: { id: bigint; username: string } | null;
+        } | null;
     }) => void;
 };
 
@@ -144,6 +150,19 @@ export default function SendMessageForm({
             type: newMessage.type ?? "message",
             deleted: false,
             parent_id: replyTo,
+            messages: newMessage.messages
+                ? {
+                      id: newMessage.messages.id,
+                      content: newMessage.messages.content,
+                      image_url: newMessage.messages.image_url,
+                      sender: newMessage.messages.sender
+                          ? {
+                                id: newMessage.messages.sender.id,
+                                username: newMessage.messages.sender.username,
+                            }
+                          : null,
+                  }
+                : null,
         });
 
         console.log("Broadcast sent:", newMessage);

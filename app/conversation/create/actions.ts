@@ -23,6 +23,14 @@ export async function loadInitMessages(conversationId: string) {
                 type: true,
                 deleted: true,
                 sender: { select: { id: true, username: true } },
+                messages: {
+                    select: {
+                        id: true,
+                        content: true,
+                        image_url: true,
+                        sender: { select: { id: true, username: true } },
+                    },
+                },
             },
         });
 
@@ -298,6 +306,18 @@ export async function sendMessage(
             content,
             image_url: imageUrl,
             parent_id: parentId ?? null,
+        },
+        include: {
+            sender: { select: { id: true, username: true } },
+            messages: {
+                // include parent message info if it exists
+                select: {
+                    id: true,
+                    content: true,
+                    image_url: true,
+                    sender: { select: { id: true, username: true } },
+                },
+            },
         },
     });
 

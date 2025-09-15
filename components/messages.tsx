@@ -19,14 +19,20 @@ type Message = {
     content: string;
     created_at: Date;
     edited_at: Date | null;
-    sender: {
-        id: bigint | null;
-        username: string;
-    } | null;
     image_url: string | null;
     type: string;
     deleted: boolean;
     parent_id: bigint | null;
+    sender: {
+        id: bigint | null;
+        username: string;
+    } | null;
+    messages: {
+        id: bigint;
+        content: string | null;
+        image_url: string | null;
+        sender: { id: bigint; username: string } | null;
+    } | null;
 };
 
 function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
@@ -75,11 +81,20 @@ export default function Messages({
                     messages as {
                         id: bigint;
                         conversation_id: string;
-                        content: string;
+                        content: string | null;
                         created_at: string;
-                        sender: { id: bigint; username: string }[] | { id: bigint; username: string };
+                        edited_at: string | null;
                         image_url: string | null;
                         type: string;
+                        deleted: boolean;
+                        sender: { id: bigint; username: string }[] | { id: bigint; username: string };
+                        parent_id: bigint | null;
+                        messages: {
+                            id: bigint;
+                            content: string | null;
+                            image_url: string | null;
+                            sender: { id: bigint; username: string } | null;
+                        } | null;
                     }[]
                 ).map((msg) => ({
                     ...msg,
@@ -114,6 +129,7 @@ export default function Messages({
                     type: payload.type ?? "message",
                     deleted: payload.deleted ?? false,
                     parent_id: payload.parent_id ?? null,
+                    messages: payload.messages ?? null,
                 };
 
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
@@ -353,44 +369,56 @@ export default function Messages({
                                                 </form>
                                             </div>
                                         ) : (
-                                            <div
-                                                className={
-                                                    "group relative " +
-                                                    (message.sender?.username !== currentUsername
-                                                        ? "bg-accent rounded-tl-none"
-                                                        : "rounded-tr-none ml-auto") +
-                                                    " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
-                                                }
-                                            >
-                                                {message.parent_id && <p>Reply to #{message.parent_id}</p>}
-
-                                                {message.content && (
-                                                    <div>
-                                                        <p className="py-2 px-4">{message.content}</p>
+                                            <>
+                                                {message.messages && (
+                                                    <div className="reply-header flex items-center bg-gray-100 p-1 rounded-t">
+                                                        <span className="text-sm font-semibold mr-1">
+                                                            {message.messages.sender?.username || "Unknown"}
+                                                        </span>
+                                                        <span className="text-sm text-gray-600">
+                                                            {message.messages.content ??
+                                                                (message.messages.image_url ? "📷 Image" : "")}
+                                                        </span>
                                                     </div>
                                                 )}
 
-                                                {message.image_url && (
-                                                    <ChatImage
-                                                        src={message.image_url}
-                                                        alt="Message attachment"
-                                                        onLoadingComplete={() => scrollToBottom(false)}
-                                                    />
-                                                )}
+                                                <div
+                                                    className={
+                                                        "group relative " +
+                                                        (message.sender?.username !== currentUsername
+                                                            ? "bg-accent rounded-tl-none"
+                                                            : "rounded-tr-none ml-auto") +
+                                                        " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
+                                                    }
+                                                >
+                                                    {message.content && (
+                                                        <div>
+                                                            <p className="py-2 px-4">{message.content}</p>
+                                                        </div>
+                                                    )}
 
-                                                {isConsecutive && (
-                                                    <p
-                                                        className={
-                                                            (message.sender?.username === currentUsername
-                                                                ? "text-right"
-                                                                : "") +
-                                                            " absolute -bottom-5 right-0 text-xs text-muted-foreground hidden group-hover:block"
-                                                        }
-                                                    >
-                                                        {message.created_at.toLocaleTimeString()}
-                                                    </p>
-                                                )}
-                                            </div>
+                                                    {message.image_url && (
+                                                        <ChatImage
+                                                            src={message.image_url}
+                                                            alt="Message attachment"
+                                                            onLoadingComplete={() => scrollToBottom(false)}
+                                                        />
+                                                    )}
+
+                                                    {isConsecutive && (
+                                                        <p
+                                                            className={
+                                                                (message.sender?.username === currentUsername
+                                                                    ? "text-right"
+                                                                    : "") +
+                                                                " absolute -bottom-5 right-0 text-xs text-muted-foreground hidden group-hover:block"
+                                                            }
+                                                        >
+                                                            {message.created_at.toLocaleTimeString()}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </>
                                         )}
                                     </li>
                                 );
@@ -406,9 +434,20 @@ export default function Messages({
                 currentUsername={currentUsername}
                 sendMessage={sendMessage}
                 onNewMessage={(msg) =>
-                    setMessages((prev) =>
-                        prev.some((m) => m.id.toString() === msg.id.toString()) ? prev : [...prev, msg]
-                    )
+                    setMessages((prev) => {
+                        // skip if the message already exists
+                        if (prev.some((m) => m.id.toString() === msg.id.toString())) return prev;
+
+                        // append the new message, including the parent message if it exists
+                        return [
+                            ...prev,
+                            {
+                                ...msg,
+                                // make sure parent message info exists if it's a reply
+                                messages: msg.parent_id ? msg.messages ?? null : null,
+                            },
+                        ];
+                    })
                 }
                 replyTo={replyTo ?? null}
                 setReplyTo={setReplyTo}
