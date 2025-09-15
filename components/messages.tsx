@@ -89,7 +89,6 @@ export default function Messages({
 
         getMessages().catch(console.error);
 
-        // TODO: add listener for message delete and edit.
         const channel = supabase
             .channel(`conversation-${conversationId}`)
             .on("broadcast", { event: "message" }, ({ payload }) => {
@@ -113,6 +112,26 @@ export default function Messages({
                 };
 
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
+            })
+            .on("broadcast", { event: "message_edited" }, ({ payload }) => {
+                console.log("Message edited:", payload);
+
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === BigInt(payload.id)
+                            ? {
+                                  ...m,
+                                  content: payload.content ?? m.content,
+                                  edited_at: payload.edited_at ? new Date(payload.edited_at) : m.edited_at,
+                              }
+                            : m
+                    )
+                );
+            })
+            .on("broadcast", { event: "message_deleted" }, ({ payload }) => {
+                console.log("Message deleted:", payload);
+
+                setMessages((prev) => prev.map((m) => (m.id === BigInt(payload.id) ? { ...m, deleted: true } : m)));
             })
             .subscribe();
 

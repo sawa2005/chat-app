@@ -48,8 +48,8 @@ export async function editMessage(messageId: bigint, newContent: string) {
         data: { content: newContent, edited_at: new Date() },
     });
 
-    const supabase = createClient();
-    (await supabase).channel(`conversation-${updated.conversation_id}`).send({
+    const supabase = await createClient();
+    const broadcast = await supabase.channel(`conversation-${updated.conversation_id}`).send({
         type: "broadcast",
         event: "message_edited",
         payload: {
@@ -58,6 +58,8 @@ export async function editMessage(messageId: bigint, newContent: string) {
             edited_at: updated.edited_at,
         },
     });
+
+    console.log("Message edit broadcasted:", broadcast);
 
     return updated;
 }
@@ -80,11 +82,13 @@ export async function deleteMessage(messageId: bigint) {
     }
     */
 
-    supabase.channel(`conversation-${msg.conversation_id}`).send({
+    const broadcast = await supabase.channel(`conversation-${msg.conversation_id}`).send({
         type: "broadcast",
         event: "message_deleted",
         payload: { id: msg.id.toString() },
     });
+
+    console.log("Message delete broadcasted:", broadcast);
 
     return msg;
 }
