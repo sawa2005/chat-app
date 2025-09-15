@@ -16,6 +16,12 @@ type BroadcastPayload = {
     image_url: string | null;
     type: string;
     parent_id: string | null;
+    messages: {
+        id: string;
+        content: string | null;
+        image_url: string | null;
+        sender: { id: string; username: string } | null;
+    } | null;
 };
 
 export async function broadcastMessage(
@@ -30,6 +36,12 @@ export async function broadcastMessage(
         image_url?: string | null;
         type?: string | null;
         parent_id: bigint | null;
+        messages: {
+            id: bigint;
+            content: string | null;
+            image_url: string | null;
+            sender: { id: bigint; username: string } | null;
+        } | null;
     },
     uploadedImageUrl?: string | null
 ) {
@@ -48,6 +60,19 @@ export async function broadcastMessage(
         image_url: uploadedImageUrl ?? newMessage.image_url ?? null,
         type: newMessage.type ?? "message",
         parent_id: newMessage.parent_id ? newMessage.parent_id.toString() : null,
+        messages: newMessage.messages
+            ? {
+                  id: newMessage.messages.id.toString(),
+                  content: newMessage.messages.content,
+                  image_url: newMessage.messages.image_url,
+                  sender: newMessage.messages.sender
+                      ? {
+                            id: newMessage.messages.sender.id.toString(),
+                            username: newMessage.messages.sender.username,
+                        }
+                      : null,
+              }
+            : null,
     };
 
     return supabase.channel(`conversation-${conversationId}`).send({

@@ -8,7 +8,7 @@ import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChatImage from "@/components/chat-image";
 import TypingIndicator from "./typing-indicator";
-import { Pen, Reply, Trash, X } from "lucide-react";
+import { Pen, Reply, Trash, X, MessageSquareReply, ImageIcon } from "lucide-react";
 import { loadInitMessages } from "@/app/conversation/create/actions";
 
 const supabase = createClient();
@@ -128,8 +128,20 @@ export default function Messages({
                     image_url: payload.image_url ?? null,
                     type: payload.type ?? "message",
                     deleted: payload.deleted ?? false,
-                    parent_id: payload.parent_id ?? null,
-                    messages: payload.messages ?? null,
+                    parent_id: payload.parent_id ? BigInt(payload.parent_id) : null,
+                    messages: payload.messages
+                        ? {
+                              id: BigInt(payload.messages.id),
+                              content: payload.messages.content,
+                              image_url: payload.messages.image_url,
+                              sender: payload.messages.sender
+                                  ? {
+                                        id: BigInt(payload.messages.sender.id),
+                                        username: payload.messages.sender.username,
+                                    }
+                                  : null,
+                          }
+                        : null,
                 };
 
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
@@ -370,15 +382,42 @@ export default function Messages({
                                             </div>
                                         ) : (
                                             <>
+                                                {/* TODO: add handling replying to deleted messages */}
                                                 {message.messages && (
-                                                    <div className="reply-header flex items-center bg-gray-100 p-1 rounded-t">
-                                                        <span className="text-sm font-semibold mr-1">
-                                                            {message.messages.sender?.username || "Unknown"}
-                                                        </span>
-                                                        <span className="text-sm text-gray-600">
-                                                            {message.messages.content ??
-                                                                (message.messages.image_url ? "📷 Image" : "")}
-                                                        </span>
+                                                    <div
+                                                        className={
+                                                            (message.sender?.username === currentUsername
+                                                                ? "ml-auto"
+                                                                : "") + " flex items-center w-fit"
+                                                        }
+                                                    >
+                                                        <div
+                                                            className={
+                                                                "reply-header flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit mb-1"
+                                                            }
+                                                        >
+                                                            <span className="text-sm font-semibold mr-1">
+                                                                {message.messages.sender?.username || "Unknown"}
+                                                            </span>
+                                                            <span className="text-sm text-gray-600">
+                                                                {message.messages.content === "" ? (
+                                                                    message.messages.image_url ? (
+                                                                        <ImageIcon
+                                                                            className="text-muted-foreground"
+                                                                            size={15}
+                                                                        />
+                                                                    ) : (
+                                                                        ""
+                                                                    )
+                                                                ) : (
+                                                                    message.messages.content
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                        <MessageSquareReply
+                                                            size={20}
+                                                            className="text-gray-300 ml-1 mb-1"
+                                                        />
                                                     </div>
                                                 )}
 
