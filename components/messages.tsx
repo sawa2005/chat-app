@@ -8,7 +8,7 @@ import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { Skeleton } from "@/components/ui/skeleton";
 import ChatImage from "@/components/chat-image";
 import TypingIndicator from "./typing-indicator";
-import { Pen, Trash, X } from "lucide-react";
+import { Pen, Reply, Trash, X } from "lucide-react";
 import { loadInitMessages } from "@/app/conversation/create/actions";
 
 const supabase = createClient();
@@ -26,6 +26,7 @@ type Message = {
     image_url: string | null;
     type: string;
     deleted: boolean;
+    parent_id: bigint | null;
 };
 
 function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
@@ -53,6 +54,7 @@ export default function Messages({
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
+    const [replyTo, setReplyTo] = useState<bigint | null>(null);
 
     // TODO: if height is too small to show messages, collapse header and members.
     // TODO: consider switching message hover text to on click instead.
@@ -111,6 +113,7 @@ export default function Messages({
                     image_url: payload.image_url ?? null,
                     type: payload.type ?? "message",
                     deleted: payload.deleted ?? false,
+                    parent_id: payload.parent_id ?? null,
                 };
 
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
@@ -154,7 +157,7 @@ export default function Messages({
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId]);
+    }, [conversationId, currentUsername]);
 
     function handleDelete(messageId: bigint) {
         deleteMessage(messageId)
@@ -238,6 +241,17 @@ export default function Messages({
                                                                 title="Edit Message"
                                                             >
                                                                 <Pen size={15} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setReplyTo(message.id);
+                                                                }}
+                                                                className="
+                                                            opacity-0 group-hover:opacity-100 mr-2
+                                                            text-muted-foreground hover:text-primary cursor-pointer"
+                                                                title="Reply"
+                                                            >
+                                                                <Reply size={15} />
                                                             </button>
                                                         </>
                                                     ) : (
@@ -348,6 +362,8 @@ export default function Messages({
                                                     " rounded-xl mb-4 inset-shadow-sm/8 shadow-lg/8 w-fit break-words max-w-[80%] overflow-hidden"
                                                 }
                                             >
+                                                {message.parent_id && <p>Reply to #{message.parent_id}</p>}
+
                                                 {message.content && (
                                                     <div>
                                                         <p className="py-2 px-4">{message.content}</p>
@@ -394,6 +410,8 @@ export default function Messages({
                         prev.some((m) => m.id.toString() === msg.id.toString()) ? prev : [...prev, msg]
                     )
                 }
+                replyTo={replyTo ?? null}
+                setReplyTo={setReplyTo}
             />
         </div>
     );

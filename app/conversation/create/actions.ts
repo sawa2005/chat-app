@@ -286,9 +286,10 @@ export async function createConversation(
 export async function sendMessage(
     conversationId: string,
     senderId: bigint,
-    senderUsername: string, // new
+    senderUsername: string,
     content: string,
-    imageUrl: string | null
+    imageUrl: string | null,
+    parentId: bigint | null
 ) {
     const message = await prisma.messages.create({
         data: {
@@ -296,10 +297,10 @@ export async function sendMessage(
             sender_id: senderId,
             content,
             image_url: imageUrl,
+            parent_id: parentId ?? null,
         },
     });
 
-    // Return the message + sender info
     return {
         ...message,
         sender: {

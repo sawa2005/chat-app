@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/client";
-import { useState, useRef, ChangeEvent, FormEvent } from "react";
+import { useState, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { sendMessage } from "@/app/conversation/create/actions";
@@ -17,6 +17,8 @@ type SendMessageFormProps = {
     currentProfileId: bigint;
     currentUsername: string;
     sendMessage: typeof sendMessage; // pass server action from parent
+    replyTo: bigint | null;
+    setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     onNewMessage: (message: {
         id: bigint;
         conversation_id: string;
@@ -30,6 +32,7 @@ type SendMessageFormProps = {
         image_url: string | null;
         type: string;
         deleted: boolean;
+        parent_id: bigint | null;
     }) => void;
 };
 
@@ -42,6 +45,8 @@ export default function SendMessageForm({
     currentUsername,
     sendMessage,
     onNewMessage,
+    replyTo,
+    setReplyTo,
 }: SendMessageFormProps) {
     const [isPending, setIsPending] = useState(false);
     const [content, setContent] = useState("");
@@ -121,7 +126,8 @@ export default function SendMessageForm({
             currentProfileId,
             currentUsername,
             content,
-            uploadedImageUrl
+            uploadedImageUrl,
+            replyTo ?? null
         );
 
         onNewMessage({
@@ -137,6 +143,7 @@ export default function SendMessageForm({
             ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
             type: newMessage.type ?? "message",
             deleted: false,
+            parent_id: replyTo,
         });
 
         console.log("Broadcast sent:", newMessage);
@@ -154,6 +161,7 @@ export default function SendMessageForm({
         setContent("");
         setImgPreview(null);
         setFile(null);
+        setReplyTo(null);
 
         if (fileInputRef.current) {
             fileInputRef.current.value = ""; // reset file input
@@ -170,41 +178,55 @@ export default function SendMessageForm({
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div className="flex gap-1">
-                <div className="relative flex gap-1 w-full">
-                    <Input
-                        name="content"
-                        type="text"
-                        placeholder="Type your message..."
-                        className="px-4 py-6 pr-10"
-                        disabled={isPending}
-                        value={content}
-                        onChange={handleInputChange}
-                    />
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
-                    {/* Icon inside input */}
+        <>
+            {replyTo && (
+                <div className="flex items-center gap-2 border-l-2 border-blue-500 text-sm text-gray-600">
+                    Replying to message #{replyTo.toString()}
                     <button
                         type="button"
-                        onClick={imgPreview ? handleUploadCancel : handleIconClick}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
+                        onClick={() => setReplyTo(null)}
+                        className="text-muted-foreground hover:text-primary cursor-pointer ml-auto"
                     >
-                        {imgPreview ? <X size={20} /> : <ImageIcon size={20} />}
+                        <X size={20} />
                     </button>
                 </div>
-                {imgPreview && (
-                    <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />
-                )}
-                <Button type="submit" className="cursor-pointer py-6" disabled={isPending || uploading}>
-                    {isPending ? "Sending..." : uploading ? "Uploading..." : "Send"}
-                </Button>
-            </div>
-        </form>
+            )}
+            <form onSubmit={handleSubmit}>
+                <div className="flex gap-1">
+                    <div className="relative flex gap-1 w-full">
+                        <Input
+                            name="content"
+                            type="text"
+                            placeholder="Type your message..."
+                            className="px-4 py-6 pr-10"
+                            disabled={isPending}
+                            value={content}
+                            onChange={handleInputChange}
+                        />
+                        <Input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+                        {/* Icon inside input */}
+                        <button
+                            type="button"
+                            onClick={imgPreview ? handleUploadCancel : handleIconClick}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
+                        >
+                            {imgPreview ? <X size={20} /> : <ImageIcon size={20} />}
+                        </button>
+                    </div>
+                    {imgPreview && (
+                        <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />
+                    )}
+                    <Button type="submit" className="cursor-pointer py-6" disabled={isPending || uploading}>
+                        {isPending ? "Sending..." : uploading ? "Uploading..." : "Send"}
+                    </Button>
+                </div>
+            </form>
+        </>
     );
 }
