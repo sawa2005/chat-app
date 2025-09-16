@@ -12,6 +12,7 @@ type BroadcastPayload = {
     sender: {
         id: string | null;
         username: string;
+        avatar: string | null;
     } | null;
     image_url: string | null;
     type: string;
@@ -20,7 +21,7 @@ type BroadcastPayload = {
         id: string;
         content: string | null;
         image_url: string | null;
-        sender: { id: string; username: string } | null;
+        sender: { id: string; username: string; avatar: string | null } | null;
     } | null;
 };
 
@@ -33,6 +34,7 @@ export async function broadcastMessage(
         created_at: string | Date;
         sender_id?: string | number | bigint | null;
         sender_username?: string; // fallback removed
+        sender_avatar: string | null;
         image_url?: string | null;
         type?: string | null;
         parent_id: bigint | null;
@@ -40,7 +42,7 @@ export async function broadcastMessage(
             id: bigint;
             content: string | null;
             image_url: string | null;
-            sender: { id: bigint; username: string } | null;
+            sender: { id: bigint; username: string; avatar: string | null } | null;
         } | null;
     },
     uploadedImageUrl?: string | null
@@ -56,6 +58,7 @@ export async function broadcastMessage(
                 : {
                       id: newMessage.sender_id ? newMessage.sender_id.toString() : null,
                       username: newMessage.sender_username ?? "",
+                      avatar: newMessage.sender_avatar ?? null,
                   },
         image_url: uploadedImageUrl ?? newMessage.image_url ?? null,
         type: newMessage.type ?? "message",
@@ -69,6 +72,7 @@ export async function broadcastMessage(
                       ? {
                             id: newMessage.messages.sender.id.toString(),
                             username: newMessage.messages.sender.username,
+                            avatar: newMessage.messages.sender.avatar,
                         }
                       : null,
               }

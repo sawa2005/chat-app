@@ -162,6 +162,7 @@ export async function addMemberToConversation(conversationId: string, username: 
     const msgWithParent = {
         ...msg,
         messages: null,
+        sender_avatar: null,
     };
 
     await broadcastMessage(conversationId, msgWithParent);
@@ -198,6 +199,7 @@ export async function leaveConversation(conversationId: string, profileId: bigin
     const msgWithParent = {
         ...msg,
         messages: null,
+        sender_avatar: null,
     };
 
     await broadcastMessage(conversationId, msgWithParent);

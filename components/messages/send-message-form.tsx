@@ -178,6 +178,7 @@ export default function SendMessageForm({
                 ...newMessage,
                 sender_id: newMessage.sender.id,
                 sender_username: newMessage.sender.username,
+                sender_avatar: newMessage.sender.avatar,
             },
             uploadedImageUrl
         );

@@ -39,8 +39,10 @@ export function MessageItem({
     const isConsecutive = isConsecutiveMessage(prevMessage, message);
 
     const headerClasses = !isConsecutive
-        ? `${isOwner ? "text-right justify-end" : "flex-row-reverse justify-end"} text-xs mb-1 flex items-center gap-2`
-        : `${isOwner ? "text-right" : ""} text-xs mb-1 hidden group-hover:flex justify-end items-center`;
+        ? `${isOwner ? "text-right" : "flex-row-reverse"} justify-end text-xs mb-1 flex items-center gap-2`
+        : `${
+              isOwner ? "text-right" : "flex-row-reverse justify-end"
+          } text-xs hidden group-hover:flex justify-end items-center gap-2`;
 
     return (
         <li
