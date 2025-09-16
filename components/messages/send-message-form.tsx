@@ -15,6 +15,7 @@ type SendMessageFormProps = {
     conversationId: string;
     currentProfileId: bigint;
     currentUsername: string;
+    currentUserAvatar: string | null;
     sendMessage: typeof sendMessage; // pass server action from parent
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
@@ -27,6 +28,7 @@ type SendMessageFormProps = {
         sender: {
             id: bigint | null;
             username: string;
+            avatar: string | null;
         };
         image_url: string | null;
         type: string;
@@ -36,7 +38,7 @@ type SendMessageFormProps = {
             id: bigint;
             content: string | null;
             image_url: string | null;
-            sender: { id: bigint; username: string } | null;
+            sender: { id: bigint; username: string; avatar: string | null } | null;
         } | null;
     }) => void;
 };
@@ -48,6 +50,7 @@ export default function SendMessageForm({
     conversationId,
     currentProfileId,
     currentUsername,
+    currentUserAvatar,
     sendMessage,
     onNewMessage,
     replyTo,
@@ -130,6 +133,7 @@ export default function SendMessageForm({
             conversationId,
             currentProfileId,
             currentUsername,
+            currentUserAvatar,
             content,
             uploadedImageUrl,
             replyTo ?? null
@@ -144,6 +148,7 @@ export default function SendMessageForm({
             sender: {
                 id: newMessage.sender_id,
                 username: currentUsername,
+                avatar: newMessage.sender.avatar,
             },
             ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
             type: newMessage.type ?? "message",
@@ -158,6 +163,7 @@ export default function SendMessageForm({
                           ? {
                                 id: newMessage.messages.sender.id,
                                 username: newMessage.messages.sender.username,
+                                avatar: newMessage.messages.sender.avatar,
                             }
                           : null,
                   }

@@ -4,6 +4,8 @@ import { isConsecutiveMessage } from "./messages";
 import { MessageActions } from "./message-buttons";
 import { MessageBubble } from "./message-bubble";
 import { editMessage } from "@/app/conversation/create/actions";
+import Avatar from "../avatar";
+import { getAvatarUrlById } from "@/app/login/actions";
 
 export function MessageItem({
     message,
@@ -30,7 +32,9 @@ export function MessageItem({
     handleDelete: (messageId: bigint) => void;
     scrollToBottom: (smooth?: boolean) => void;
 }) {
-    const isOwner = message.sender?.username === currentUsername;
+    if (!message.sender) return;
+
+    const isOwner = message.sender.username === currentUsername;
     const isEditing = editingMessageId === message.id.toString();
     const isConsecutive = isConsecutiveMessage(prevMessage, message);
 
@@ -57,14 +61,10 @@ export function MessageItem({
                     onReply={() => setReplyTo(message.id)}
                 />
                 {!isConsecutive && (
-                    <>
-                        {(isOwner ? "You" : message.sender?.username) +
-                            " / " +
-                            message.created_at.toLocaleDateString() +
-                            " - " +
-                            message.created_at.toLocaleTimeString() +
-                            (message.edited_at ? " (edited)" : "")}
-                    </>
+                    <div className={`flex gap-1 items-center ${!isOwner && "flex-row-reverse"}`}>
+                        {isOwner ? "You" : message.sender?.username}
+                        <Avatar size={15} avatarUrl={message.sender?.avatar} username={message.sender?.username} />
+                    </div>
                 )}
                 {isConsecutive && message.created_at.toLocaleTimeString()}
             </div>

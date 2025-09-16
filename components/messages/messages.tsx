@@ -25,12 +25,13 @@ export type Message = {
     sender: {
         id: bigint | null;
         username: string;
+        avatar: string | null;
     } | null;
     messages: {
         id: bigint;
         content: string | null;
         image_url: string | null;
-        sender: { id: bigint; username: string } | null;
+        sender: { id: bigint; username: string; avatar: string | null } | null;
     } | null;
 };
 
@@ -39,6 +40,7 @@ export function isConsecutiveMessage(prev: Message | undefined, current: Message
     if (prev.type === "info" || current.type === "info") return false;
     if (!prev.sender) return false;
     if (prev.sender.id !== current.sender?.id) return false;
+    if (prev.messages?.id !== current.messages?.id) return false;
 
     const diffMs = current.created_at.getTime() - prev.created_at.getTime();
     return diffMs < cutoffMinutes * 60 * 1000;
@@ -48,10 +50,12 @@ export default function Messages({
     conversationId,
     currentUsername,
     currentProfileId,
+    currentUserAvatar,
 }: {
     conversationId: string;
     currentUsername: string;
     currentProfileId: bigint;
+    currentUserAvatar: string | null;
 }) {
     const { containerRef, scrollToBottom } = useChatScroll();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -85,13 +89,15 @@ export default function Messages({
                         image_url: string | null;
                         type: string;
                         deleted: boolean;
-                        sender: { id: bigint; username: string }[] | { id: bigint; username: string };
+                        sender:
+                            | { id: bigint; username: string; avatar: string | null }[]
+                            | { id: bigint; username: string; avatar: string | null };
                         parent_id: bigint | null;
                         messages: {
                             id: bigint;
                             content: string | null;
                             image_url: string | null;
-                            sender: { id: bigint; username: string } | null;
+                            sender: { id: bigint; username: string; avatar: string } | null;
                         } | null;
                     }[]
                 ).map((msg) => ({
@@ -121,6 +127,7 @@ export default function Messages({
                         ? {
                               id: payload.sender.id ? BigInt(payload.sender.id) : null,
                               username: payload.sender.username ?? "",
+                              avatar: payload.sender.avatar ?? null,
                           }
                         : null,
                     image_url: payload.image_url ?? null,
@@ -136,6 +143,7 @@ export default function Messages({
                                   ? {
                                         id: BigInt(payload.messages.sender.id),
                                         username: payload.messages.sender.username,
+                                        avatar: payload.messages.sender.avatar,
                                     }
                                   : null,
                           }
@@ -235,6 +243,7 @@ export default function Messages({
                 conversationId={conversationId}
                 currentProfileId={currentProfileId}
                 currentUsername={currentUsername}
+                currentUserAvatar={currentUserAvatar}
                 sendMessage={sendMessage}
                 onNewMessage={handleNewMessage}
                 replyTo={replyTo ?? null}

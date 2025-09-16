@@ -142,7 +142,7 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                     <p className="text-xs font-mono text-muted-foreground">
                         / {loadingMembers ? "loading..." : `${members.length} members`}
                     </p>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 mt-3">
                         {!loadingMembers ? (
                             members.map((m) => (
                                 <Avatar key={m.id} size={35} avatarUrl={m.avatar} username={m.username} />

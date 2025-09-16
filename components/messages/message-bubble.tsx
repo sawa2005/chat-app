@@ -49,11 +49,11 @@ export function MessageBubble({
         <>
             {message.messages && (
                 <div className={`${isOwner ? "ml-auto" : ""} flex items-center w-fit mb-2 gap-1`}>
-                    <div className="reply-header flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit">
+                    <div className="flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit">
                         <span className="text-sm font-semibold mr-1">
                             {message.messages.sender?.username || "Unknown"}
                         </span>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 truncate max-w-[40vw]">
                             {message.messages.content === "" ? (
                                 message.messages.image_url ? (
                                     <ImageIcon className="text-muted-foreground" size={15} />
@@ -81,15 +81,6 @@ export function MessageBubble({
                         alt="Message attachment"
                         onLoadingComplete={() => scrollToBottom(false)}
                     />
-                )}
-                {isConsecutive && (
-                    <p
-                        className={`${
-                            isOwner ? "text-right" : ""
-                        } absolute -bottom-5 right-0 text-xs text-muted-foreground hidden group-hover:block`}
-                    >
-                        {message.created_at.toLocaleTimeString()}
-                    </p>
                 )}
             </div>
         </>

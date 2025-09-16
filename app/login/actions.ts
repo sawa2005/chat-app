@@ -6,6 +6,20 @@ import { prisma } from "@/lib/prisma";
 
 import { createClient } from "@/utils/supabase/server";
 
+export async function getAvatarUrlById(senderId: bigint | null): Promise<string | null> {
+    if (senderId === null) {
+        console.log("Get Avatar: Sender ID can not be null");
+        return null;
+    }
+
+    const profile = await prisma.profiles.findUnique({
+        where: { id: senderId },
+        select: { avatar: true },
+    });
+
+    return profile?.avatar ?? null;
+}
+
 export async function login(formData: FormData) {
     const supabase = await createClient();
 

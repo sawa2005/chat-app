@@ -20,7 +20,7 @@ export default function Avatar({ size, avatarUrl, username }: AvatarProps) {
         <Image
             src={publicUrl || `https://api.dicebear.com/9.x/identicon/jpg?seed=${encodeURIComponent(username)}`}
             alt="User Avatar"
-            className="mt-2 rounded-full object-cover"
+            className="rounded-full object-cover"
             width={size}
             height={size}
             title={username}

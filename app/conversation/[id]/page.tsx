@@ -49,10 +49,23 @@ export default async function ConversationPage({ params }: ConversationPageProps
         return <div className="p-6 text-red-500">Conversation not found.</div>;
     }
 
+    // Get current user's avatar from Prisma
+    const currentUser = await prisma.profiles.findUnique({
+        where: { id: currentProfileId },
+        select: { avatar: true },
+    });
+
+    const currentUserAvatar = currentUser?.avatar ?? null;
+
     return (
         <div className="font-sans flex flex-col h-[85vh]">
             <ConversationHeader conversation={conversation} currentProfileId={currentProfileId} />
-            <Messages conversationId={conversation.id} currentUsername={username} currentProfileId={currentProfileId} />
+            <Messages
+                conversationId={conversation.id}
+                currentUsername={username}
+                currentProfileId={currentProfileId}
+                currentUserAvatar={currentUserAvatar}
+            />
         </div>
     );
 }

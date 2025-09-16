@@ -22,7 +22,7 @@ export async function loadInitMessages(conversationId: string) {
                 image_url: true,
                 type: true,
                 deleted: true,
-                sender: { select: { id: true, username: true } },
+                sender: { select: { id: true, username: true, avatar: true } },
                 messages: {
                     select: {
                         id: true,
@@ -39,7 +39,9 @@ export async function loadInitMessages(conversationId: string) {
                 ...msg,
                 // convert IDs to bigint
                 id: BigInt(msg.id),
-                sender: msg.sender ? { id: BigInt(msg.sender.id), username: msg.sender.username } : null,
+                sender: msg.sender
+                    ? { id: BigInt(msg.sender.id), username: msg.sender.username, avatar: msg.sender.avatar }
+                    : null,
                 created_at: msg.created_at.toISOString(),
             }));
 
@@ -305,6 +307,7 @@ export async function sendMessage(
     conversationId: string,
     senderId: bigint,
     senderUsername: string,
+    senderAvatar: string | null,
     content: string,
     imageUrl: string | null,
     parentId: bigint | null
@@ -318,14 +321,14 @@ export async function sendMessage(
             parent_id: parentId ?? null,
         },
         include: {
-            sender: { select: { id: true, username: true } },
+            sender: { select: { id: true, username: true, avatar: true } },
             messages: {
                 // include parent message info if it exists
                 select: {
                     id: true,
                     content: true,
                     image_url: true,
-                    sender: { select: { id: true, username: true } },
+                    sender: { select: { id: true, username: true, avatar: true } },
                 },
             },
         },
@@ -336,6 +339,7 @@ export async function sendMessage(
         sender: {
             id: senderId,
             username: senderUsername,
+            avatar: senderAvatar,
         },
     };
 }
