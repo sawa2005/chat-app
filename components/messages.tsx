@@ -227,6 +227,7 @@ export default function Messages({
                                 const prevMsg = messages[i - 1];
                                 const isConsecutive = isConsecutiveMessage(prevMsg, message);
 
+                                // TODO: add edit delete reply buttons and fix hover text on incoming messages.
                                 return (
                                     <li
                                         key={message.id}
@@ -241,58 +242,62 @@ export default function Messages({
                                                 className={
                                                     (message.sender?.username === currentUsername
                                                         ? "text-right justify-end"
-                                                        : "") + " text-xs mb-1 flex items-center"
+                                                        : "flex-row-reverse justify-end") +
+                                                    " text-xs mb-1 flex items-center gap-2"
                                                 }
                                             >
-                                                {message.sender?.username === currentUsername &&
-                                                    (editingMessageId === null ? (
-                                                        <>
-                                                            <button
-                                                                onClick={() => {
-                                                                    handleDelete(message.id);
-                                                                }}
-                                                                className="
-                                                            opacity-0 group-hover:opacity-100 mr-2
-                                                            text-muted-foreground hover:text-primary cursor-pointer"
-                                                                title="Delete Message"
-                                                            >
-                                                                <Trash size={15} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setEditingMessageId(message.id.toString());
-                                                                    setEditContent(message.content);
-                                                                }}
-                                                                className="
-                                                            opacity-0 group-hover:opacity-100 mr-2
-                                                            text-muted-foreground hover:text-primary cursor-pointer"
-                                                                title="Edit Message"
-                                                            >
-                                                                <Pen size={15} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setReplyTo(message.id);
-                                                                }}
-                                                                className="
-                                                            opacity-0 group-hover:opacity-100 mr-2
-                                                            text-muted-foreground hover:text-primary cursor-pointer"
-                                                                title="Reply"
-                                                            >
-                                                                <Reply size={15} />
-                                                            </button>
-                                                        </>
-                                                    ) : (
+                                                {editingMessageId === null ? (
+                                                    <div className="flex gap-1">
+                                                        {message.sender?.id === currentProfileId && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        handleDelete(message.id);
+                                                                    }}
+                                                                    className="
+                                                                    opacity-0 group-hover:opacity-100
+                                                                    text-muted-foreground hover:text-primary cursor-pointer"
+                                                                    title="Delete Message"
+                                                                >
+                                                                    <Trash size={15} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setEditingMessageId(message.id.toString());
+                                                                        setEditContent(message.content);
+                                                                    }}
+                                                                    className="
+                                                                    opacity-0 group-hover:opacity-100
+                                                                    text-muted-foreground hover:text-primary cursor-pointer"
+                                                                    title="Edit Message"
+                                                                >
+                                                                    <Pen size={15} />
+                                                                </button>
+                                                            </>
+                                                        )}
                                                         <button
                                                             onClick={() => {
-                                                                setEditingMessageId(null);
+                                                                setReplyTo(message.id);
                                                             }}
-                                                            className="opacity-0 group-hover:opacity-100 mr-2 text-muted-foreground hover:text-red-800 cursor-pointer"
-                                                            title="Edit Message"
+                                                            className="
+                                                            opacity-0 group-hover:opacity-100
+                                                            text-muted-foreground hover:text-primary cursor-pointer"
+                                                            title="Reply"
                                                         >
-                                                            <X size={20} />
+                                                            <Reply size={15} />
                                                         </button>
-                                                    ))}
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingMessageId(null);
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 mr-2 text-muted-foreground hover:text-red-800 cursor-pointer"
+                                                        title="Edit Message"
+                                                    >
+                                                        <X size={20} />
+                                                    </button>
+                                                )}
                                                 {(message.sender?.username === currentUsername
                                                     ? "You"
                                                     : message.sender?.username) +
@@ -388,12 +393,12 @@ export default function Messages({
                                                         className={
                                                             (message.sender?.username === currentUsername
                                                                 ? "ml-auto"
-                                                                : "") + " flex items-center w-fit"
+                                                                : "") + " flex items-center w-fit mb-2 gap-1"
                                                         }
                                                     >
                                                         <div
                                                             className={
-                                                                "reply-header flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit mb-1"
+                                                                "reply-header flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit"
                                                             }
                                                         >
                                                             <span className="text-sm font-semibold mr-1">
@@ -414,10 +419,7 @@ export default function Messages({
                                                                 )}
                                                             </span>
                                                         </div>
-                                                        <MessageSquareReply
-                                                            size={20}
-                                                            className="text-gray-300 ml-1 mb-1"
-                                                        />
+                                                        <MessageSquareReply size={18} className="text-gray-300" />
                                                     </div>
                                                 )}
 

@@ -200,7 +200,8 @@ export default function SendMessageForm({
         <>
             {replyTo && (
                 <div className="flex items-center font-mono text-xs text-muted-foreground">
-                    / Replying to message #{replyTo.toString()}
+                    {/* TODO: show message you are replying to instead of just message id. */}/ replying to message #
+                    {replyTo.toString()}
                     <button
                         type="button"
                         onClick={() => setReplyTo(null)}
