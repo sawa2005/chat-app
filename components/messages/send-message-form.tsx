@@ -5,7 +5,6 @@ import { useState, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } fr
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { sendMessage } from "@/app/conversation/create/actions";
-import { getCurrentProfileId } from "@/app/login/actions";
 import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
 import { Image as ImageIcon, X } from "lucide-react";

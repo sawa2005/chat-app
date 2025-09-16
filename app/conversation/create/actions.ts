@@ -157,7 +157,12 @@ export async function addMemberToConversation(conversationId: string, username: 
         },
     });
 
-    await broadcastMessage(conversationId, msg);
+    const msgWithParent = {
+        ...msg,
+        messages: null,
+    };
+
+    await broadcastMessage(conversationId, msgWithParent);
 
     const member = {
         id: newUser.id,
@@ -188,7 +193,12 @@ export async function leaveConversation(conversationId: string, profileId: bigin
         },
     });
 
-    await broadcastMessage(conversationId, msg);
+    const msgWithParent = {
+        ...msg,
+        messages: null,
+    };
+
+    await broadcastMessage(conversationId, msgWithParent);
     await broadcastMember(conversationId, { id: profileId }, "removed");
 }
 
