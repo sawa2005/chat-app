@@ -18,7 +18,7 @@ export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProp
                 alt={alt}
                 width={width || 0}
                 height={height || 0}
-                className="rounded-b-xl"
+                className="rounded-xl"
                 unoptimized
                 onLoad={(e) => {
                     const target = e.currentTarget as HTMLImageElement;

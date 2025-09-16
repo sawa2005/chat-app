@@ -49,11 +49,11 @@ export function MessageBubble({
         <>
             {message.messages && (
                 <div className={`${isOwner ? "ml-auto" : ""} flex items-center w-fit mb-2 gap-1`}>
-                    <div className="flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit">
+                    <div className="flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit max-w-80">
                         <span className="text-sm font-semibold mr-1">
                             {message.messages.sender?.username || "Unknown"}
                         </span>
-                        <span className="text-sm text-gray-600 truncate max-w-[40vw]">
+                        <span className="text-sm text-gray-600 truncate max-w-[100%]">
                             {message.messages.content === "" ? (
                                 message.messages.image_url ? (
                                     <ImageIcon className="text-muted-foreground" size={15} />

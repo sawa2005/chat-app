@@ -67,7 +67,6 @@ export default function Messages({
 
     // TODO: if height is too small to show messages, collapse header and members.
     // TODO: consider switching message hover text to on click instead.
-    // TODO: change date format to date if old and time if newer.
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -221,7 +220,7 @@ export default function Messages({
             {loading ? (
                 <SkeletonList />
             ) : (
-                <div ref={containerRef} className="flex-1 min-h-0 pr-4 mt-5 overflow-y-auto">
+                <div ref={containerRef} className="flex-1 min-h-0 pr-4 mt-5 overflow-y-auto overflow-x-hidden">
                     <MessageList
                         messages={messages}
                         currentUsername={currentUsername}

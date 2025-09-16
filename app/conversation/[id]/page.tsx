@@ -10,7 +10,6 @@ interface ConversationPageProps {
 }
 
 // TODO: add reactions.
-// TODO: add reply functionality.
 // TODO: add read messages and notifications.
 
 export default async function ConversationPage({ params }: ConversationPageProps) {

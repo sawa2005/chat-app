@@ -44,6 +44,19 @@ export function MessageItem({
               isOwner ? "text-right" : "flex-row-reverse justify-end"
           } text-xs hidden group-hover:flex justify-end items-center gap-2`;
 
+    const msgOld = (msgDate: Date) => {
+        const currentDate = new Date();
+
+        const milliDiff = currentDate.getTime() - msgDate.getTime();
+        const hoursDiff = Math.floor(milliDiff / (1000 * 60 * 60));
+
+        if (hoursDiff >= 24) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
     return (
         <li
             className={`relative group max-w-9/10 ${isOwner ? "ml-auto" : ""} ${
@@ -63,12 +76,26 @@ export function MessageItem({
                     onReply={() => setReplyTo(message.id)}
                 />
                 {!isConsecutive && (
-                    <div className={`flex gap-1 items-center ${!isOwner && "flex-row-reverse"}`}>
-                        {isOwner ? "You" : message.sender?.username}
+                    <div className={`flex gap-2 items-center ${!isOwner && "flex-row-reverse"}`}>
+                        <div>
+                            {msgOld(message.created_at)
+                                ? new Date(message.created_at).toISOString().slice(0, 10)
+                                : message.created_at.toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                  })}
+                        </div>
+                        <div>{isOwner ? "You" : message.sender?.username}</div>
                         <Avatar size={15} avatarUrl={message.sender?.avatar} username={message.sender?.username} />
                     </div>
                 )}
-                {isConsecutive && message.created_at.toLocaleTimeString()}
+                {isConsecutive &&
+                    (msgOld(message.created_at)
+                        ? new Date(message.created_at).toISOString().slice(0, 10)
+                        : message.created_at.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                          }))}
             </div>
 
             <MessageBubble
