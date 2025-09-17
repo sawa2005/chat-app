@@ -17,7 +17,7 @@ type SendMessageFormProps = {
     currentProfileId: bigint;
     currentUsername: string;
     currentUserAvatar: string | null;
-    sendMessage: typeof sendMessage; // pass server action from parent
+    sendMessage: typeof sendMessage;
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     onNewMessage: (message: {
@@ -39,13 +39,14 @@ type SendMessageFormProps = {
             id: bigint;
             content: string | null;
             image_url: string | null;
-            sender: { id: bigint; username: string; avatar: string | null } | null;
+            sender: {
+                id: bigint;
+                username: string;
+                avatar: string | null;
+            } | null;
         } | null;
     }) => void;
 };
-
-// TODO: add emoji picker
-// TODO: add gif picker
 
 export default function SendMessageForm({
     conversationId,
@@ -64,13 +65,14 @@ export default function SendMessageForm({
     const [uploading, setUploading] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
-
     let typingTimeout: NodeJS.Timeout | null = null;
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setContent(e.target.value);
+    function handleInputChange(value: string | React.ChangeEvent<HTMLInputElement>) {
+        const newValue = typeof value === "string" ? value : value.target.value;
+        setContent(newValue);
 
         if (!typingTimeout) {
             channel.current.send({
@@ -78,25 +80,40 @@ export default function SendMessageForm({
                 event: "user_typing",
                 payload: { username: currentUsername },
             });
-
-            console.log("Typing broadcast sent:", channel);
-
             typingTimeout = setTimeout(() => {
                 typingTimeout = null;
             }, 2000);
         }
-    };
+    }
 
-    const handleIconClick = () => {
+    // === Emoji handler with caret control ===
+    function handleEmojiSelect(emoji: string) {
+        const inputEl = inputRef.current;
+        if (!inputEl) return;
+
+        const start = inputEl.selectionStart ?? content.length;
+        const end = inputEl.selectionEnd ?? content.length;
+        const newContent = content.slice(0, start) + emoji + content.slice(end);
+
+        handleInputChange(newContent);
+
+        // Move cursor right after inserted emoji
+        requestAnimationFrame(() => {
+            const cursorPos = start + emoji.length;
+            inputEl.selectionStart = inputEl.selectionEnd = cursorPos;
+            inputEl.focus({ preventScroll: true });
+        });
+    }
+
+    function handleIconClick() {
         fileInputRef.current?.click();
-    };
+    }
 
     async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-        const uploadedfile = e.target.files?.[0];
-        setFile(uploadedfile ?? null);
-        if (!uploadedfile) return;
-
-        setImgPreview(URL.createObjectURL(uploadedfile));
+        const uploadedFile = e.target.files?.[0];
+        setFile(uploadedFile ?? null);
+        if (!uploadedFile) return;
+        setImgPreview(URL.createObjectURL(uploadedFile));
     }
 
     async function handleSubmit(e: FormEvent) {
@@ -107,12 +124,10 @@ export default function SendMessageForm({
 
         if (file) {
             setUploading(true);
-
             const fileExt = file.name.split(".").pop();
             const fileName = `${currentProfileId}-${Date.now()}.${fileExt}`;
             const filePath = `messages/${fileName}`;
 
-            // Upload file
             const { error } = await supabase.storage.from("chat-uploads").upload(filePath, file);
 
             if (error) {
@@ -121,11 +136,8 @@ export default function SendMessageForm({
                 return;
             }
 
-            // Get public URL (permanent since bucket is public)
             const { data: publicData } = supabase.storage.from("chat-uploads").getPublicUrl(filePath);
-
             uploadedImageUrl = publicData.publicUrl;
-
             setUploading(false);
         }
 
@@ -171,8 +183,6 @@ export default function SendMessageForm({
                 : null,
         });
 
-        console.log("Broadcast sent:", newMessage);
-
         await broadcastMessage(
             conversationId,
             {
@@ -188,11 +198,7 @@ export default function SendMessageForm({
         setImgPreview(null);
         setFile(null);
         setReplyTo(null);
-
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ""; // reset file input
-        }
-
+        if (fileInputRef.current) fileInputRef.current.value = "";
         setIsPending(false);
     }
 
@@ -207,8 +213,7 @@ export default function SendMessageForm({
         <>
             {replyTo && (
                 <div className="flex items-center font-mono text-xs text-muted-foreground">
-                    {/* TODO: show message you are replying to instead of just message id. */}/ replying to message #
-                    {replyTo.toString()}
+                    replying to message #{replyTo.toString()}
                     <button
                         type="button"
                         onClick={() => setReplyTo(null)}
@@ -218,10 +223,12 @@ export default function SendMessageForm({
                     </button>
                 </div>
             )}
+
             <form onSubmit={handleSubmit}>
                 <div className="flex gap-1">
                     <div className="relative flex gap-1 w-full">
                         <Input
+                            ref={inputRef}
                             name="content"
                             type="text"
                             placeholder="Type your message..."
@@ -237,12 +244,33 @@ export default function SendMessageForm({
                             onChange={handleFileChange}
                             className="hidden"
                         />
+
+                        {/* Emoji picker that stays open if Shift is held */}
                         <EmojiComponent
                             onEmojiSelect={(emoji) => {
-                                setContent((prev) => prev + emoji);
+                                const inputEl = inputRef.current;
+                                if (!inputEl) return;
+
+                                const start = inputEl.selectionStart ?? content.length;
+                                const end = inputEl.selectionEnd ?? content.length;
+                                const newContent = content.slice(0, start) + emoji + content.slice(end);
+
+                                // Update input value immediately
+                                handleInputChange(newContent);
+
+                                // Conditionally focus input AFTER emoji insertion if Shift is NOT held
+                                const shiftHeld = window.event instanceof MouseEvent && window.event.shiftKey;
+                                if (!shiftHeld) {
+                                    requestAnimationFrame(() => {
+                                        const cursorPos = start + emoji.length;
+                                        inputEl.selectionStart = inputEl.selectionEnd = cursorPos;
+                                        inputEl.focus({ preventScroll: true });
+                                    });
+                                }
                             }}
+                            closeOnSelect={true}
                         />
-                        {/* Icon inside input */}
+
                         <button
                             type="button"
                             onClick={imgPreview ? handleUploadCancel : handleIconClick}
@@ -251,9 +279,11 @@ export default function SendMessageForm({
                             {imgPreview ? <X size={20} /> : <ImageIcon size={20} />}
                         </button>
                     </div>
+
                     {imgPreview && (
                         <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />
                     )}
+
                     <Button type="submit" className="cursor-pointer py-6" disabled={isPending || uploading}>
                         {isPending ? "Sending..." : uploading ? "Uploading..." : "Send"}
                     </Button>
