@@ -4,6 +4,7 @@ import { createClient } from "@/lib/client";
 import { useState, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import EmojiComponent from "../emoji-component";
 import type { sendMessage } from "@/app/conversation/create/actions";
 import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
@@ -224,7 +225,7 @@ export default function SendMessageForm({
                             name="content"
                             type="text"
                             placeholder="Type your message..."
-                            className="px-4 py-6 pr-10"
+                            className="px-4 py-6 pr-18"
                             disabled={isPending}
                             value={content}
                             onChange={handleInputChange}
@@ -235,6 +236,11 @@ export default function SendMessageForm({
                             ref={fileInputRef}
                             onChange={handleFileChange}
                             className="hidden"
+                        />
+                        <EmojiComponent
+                            onEmojiSelect={(emoji) => {
+                                setContent((prev) => prev + emoji);
+                            }}
                         />
                         {/* Icon inside input */}
                         <button

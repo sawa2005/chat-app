@@ -35,6 +35,15 @@ export type Message = {
     } | null;
 };
 
+// Returns true if the string contains only emojis (optionally with whitespace)
+export function isEmojiOnly(message: string) {
+    // Matches most Unicode emoji characters
+    const emojiRegex = /\p{Extended_Pictographic}/gu;
+    const stripped = message.replace(/\s/g, ""); // remove spaces
+    const matched = stripped.match(emojiRegex);
+    return matched !== null && matched.join("") === stripped;
+}
+
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
     if (prev.type === "info" || current.type === "info") return false;

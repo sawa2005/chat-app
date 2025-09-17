@@ -1,4 +1,4 @@
-import { Message } from "./messages";
+import { isEmojiOnly, Message } from "./messages";
 import { Dispatch, SetStateAction } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
@@ -24,6 +24,8 @@ export function MessageBubble({
     scrollToBottom: (smooth?: boolean) => void;
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
 }) {
+    const emojiOnly = isEmojiOnly(message.content);
+
     if (isEditing) {
         return (
             <div
@@ -70,9 +72,11 @@ export function MessageBubble({
             )}
 
             <div
-                className={`group relative ${
-                    !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
-                } rounded-xl mb-4 shadow-lg/8 w-fit break-words max-w-[80%]`}
+                className={`group relative rounded-xl mb-4 w-fit break-words max-w-[80%] 
+                ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
+                ${emojiOnly && (isOwner ? "mr-[-1.5rem]" : "ml-[-1.5rem]")} 
+                ${!emojiOnly && !isOwner && "bg-accent"} 
+                ${!isOwner ? "rounded-tl-none" : "rounded-tr-none ml-auto"}`}
             >
                 {message.content && <p className="py-2 px-4">{message.content}</p>}
                 {message.image_url && (
