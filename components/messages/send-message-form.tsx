@@ -9,6 +9,7 @@ import type { sendMessage } from "@/app/conversation/create/actions";
 import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
 import { Image as ImageIcon, X } from "lucide-react";
+import GifComponent from "../gif-component";
 
 const supabase = createClient();
 
@@ -86,25 +87,6 @@ export default function SendMessageForm({
         }
     }
 
-    // === Emoji handler with caret control ===
-    function handleEmojiSelect(emoji: string) {
-        const inputEl = inputRef.current;
-        if (!inputEl) return;
-
-        const start = inputEl.selectionStart ?? content.length;
-        const end = inputEl.selectionEnd ?? content.length;
-        const newContent = content.slice(0, start) + emoji + content.slice(end);
-
-        handleInputChange(newContent);
-
-        // Move cursor right after inserted emoji
-        requestAnimationFrame(() => {
-            const cursorPos = start + emoji.length;
-            inputEl.selectionStart = inputEl.selectionEnd = cursorPos;
-            inputEl.focus({ preventScroll: true });
-        });
-    }
-
     function handleIconClick() {
         fileInputRef.current?.click();
     }
@@ -118,10 +100,16 @@ export default function SendMessageForm({
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
-        if (!content.trim() && !file) return;
+        if (!content.trim() && !file && !imgPreview) return;
 
         let uploadedImageUrl: string | null = null;
 
+        // If a gif is chosen just set the URL
+        if (imgPreview && !file) {
+            uploadedImageUrl = imgPreview;
+        }
+
+        // Upload file if an image is uploaded
         if (file) {
             setUploading(true);
             const fileExt = file.name.split(".").pop();
@@ -232,7 +220,7 @@ export default function SendMessageForm({
                             name="content"
                             type="text"
                             placeholder="Type your message..."
-                            className="px-4 py-6 pr-18"
+                            className="px-4 py-6 pr-18 w-full"
                             disabled={isPending}
                             value={content}
                             onChange={handleInputChange}
@@ -245,43 +233,57 @@ export default function SendMessageForm({
                             className="hidden"
                         />
 
-                        {/* Emoji picker that stays open if Shift is held */}
-                        <EmojiComponent
-                            onEmojiSelect={(emoji) => {
-                                const inputEl = inputRef.current;
-                                if (!inputEl) return;
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="flex gap-3 items-center">
+                                {/* Emoji picker that stays open if Shift is held */}
+                                <EmojiComponent
+                                    onEmojiSelect={(emoji) => {
+                                        const inputEl = inputRef.current;
+                                        if (!inputEl) return;
 
-                                const start = inputEl.selectionStart ?? content.length;
-                                const end = inputEl.selectionEnd ?? content.length;
-                                const newContent = content.slice(0, start) + emoji + content.slice(end);
+                                        const start = inputEl.selectionStart ?? content.length;
+                                        const end = inputEl.selectionEnd ?? content.length;
+                                        const newContent = content.slice(0, start) + emoji + content.slice(end);
 
-                                // Update input value immediately
-                                handleInputChange(newContent);
+                                        // Update input value immediately
+                                        handleInputChange(newContent);
 
-                                // Conditionally focus input AFTER emoji insertion if Shift is NOT held
-                                const shiftHeld = window.event instanceof MouseEvent && window.event.shiftKey;
-                                if (!shiftHeld) {
-                                    requestAnimationFrame(() => {
-                                        const cursorPos = start + emoji.length;
-                                        inputEl.selectionStart = inputEl.selectionEnd = cursorPos;
-                                        inputEl.focus({ preventScroll: true });
-                                    });
-                                }
-                            }}
-                            closeOnSelect={true}
-                        />
+                                        // Conditionally focus input AFTER emoji insertion if Shift is NOT held
+                                        const shiftHeld = window.event instanceof MouseEvent && window.event.shiftKey;
+                                        if (!shiftHeld) {
+                                            requestAnimationFrame(() => {
+                                                const cursorPos = start + emoji.length;
+                                                inputEl.selectionStart = inputEl.selectionEnd = cursorPos;
+                                                inputEl.focus({ preventScroll: true });
+                                            });
+                                        }
+                                    }}
+                                    closeOnSelect={true}
+                                />
 
-                        <button
-                            type="button"
-                            onClick={imgPreview ? handleUploadCancel : handleIconClick}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer"
-                        >
-                            {imgPreview ? <X size={20} /> : <ImageIcon size={20} />}
-                        </button>
+                                <GifComponent imgPreview={imgPreview} setImgPreview={setImgPreview} />
+
+                                <button
+                                    type="button"
+                                    onClick={imgPreview ? handleUploadCancel : handleIconClick}
+                                    className="text-muted-foreground hover:text-primary cursor-pointer"
+                                >
+                                    {imgPreview ? <X size={20} /> : <ImageIcon size={20} />}
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     {imgPreview && (
-                        <Image width={50} height={30} src={imgPreview} alt="Preview" className="object-cover rounded" />
+                        <div className="max-w-[50px] max-h-[50px] overflow-hidden flex items-center rounded-md">
+                            <Image
+                                width={50}
+                                height={30}
+                                src={imgPreview}
+                                alt="Preview"
+                                className="object-cover w-full h-full"
+                            />
+                        </div>
                     )}
 
                     <Button type="submit" className="cursor-pointer py-6" disabled={isPending || uploading}>

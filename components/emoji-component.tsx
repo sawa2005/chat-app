@@ -27,15 +27,15 @@ export default function EmojiComponent({ onEmojiSelect, closeOnSelect = true }: 
     return (
         <Popover onOpenChange={setIsOpen} open={isOpen}>
             <PopoverTrigger asChild>
-                <button className="absolute right-11 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary cursor-pointer">
+                <button className="text-muted-foreground hover:text-primary cursor-pointer">
                     <Smile size={20} />
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-fit p-0 will-change-transform will-change-opacity" forceMount>
-                <EmojiPicker className="h-[342px] font-sans" onEmojiSelect={handleSelect}>
+            <PopoverContent className="w-fit p-0 m-5 will-change-transform will-change-opacity rounded-lg!" forceMount>
+                <EmojiPicker className="h-[342px] font-sans rounded-lg!" onEmojiSelect={handleSelect}>
                     <EmojiPickerSearch />
                     <EmojiPickerContent />
-                    <EmojiPickerFooter />
+                    <EmojiPickerFooter className="font-mono" />
                 </EmojiPicker>
             </PopoverContent>
         </Popover>
