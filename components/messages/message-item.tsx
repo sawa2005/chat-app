@@ -75,6 +75,7 @@ export function MessageItem({
                     onCancelEdit={() => setEditingMessageId(null)}
                     onReply={() => setReplyTo(message.id)}
                 />
+                {message.edited_at && "(edited)"}
                 {!isConsecutive && (
                     <div className={`flex gap-2 items-center ${!isOwner && "flex-row-reverse"}`}>
                         <div>

@@ -9,6 +9,7 @@ import TypingIndicator from "../typing-indicator";
 import { loadInitMessages } from "@/app/conversation/create/actions";
 import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
+import emojiRegex from "emoji-regex";
 
 const supabase = createClient();
 
@@ -35,12 +36,11 @@ export type Message = {
     } | null;
 };
 
-// Returns true if the string contains only emojis (optionally with whitespace)
+// Returns true if the string contains only emojis
 export function isEmojiOnly(message: string) {
-    // Matches most Unicode emoji characters
-    const emojiRegex = /\p{Extended_Pictographic}/gu;
-    const stripped = message.replace(/\s/g, ""); // remove spaces
-    const matched = stripped.match(emojiRegex);
+    const regex = emojiRegex();
+    const stripped = message.replace(/\s/g, "");
+    const matched = stripped.match(regex);
     return matched !== null && matched.join("") === stripped;
 }
 

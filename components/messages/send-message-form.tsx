@@ -49,6 +49,8 @@ type SendMessageFormProps = {
     }) => void;
 };
 
+// TODO: test uploading of files that aren't images (gifs, mp4, mp3 etc.)
+
 export default function SendMessageForm({
     conversationId,
     currentProfileId,
