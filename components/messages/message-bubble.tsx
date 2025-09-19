@@ -1,7 +1,40 @@
 import { isEmojiOnly, Message } from "./messages";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, ReactNode } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
+import emojiRegex from "emoji-regex";
+
+export function renderMessageContent(text: string) {
+    const regex = emojiRegex();
+    const result: ReactNode[] = [];
+    let lastIndex = 0;
+
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+        // Push text before the emoji
+        if (match.index > lastIndex) {
+            result.push(<span key={lastIndex}>{text.slice(lastIndex, match.index)}</span>);
+        }
+
+        const emoji = match[0];
+
+        // Wrap the emoji in a span with emoji-specific font
+        result.push(
+            <span key={match.index} className="emoji">
+                {emoji}
+            </span>
+        );
+
+        lastIndex = regex.lastIndex;
+    }
+
+    // Push remaining text
+    if (lastIndex < text.length) {
+        result.push(<span key={lastIndex}>{text.slice(lastIndex)}</span>);
+    }
+
+    return result;
+}
 
 export function MessageBubble({
     message,
@@ -78,7 +111,9 @@ export function MessageBubble({
                 ${!emojiOnly && !isOwner && "bg-accent"} 
                 ${!isOwner ? "rounded-tl-none" : "rounded-tr-none ml-auto"}`}
             >
-                {message.content && <p className="py-2 px-4">{message.content}</p>}
+                {message.content && (
+                    <p className="py-2 px-4 message-content">{renderMessageContent(message.content)}</p>
+                )}
                 {message.image_url && (
                     <ChatImage
                         src={message.image_url}

@@ -140,3 +140,11 @@
 .GifPickerReact .gpr-category-name, .GifPickerReact.gpr-main .gpr-text-trending-category span {
   font-family: var(--font-geist-mono);
 }
+
+.emoji {
+  font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', 'Android Emoji', 'Twemoji Mozilla', 'EmojiSymbols';
+}
+
+.emoji-picker button[data-slot="emoji-picker-emoji"] {
+  font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', 'Android Emoji', 'Twemoji Mozilla', 'EmojiSymbols' !important;
+}

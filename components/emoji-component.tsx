@@ -32,7 +32,7 @@ export default function EmojiComponent({ onEmojiSelect, closeOnSelect = true }: 
                 </button>
             </PopoverTrigger>
             <PopoverContent className="w-fit p-0 m-5 will-change-transform will-change-opacity rounded-lg!" forceMount>
-                <EmojiPicker className="h-[342px] font-sans rounded-lg!" onEmojiSelect={handleSelect}>
+                <EmojiPicker className="emoji-picker h-[342px] font-sans rounded-lg!" onEmojiSelect={handleSelect}>
                     <EmojiPickerSearch />
                     <EmojiPickerContent />
                     <EmojiPickerFooter className="font-mono" />
