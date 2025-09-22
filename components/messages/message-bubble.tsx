@@ -4,6 +4,25 @@ import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
 
+function linkifyMessage(text: string) {
+    // Regex to match URLs (simple version)
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, idx) => {
+        if (urlRegex.test(part)) {
+            return (
+                <a key={idx} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                    {part}
+                </a>
+            );
+        } else {
+            return part;
+        }
+    });
+}
+
 export function renderMessageContent(text: string) {
     const regex = emojiRegex();
     const result: ReactNode[] = [];
@@ -30,7 +49,7 @@ export function renderMessageContent(text: string) {
 
     // Push remaining text
     if (lastIndex < text.length) {
-        result.push(<span key={lastIndex}>{text.slice(lastIndex)}</span>);
+        result.push(<span key={lastIndex}>{linkifyMessage(text.slice(lastIndex))}</span>);
     }
 
     return result;
