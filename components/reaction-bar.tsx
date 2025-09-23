@@ -12,14 +12,15 @@ export function ReactionBar({
     currentProfileId: bigint;
 }) {
     function aggregateReactions(reactions: Reaction[]) {
-        const reactionMap: { [emoji: string]: { count: number; reacted: boolean } } = {};
+        const reactionMap: { [emoji: string]: { count: number; reacted: boolean; profile_ids: bigint[] } } = {};
         reactions.forEach((r) => {
             console.log("reaction:", r);
 
-            if (!reactionMap[r.emoji]) reactionMap[r.emoji] = { count: 0, reacted: false };
+            if (!reactionMap[r.emoji]) reactionMap[r.emoji] = { count: 0, reacted: false, profile_ids: [] };
 
-            reactionMap[r.emoji] = reactionMap[r.emoji] = { count: reactionMap[r.emoji].count + 1, reacted: true };
-            if (r.profile_id !== currentProfileId) reactionMap[r.emoji].reacted = false;
+            reactionMap[r.emoji].count += 1;
+            reactionMap[r.emoji].profile_ids.push(r.profile_id);
+            if (r.profile_id === currentProfileId) reactionMap[r.emoji].reacted = true;
         });
 
         const result = Object.entries(reactionMap).map(([emoji, data]) => ({ emoji, ...data }));
