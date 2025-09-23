@@ -20,6 +20,7 @@ export function MessageItem({
     handleDelete,
     setReplyTo,
     scrollToBottom,
+    conversationId,
 }: {
     message: Message;
     prevMessage: Message;
@@ -30,6 +31,7 @@ export function MessageItem({
     editContent: string;
     setEditContent: Dispatch<SetStateAction<string>>;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
+    conversationId: string;
     handleDelete: (messageId: bigint) => void;
     scrollToBottom: (smooth?: boolean) => void;
 }) {
@@ -75,7 +77,9 @@ export function MessageItem({
                     }}
                     onCancelEdit={() => setEditingMessageId(null)}
                     onReply={() => setReplyTo(message.id)}
-                    onReactionSelect={async (emoji: string) => await addReaction(message.id, currentProfileId, emoji)}
+                    onReactionSelect={async (emoji: string) =>
+                        await addReaction(conversationId, message.id, currentProfileId, emoji)
+                    }
                 />
                 {message.edited_at && "(edited)"}
                 {!isConsecutive && (
@@ -126,7 +130,7 @@ export function MessageItem({
                         );
                         return hasReacted(emoji)
                             ? userReaction && removeReaction(userReaction.id)
-                            : addReaction(message.id, currentProfileId, emoji);
+                            : addReaction(conversationId, message.id, currentProfileId, emoji);
                     }}
                     isOwner={isOwner}
                     currentProfileId={currentProfileId}

@@ -12,6 +12,7 @@ interface ConversationPageProps {
 // TODO: add reactions.
 // TODO: add read messages and notifications.
 // TODO: maybe add embeds/previews for links.
+// TODO: if all users leave a conversation, delete it and its messages (maybe display a warning message for the last user).
 
 export default async function ConversationPage({ params }: ConversationPageProps) {
     const { id } = await params;

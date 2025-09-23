@@ -46,6 +46,15 @@ type SendMessageFormProps = {
                 avatar: string | null;
             } | null;
         } | null;
+        message_reactions:
+            | {
+                  id: bigint;
+                  emoji: string;
+                  created_at: Date;
+                  profile_id: bigint;
+                  message_id: bigint;
+              }[]
+            | null;
     }) => void;
 };
 
@@ -171,6 +180,7 @@ export default function SendMessageForm({
                           : null,
                   }
                 : null,
+            message_reactions: null,
         });
 
         await broadcastMessage(

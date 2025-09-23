@@ -11,6 +11,7 @@ interface MessageListProps {
     setEditContent: Dispatch<SetStateAction<string>>;
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
+    conversationId: string;
     handleDelete: (id: bigint) => void;
     scrollToBottom: (smooth?: boolean) => void;
 }

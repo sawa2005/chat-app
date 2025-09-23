@@ -3,15 +3,19 @@
 import { getCurrentProfileId } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { broadcastMember, broadcastMessage } from "@/lib/broadcast";
+import { broadcastMember, broadcastMessage, broadcastReaction } from "@/lib/broadcast";
 import { createClient } from "@/lib/server";
 
-import { Member } from "@/lib/types";
+import { Member, Reaction } from "@/lib/types";
 
-export async function addReaction(messageId: bigint, profileId: bigint, emoji: string) {
-    return await prisma.message_reactions.create({
+export async function addReaction(conversationId: string, messageId: bigint, profileId: bigint, emoji: string) {
+    const addedReaction = await prisma.message_reactions.create({
         data: { message_id: messageId, profile_id: profileId, emoji },
     });
+
+    broadcastReaction(conversationId, addedReaction);
+
+    return addedReaction;
 }
 
 export async function removeReaction(reactionId: bigint) {

@@ -85,6 +85,15 @@ export default function Messages({
                             image_url: string | null;
                             sender: { id: bigint; username: string; avatar: string } | null;
                         } | null;
+                        message_reactions:
+                            | {
+                                  id: bigint;
+                                  emoji: string;
+                                  created_at: Date;
+                                  profile_id: bigint;
+                                  message_id: bigint;
+                              }[]
+                            | null;
                     }[]
                 ).map((msg) => ({
                     ...msg,
@@ -134,6 +143,7 @@ export default function Messages({
                                   : null,
                           }
                         : null,
+                    message_reactions: payload.message_reactions ?? null,
                 };
 
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
@@ -171,6 +181,27 @@ export default function Messages({
                     setTimeout(() => setTypers((p) => p.filter((n) => n !== name)), 3000);
                     return [...prev, name];
                 });
+            })
+            .on("broadcast", { event: "reaction_added" }, ({ payload }) => {
+                console.log("Reaction added broadcast received:", payload);
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === BigInt(payload.message_id)
+                            ? {
+                                  ...m,
+                                  message_reactions: [
+                                      ...(m.message_reactions ?? []),
+                                      {
+                                          ...payload,
+                                          id: BigInt(payload.id),
+                                          profile_id: BigInt(payload.profile_id),
+                                          message_id: BigInt(payload.message_id),
+                                      },
+                                  ],
+                              }
+                            : m
+                    )
+                );
             })
             .subscribe();
 
@@ -219,6 +250,7 @@ export default function Messages({
                         handleDelete={handleDelete}
                         setReplyTo={setReplyTo}
                         scrollToBottom={scrollToBottom}
+                        conversationId={conversationId}
                     />
                 </div>
             )}

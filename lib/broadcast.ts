@@ -1,5 +1,5 @@
 // lib/broadcast.ts
-import { Member } from "@/lib/types";
+import { Member, Reaction } from "@/lib/types";
 import { createClient } from "@/lib/client";
 
 const supabase = createClient();
@@ -82,6 +82,21 @@ export async function broadcastMessage(
     return supabase.channel(`conversation-${conversationId}`).send({
         type: "broadcast",
         event: "message",
+        payload,
+    });
+}
+
+export async function broadcastReaction(conversationId: string, reaction: Reaction) {
+    const payload = {
+        ...reaction,
+        id: reaction.id.toString(), // normalize bigint/number → string
+        profile_id: reaction.profile_id.toString(),
+        message_id: reaction.message_id.toString(),
+    };
+
+    return supabase.channel(`conversation-${conversationId}`).send({
+        type: "broadcast",
+        event: "reaction_added",
         payload,
     });
 }
