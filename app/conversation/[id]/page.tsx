@@ -11,6 +11,7 @@ interface ConversationPageProps {
 
 // TODO: add reactions.
 // TODO: add read messages and notifications.
+// TODO: maybe add embeds/previews for links.
 
 export default async function ConversationPage({ params }: ConversationPageProps) {
     const { id } = await params;

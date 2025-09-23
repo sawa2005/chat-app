@@ -1,4 +1,4 @@
-import { Message } from "./messages";
+import { Message } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
 import { isConsecutiveMessage } from "./messages";
 import { MessageActions } from "./message-buttons";

@@ -1,8 +1,9 @@
-import { isEmojiOnly, Message } from "./messages";
+import { isEmojiOnly } from "./messages";
 import { Dispatch, SetStateAction, ReactNode } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
+import type { Message } from "@/lib/types";
 
 function linkifyMessage(text: string) {
     // Regex to match URLs (simple version)

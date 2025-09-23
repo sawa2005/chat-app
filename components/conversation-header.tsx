@@ -21,12 +21,7 @@ import { Prisma as PrismaClient } from "@prisma/client";
 import { getConversationMembers } from "@/app/conversation/create/actions";
 import { createClient } from "@/lib/client";
 
-// TODO: put types in seperate /types folder.
-export type Member = {
-    id: bigint;
-    username: string;
-    avatar: string | null;
-};
+import type { Member } from "@/lib/types";
 
 type ConversationWithRelations = PrismaClient.conversationsGetPayload<{
     include: {

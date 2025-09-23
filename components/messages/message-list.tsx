@@ -1,4 +1,4 @@
-import { Message } from "./messages";
+import { Message } from "@/lib/types";
 import { MessageItem } from "./message-item";
 import { Dispatch, SetStateAction } from "react";
 

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { broadcastMember, broadcastMessage } from "@/lib/broadcast";
 import { createClient } from "@/lib/server";
 
-import { Member } from "@/components/conversation-header";
+import { Member } from "@/lib/types";
 
 export async function loadInitMessages(conversationId: string) {
     try {

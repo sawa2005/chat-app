@@ -1,5 +1,5 @@
 // lib/broadcast.ts
-import { Member } from "@/components/conversation-header";
+import { Member } from "@/lib/types";
 import { createClient } from "@/lib/client";
 
 const supabase = createClient();
