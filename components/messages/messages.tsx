@@ -203,6 +203,21 @@ export default function Messages({
                     )
                 );
             })
+            .on("broadcast", { event: "reaction_removed" }, ({ payload }) => {
+                console.log("Reaction removed broadcast received:", payload);
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === BigInt(payload.message_id)
+                            ? {
+                                  ...m,
+                                  message_reactions: (m.message_reactions ?? []).filter(
+                                      (r) => r.id !== BigInt(payload.id)
+                                  ),
+                              }
+                            : m
+                    )
+                );
+            })
             .subscribe();
 
         return () => {

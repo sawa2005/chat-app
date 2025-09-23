@@ -13,15 +13,21 @@ export async function addReaction(conversationId: string, messageId: bigint, pro
         data: { message_id: messageId, profile_id: profileId, emoji },
     });
 
-    broadcastReaction(conversationId, addedReaction);
+    broadcastReaction(conversationId, addedReaction, "added");
 
     return addedReaction;
 }
 
-export async function removeReaction(reactionId: bigint) {
-    return await prisma.message_reactions.deleteMany({
-        where: { id: reactionId },
+export async function removeReaction(conversationId: string, messageId: bigint, profileId: bigint, emoji: string) {
+    const removedReaction = await prisma.message_reactions.delete({
+        where: { message_id_profile_id_emoji: { message_id: messageId, profile_id: profileId, emoji } },
     });
+
+    console.log("Removed reaction:", removedReaction);
+
+    broadcastReaction(conversationId, removedReaction, "removed");
+
+    return removedReaction;
 }
 
 export async function loadInitMessages(conversationId: string) {

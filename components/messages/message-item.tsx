@@ -129,7 +129,7 @@ export function MessageItem({
                             (r) => r.emoji === emoji && r.profile_id === currentProfileId
                         );
                         return hasReacted(emoji)
-                            ? userReaction && removeReaction(userReaction.id)
+                            ? userReaction && removeReaction(conversationId, message.id, currentProfileId, emoji)
                             : addReaction(conversationId, message.id, currentProfileId, emoji);
                     }}
                     isOwner={isOwner}

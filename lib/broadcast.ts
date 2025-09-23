@@ -86,7 +86,7 @@ export async function broadcastMessage(
     });
 }
 
-export async function broadcastReaction(conversationId: string, reaction: Reaction) {
+export async function broadcastReaction(conversationId: string, reaction: Reaction, action: "added" | "removed") {
     const payload = {
         ...reaction,
         id: reaction.id.toString(), // normalize bigint/number → string
@@ -96,7 +96,7 @@ export async function broadcastReaction(conversationId: string, reaction: Reacti
 
     return supabase.channel(`conversation-${conversationId}`).send({
         type: "broadcast",
-        event: "reaction_added",
+        event: action === "added" ? "reaction_added" : "reaction_removed",
         payload,
     });
 }

@@ -11,6 +11,8 @@ export function ReactionBar({
     isOwner: boolean;
     currentProfileId: bigint;
 }) {
+    // TODO: show profiles who reacted on hover in a shadcn/ui tooltip
+
     function aggregateReactions(reactions: Reaction[]) {
         const reactionMap: { [emoji: string]: { count: number; reacted: boolean; profile_ids: bigint[] } } = {};
         reactions.forEach((r) => {
