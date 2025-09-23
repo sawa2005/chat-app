@@ -125,7 +125,7 @@ export function MessageBubble({
             )}
 
             <div
-                className={`group relative rounded-xl mb-4 w-fit break-words max-w-[80%] 
+                className={`group relative rounded-xl mb-2 w-fit break-words max-w-[80%] 
                 ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
                 ${emojiOnly && (isOwner ? "mr-[-1.5rem]" : "ml-[-1.5rem]")} 
                 ${!emojiOnly && !isOwner && "bg-accent"} 

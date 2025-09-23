@@ -1,4 +1,5 @@
 import { X, Trash, Pen, Reply } from "lucide-react";
+import { ReactionButton } from "../reaction-button";
 
 export function MessageActions({
     isOwner,
@@ -7,6 +8,7 @@ export function MessageActions({
     onEdit,
     onCancelEdit,
     onReply,
+    onReactionSelect,
 }: {
     isOwner: boolean;
     isEditing: boolean;
@@ -14,6 +16,7 @@ export function MessageActions({
     onEdit: () => void;
     onCancelEdit: () => void;
     onReply: () => void;
+    onReactionSelect: (emoji: string) => void;
 }) {
     if (isEditing) {
         return (
@@ -47,6 +50,7 @@ export function MessageActions({
                     </button>
                 </>
             )}
+            <ReactionButton onEmojiSelect={onReactionSelect} />
             <button
                 onClick={onReply}
                 className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary cursor-pointer"

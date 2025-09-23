@@ -3,9 +3,10 @@ import { Dispatch, SetStateAction } from "react";
 import { isConsecutiveMessage } from "./messages";
 import { MessageActions } from "./message-buttons";
 import { MessageBubble } from "./message-bubble";
-import { editMessage } from "@/app/conversation/create/actions";
+import { editMessage, addReaction, removeReaction } from "@/app/conversation/create/actions";
 import Avatar from "../avatar";
 import { getAvatarUrlById } from "@/app/login/actions";
+import { ReactionBar } from "../reaction-bar";
 
 export function MessageItem({
     message,
@@ -42,7 +43,7 @@ export function MessageItem({
         ? `${isOwner ? "text-right" : "flex-row-reverse"} justify-end text-xs mb-1 flex items-center gap-2`
         : `${
               isOwner ? "text-right" : "flex-row-reverse justify-end"
-          } text-xs hidden group-hover:flex justify-end items-center gap-2`;
+          } mt-5 mb-1 text-xs hidden group-hover:flex justify-end items-center gap-2`;
 
     const msgOld = (msgDate: Date) => {
         const currentDate = new Date();
@@ -57,12 +58,12 @@ export function MessageItem({
         }
     };
 
+    const hasReacted = (emoji: string) => {
+        return message.message_reactions?.some((r) => r.emoji === emoji && r.profile_id === currentProfileId);
+    };
+
     return (
-        <li
-            className={`relative group max-w-9/10 ${isOwner ? "ml-auto" : ""} ${
-                isConsecutive ? " mt-[-10px]" : " mt-5"
-            }`}
-        >
+        <li className={`relative group max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " my-5"}`}>
             <div className={headerClasses}>
                 <MessageActions
                     isOwner={message.sender?.id === currentProfileId}
@@ -74,6 +75,7 @@ export function MessageItem({
                     }}
                     onCancelEdit={() => setEditingMessageId(null)}
                     onReply={() => setReplyTo(message.id)}
+                    onReactionSelect={async (emoji: string) => await addReaction(message.id, currentProfileId, emoji)}
                 />
                 {message.edited_at && "(edited)"}
                 {!isConsecutive && (
@@ -114,6 +116,22 @@ export function MessageItem({
                 scrollToBottom={scrollToBottom}
                 setEditingMessageId={setEditingMessageId}
             />
+
+            {message.message_reactions && message.message_reactions.length > 0 && (
+                <ReactionBar
+                    reactionData={message.message_reactions}
+                    onToggle={(emoji) => {
+                        const userReaction = message.message_reactions?.find(
+                            (r) => r.emoji === emoji && r.profile_id === currentProfileId
+                        );
+                        return hasReacted(emoji)
+                            ? userReaction && removeReaction(userReaction.id)
+                            : addReaction(message.id, currentProfileId, emoji);
+                    }}
+                    isOwner={isOwner}
+                    currentProfileId={currentProfileId}
+                />
+            )}
         </li>
     );
 }

@@ -8,6 +8,18 @@ import { createClient } from "@/lib/server";
 
 import { Member } from "@/lib/types";
 
+export async function addReaction(messageId: bigint, profileId: bigint, emoji: string) {
+    return await prisma.message_reactions.create({
+        data: { message_id: messageId, profile_id: profileId, emoji },
+    });
+}
+
+export async function removeReaction(reactionId: bigint) {
+    return await prisma.message_reactions.deleteMany({
+        where: { id: reactionId },
+    });
+}
+
 export async function loadInitMessages(conversationId: string) {
     try {
         const prismaMessages = await prisma.messages.findMany({
@@ -31,6 +43,7 @@ export async function loadInitMessages(conversationId: string) {
                         sender: { select: { id: true, username: true } },
                     },
                 },
+                message_reactions: { select: { emoji: true, profile_id: true } },
             },
         });
 

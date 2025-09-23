@@ -1,3 +1,9 @@
+import { Prisma } from "@prisma/client";
+
+export type Reaction = Prisma.message_reactionsGetPayload<{
+    select: { id: true; created_at: true; emoji: true; message_id: true; profile_id: true };
+}>;
+
 export type Message = {
     id: bigint;
     conversation_id: string;
@@ -19,6 +25,15 @@ export type Message = {
         image_url: string | null;
         sender: { id: bigint; username: string; avatar: string | null } | null;
     } | null;
+    message_reactions:
+        | {
+              id: bigint;
+              emoji: string;
+              created_at: Date;
+              profile_id: bigint;
+              message_id: bigint;
+          }[]
+        | null;
 };
 
 export type Member = {
