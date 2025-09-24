@@ -8,7 +8,30 @@ import { createClient } from "@/lib/server";
 
 import { Member, Reaction } from "@/lib/types";
 
+export async function getUsernameList(profileIds: bigint[]) {
+    const profiles = await prisma.profiles.findMany({
+        where: { id: { in: profileIds } },
+        select: { id: true, username: true },
+    });
+
+    return Object.fromEntries(profiles.map((p) => [p.id.toString(), p.username]));
+}
+
 export async function addReaction(conversationId: string, messageId: bigint, profileId: bigint, emoji: string) {
+    const existing = await prisma.message_reactions.findUnique({
+        where: {
+            message_id_profile_id_emoji: {
+                message_id: messageId,
+                profile_id: profileId,
+                emoji,
+            },
+        },
+    });
+
+    if (existing) {
+        return existing;
+    }
+
     const addedReaction = await prisma.message_reactions.create({
         data: { message_id: messageId, profile_id: profileId, emoji },
     });
