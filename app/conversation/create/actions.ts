@@ -105,7 +105,6 @@ export async function deleteMessage(messageId: bigint) {
 
     const supabase = await createClient();
 
-    /* TODO: not working, returns data: [] error: null
     if (msg.image_url) {
         const filePath = msg.image_url.replace(/^.*\/storage\/v1\/object\/public\/chat-uploads\//, "");
         console.log("Attempting to delete image path:", filePath);
@@ -113,7 +112,6 @@ export async function deleteMessage(messageId: bigint) {
         const { data, error } = await supabase.storage.from("chat-uploads").remove([filePath]);
         console.log("Delete result:", { data, error });
     }
-    */
 
     const broadcast = await supabase.channel(`conversation-${msg.conversation_id}`).send({
         type: "broadcast",
