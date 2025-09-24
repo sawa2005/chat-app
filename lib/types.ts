@@ -34,6 +34,7 @@ export type Message = {
               message_id: bigint;
           }[]
         | null;
+    message_reads: { profile_id: bigint }[];
 };
 
 export type Member = {

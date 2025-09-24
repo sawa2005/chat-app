@@ -1,6 +1,7 @@
 import { Message } from "@/lib/types";
 import { MessageItem } from "./message-item";
 import { Dispatch, SetStateAction } from "react";
+import React from "react";
 
 interface MessageListProps {
     messages: Message[];
@@ -14,24 +15,38 @@ interface MessageListProps {
     conversationId: string;
     handleDelete: (id: bigint) => void;
     scrollToBottom: (smooth?: boolean) => void;
+    firstUnreadIndex: number | null;
 }
 
-export function MessageList({ messages, ...rest }: MessageListProps) {
+export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageListProps) {
+    const newMessageComponent = (
+        <li className="relative my-4 flex items-center">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="mx-2 text-xs text-gray-500 font-mono">New Messages</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+        </li>
+    );
+
     return (
         <ul className="list-none">
             {messages.map((m, i) => {
                 if (m.type === "info") {
                     return (
-                        <li
-                            key={m.id}
-                            className="text-xs font-mono text-muted-foreground m-auto block w-fit my-10 text-center"
-                        >
-                            {m.content}
-                        </li>
+                        <React.Fragment key={m.id}>
+                            {i === firstUnreadIndex && newMessageComponent}
+                            <li className="text-xs font-mono text-muted-foreground m-auto block w-fit my-10 text-center">
+                                {m.content}
+                            </li>
+                        </React.Fragment>
                     );
                 }
                 if (m.type === "message" && !m.deleted) {
-                    return <MessageItem key={m.id} message={m} prevMessage={messages[i - 1]} {...rest} />;
+                    return (
+                        <React.Fragment key={m.id}>
+                            {i === firstUnreadIndex && newMessageComponent}
+                            <MessageItem message={m} prevMessage={messages[i - 1]} {...rest} />
+                        </React.Fragment>
+                    );
                 }
                 return null;
             })}

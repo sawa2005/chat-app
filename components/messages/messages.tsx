@@ -2,11 +2,10 @@
 
 import { createClient } from "@/lib/client";
 import { useEffect, useState } from "react";
-import { sendMessage, deleteMessage } from "@/app/conversation/create/actions";
+import { sendMessage, deleteMessage, markMessagesAsRead, loadInitMessages } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import TypingIndicator from "../typing-indicator";
-import { loadInitMessages } from "@/app/conversation/create/actions";
 import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
 import emojiRegex from "emoji-regex";
@@ -46,6 +45,7 @@ export default function Messages({
 }) {
     const { containerRef, scrollToBottom } = useChatScroll();
     const [messages, setMessages] = useState<Message[]>([]);
+    const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
@@ -55,14 +55,35 @@ export default function Messages({
     // TODO: if height is too small to show messages, collapse header and members.
     // TODO: consider switching message hover text to on click instead.
 
-    // Scroll to bottom when messages change
+    // TODO: don't scroll for reactions changing, or maybe scroll to the message in question.
     useEffect(() => {
         scrollToBottom();
     }, [messages, scrollToBottom, loading, typers]);
 
     useEffect(() => {
+        if (!conversationId) return;
+
+        const markIfVisible = () => {
+            if (document.visibilityState === "visible") {
+                markMessagesAsRead(conversationId, currentProfileId);
+            }
+        };
+
+        markIfVisible();
+
+        window.addEventListener("visibilitychange", markIfVisible);
+        return () => window.removeEventListener("visibilitychange", markIfVisible);
+    }, [conversationId, currentProfileId]);
+
+    useEffect(() => {
         const getMessages = async () => {
             const messages = await loadInitMessages(conversationId);
+
+            if (messages !== undefined && messages.length > 0) {
+                setFirstUnreadIndex(
+                    messages.findIndex((m) => !m.message_reads.some((r) => r.profile_id === currentProfileId))
+                );
+            }
 
             setMessages(
                 (
@@ -94,6 +115,7 @@ export default function Messages({
                                   message_id: bigint;
                               }[]
                             | null;
+                        message_reads: { profile_id: bigint }[];
                     }[]
                 ).map((msg) => ({
                     ...msg,
@@ -144,6 +166,7 @@ export default function Messages({
                           }
                         : null,
                     message_reactions: payload.message_reactions ?? null,
+                    message_reads: payload.message_reads ?? [],
                 };
 
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
@@ -266,6 +289,7 @@ export default function Messages({
                         setReplyTo={setReplyTo}
                         scrollToBottom={scrollToBottom}
                         conversationId={conversationId}
+                        firstUnreadIndex={firstUnreadIndex}
                     />
                 </div>
             )}

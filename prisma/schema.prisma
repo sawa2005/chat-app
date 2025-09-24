@@ -23,6 +23,7 @@ model messages {
   deleted           Boolean?            @default(false)
   parent_id         BigInt?
   message_reactions message_reactions[]
+  message_reads     message_reads[]
   conversations     conversations       @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_messages_conversation")
   sender            profiles?           @relation(fields: [sender_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_messages_sender")
   messages          messages?           @relation("messagesTomessages", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -40,6 +41,7 @@ model profiles {
   display_name         String?                @default("") @db.VarChar
   conversation_members conversation_members[]
   message_reactions    message_reactions[]
+  message_reads        message_reads[]
   messages             messages[]
 
   @@schema("public")
@@ -78,6 +80,36 @@ model message_reactions {
   profiles   profiles @relation(fields: [profile_id], references: [id], onDelete: Cascade, map: "message_reaction_profile_id_fkey")
 
   @@unique([message_id, profile_id, emoji], map: "message_reaction_unique_per_user")
+  @@schema("public")
+}
+
+model message_reads {
+  id         BigInt   @id @default(autoincrement())
+  message_id BigInt
+  profile_id BigInt
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  messages   messages @relation(fields: [message_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles   profiles @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([message_id, profile_id], map: "message_read_unique")
+  @@index([message_id], map: "idx_message_reads_message_id")
+  @@index([profile_id], map: "idx_message_reads_profile_id")
+  @@schema("public")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model policy_backup {
+  backed_up_at DateTime?              @db.Timestamptz(6)
+  schemaname   Unsupported("name")?
+  tablename    Unsupported("name")?
+  policyname   Unsupported("name")?
+  permissive   String?
+  roles        Unsupported("_name")[]
+  cmd          String?
+  qual         String?
+  with_check   String?
+
+  @@ignore
   @@schema("public")
 }
 

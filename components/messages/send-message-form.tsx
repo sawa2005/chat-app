@@ -55,6 +55,7 @@ type SendMessageFormProps = {
                   message_id: bigint;
               }[]
             | null;
+        message_reads: { profile_id: bigint }[];
     }) => void;
 };
 
@@ -181,6 +182,7 @@ export default function SendMessageForm({
                   }
                 : null,
             message_reactions: null,
+            message_reads: [],
         });
 
         await broadcastMessage(

@@ -8,6 +8,24 @@ import { createClient } from "@/lib/server";
 
 import { Member, Reaction } from "@/lib/types";
 
+export async function markMessagesAsRead(conversationId: string, profileId: bigint) {
+    const unreadMessages = await prisma.messages.findMany({
+        where: {
+            conversation_id: conversationId,
+            NOT: { message_reads: { some: { profile_id: profileId } } },
+            sender_id: { not: profileId },
+        },
+        select: { id: true },
+    });
+
+    if (unreadMessages.length === 0) return;
+
+    await prisma.message_reads.createMany({
+        data: unreadMessages.map((msg) => ({ message_id: msg.id, profile_id: profileId })),
+        skipDuplicates: true,
+    });
+}
+
 export async function getUsernameList(profileIds: bigint[]) {
     const profiles = await prisma.profiles.findMany({
         where: { id: { in: profileIds } },
@@ -77,6 +95,7 @@ export async function loadInitMessages(conversationId: string) {
                     },
                 },
                 message_reactions: { select: { emoji: true, profile_id: true } },
+                message_reads: { select: { profile_id: true } },
             },
         });
 

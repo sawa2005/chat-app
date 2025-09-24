@@ -52,9 +52,19 @@ export default async function ConversationsPage() {
             {conversations.length === 0 && <p className="text-muted-foreground">No conversations yet.</p>}
 
             <ul className="space-y-4 w-100%">
-                {conversations.map((c) => {
+                {conversations.map(async (c) => {
                     const lastMsg = c.messages[0];
                     console.log("lastMsg:", lastMsg);
+
+                    const unreadCount = await prisma.messages.count({
+                        where: {
+                            conversation_id: c.id,
+                            NOT: { message_reads: { some: { profile_id: profile.id } } },
+                            sender_id: { not: profile.id },
+                        },
+                    });
+                    console.log("unreadCount:", unreadCount);
+
                     return (
                         <li key={c.id} className="border rounded-lg p-4 shadow-sm">
                             <Link href={`/conversation/${c.id}`} className="block">
@@ -62,9 +72,15 @@ export default async function ConversationsPage() {
                                     <h3 className="font-normal text-lg">
                                         {c.name ?? c.conversation_members.map((m) => m.profiles?.username).join(", ")}
                                     </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        {c.conversation_members.length} members
-                                    </p>
+                                    {unreadCount > 0 ? (
+                                        <div className="flex items-center bg-red-500 text-white rounded-full px-2 py-0.5 mb-1 text-xs font-semibold">
+                                            {unreadCount}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">
+                                            {c.conversation_members.length} members
+                                        </p>
+                                    )}
                                 </div>
 
                                 {lastMsg && lastMsg.type === "message" && (
