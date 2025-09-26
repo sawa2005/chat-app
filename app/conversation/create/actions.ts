@@ -8,22 +8,75 @@ import { createClient } from "@/lib/server";
 
 import { Member, Reaction } from "@/lib/types";
 
+export async function getFirstUnreadIndex(conversationId: string, profileId: bigint) {
+    // Calculate the index of the first unread message
+    const [indexRow] = await prisma.$queryRaw<{ index: number | null }[]>`
+    WITH ordered AS (
+        SELECT id, sender_id, ROW_NUMBER() OVER (ORDER BY created_at ASC) - 1 AS zero_based_index
+        FROM public.messages
+        WHERE conversation_id = ${conversationId}::uuid
+        ORDER BY created_at ASC
+    )
+    SELECT zero_based_index AS index
+    FROM ordered o
+    WHERE o.sender_id IS DISTINCT FROM ${profileId}
+        AND NOT EXISTS (
+            SELECT 1
+            FROM public.message_reads r
+            WHERE r.message_id = o.id AND r.profile_id = ${profileId}
+        )
+    ORDER BY o.zero_based_index
+    LIMIT 1;
+    `;
+
+    const firstUnreadIndex =
+        indexRow && indexRow.index !== null
+            ? Number(indexRow.index) // convert BigInt to Number
+            : null;
+
+    console.log("First unread index calculated:", firstUnreadIndex);
+
+    return firstUnreadIndex;
+}
+
 export async function markMessagesAsRead(conversationId: string, profileId: bigint) {
+    console.log("markMessageAsRead:", conversationId, profileId);
+
     const unreadMessages = await prisma.messages.findMany({
         where: {
             conversation_id: conversationId,
-            NOT: { message_reads: { some: { profile_id: profileId } } },
-            sender_id: { not: profileId },
+            AND: [
+                {
+                    OR: [
+                        { sender_id: { not: profileId } }, // normal messages
+                        { sender_id: null }, // info messages
+                    ],
+                },
+                {
+                    NOT: {
+                        message_reads: {
+                            some: { profile_id: profileId }, // already read messages
+                        },
+                    },
+                },
+            ],
         },
-        select: { id: true },
+        select: { id: true }, // only need id to mark as read
     });
 
-    if (unreadMessages.length === 0) return;
+    console.log("Unread messages fetched:", unreadMessages.length);
 
-    await prisma.message_reads.createMany({
-        data: unreadMessages.map((msg) => ({ message_id: msg.id, profile_id: profileId })),
-        skipDuplicates: true,
-    });
+    if (unreadMessages.length > 0) {
+        console.log(
+            "Marking messages as read:",
+            unreadMessages.map((m) => m.id.toString())
+        );
+
+        await prisma.message_reads.createMany({
+            data: unreadMessages.map((msg) => ({ message_id: msg.id, profile_id: profileId })),
+            skipDuplicates: true,
+        });
+    }
 }
 
 export async function getUsernameList(profileIds: bigint[]) {

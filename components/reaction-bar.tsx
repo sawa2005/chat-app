@@ -32,7 +32,7 @@ export function ReactionBar({
     isOwner: boolean;
     currentProfileId: bigint;
 }) {
-    // TODO: show profiles who reacted on hover in a shadcn/ui tooltip
+    // TODO: order reactions by count on realtime if possible.
 
     type UsernamesMap = Record<string, string[]>;
 
@@ -42,7 +42,7 @@ export function ReactionBar({
     const reactions = React.useMemo(
         () => aggregateReactions(reactionData, currentProfileId),
         [reactionData, currentProfileId]
-    );
+    ).sort((a, b) => b.count - a.count);
 
     async function handleHover(emoji: string, profileIds: bigint[]) {
         if (usernames[emoji] || loading[emoji]) return;

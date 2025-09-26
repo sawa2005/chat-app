@@ -1,6 +1,6 @@
 import { Message } from "@/lib/types";
 import { MessageItem } from "./message-item";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import React from "react";
 
 interface MessageListProps {
@@ -18,7 +18,17 @@ interface MessageListProps {
     firstUnreadIndex: number | null;
 }
 
+// TODO: fix new message indicator always showing at the first message.
+
 export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageListProps) {
+    useEffect(() => {
+        console.log("First unread index:", firstUnreadIndex);
+    }, [firstUnreadIndex]);
+
+    if (messages.length === 0) {
+        return <div className="text-center text-sm text-gray-500 my-10">No messages yet. Start the conversation!</div>;
+    }
+
     const newMessageComponent = (
         <li className="relative my-4 flex items-center">
             <div className="flex-grow border-t border-gray-300"></div>

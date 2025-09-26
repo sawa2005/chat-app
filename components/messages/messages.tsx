@@ -2,7 +2,13 @@
 
 import { createClient } from "@/lib/client";
 import { useEffect, useState } from "react";
-import { sendMessage, deleteMessage, markMessagesAsRead, loadInitMessages } from "@/app/conversation/create/actions";
+import {
+    sendMessage,
+    deleteMessage,
+    markMessagesAsRead,
+    loadInitMessages,
+    getFirstUnreadIndex,
+} from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import TypingIndicator from "../typing-indicator";
@@ -60,31 +66,44 @@ export default function Messages({
         scrollToBottom();
     }, [messages, scrollToBottom, loading, typers]);
 
-    useEffect(() => {
-        if (!conversationId) return;
+    useEffect(() => {}, [conversationId, currentProfileId]);
 
-        const markIfVisible = () => {
-            if (document.visibilityState === "visible") {
-                markMessagesAsRead(conversationId, currentProfileId);
+    useEffect(() => {
+        if (!conversationId || !currentProfileId) return;
+
+        let isMounted = true;
+
+        // 1️⃣ Fetch initial unread index and mark messages as read
+        const initUnread = async () => {
+            try {
+                const initialIndex = await getFirstUnreadIndex(conversationId, currentProfileId);
+                if (!isMounted) return;
+
+                // Freeze the unread index in state
+                setFirstUnreadIndex(initialIndex !== null ? Number(initialIndex) : null);
+
+                // Mark messages as read in DB (UI state remains)
+                await markMessagesAsRead(conversationId, currentProfileId);
+            } catch (err) {
+                console.error(err);
             }
         };
+        initUnread();
 
-        markIfVisible();
+        // 2️⃣ Optional: mark messages as read again when tab becomes visible
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
+            }
+        };
+        window.addEventListener("visibilitychange", handleVisibilityChange);
 
-        window.addEventListener("visibilitychange", markIfVisible);
-        return () => window.removeEventListener("visibilitychange", markIfVisible);
-    }, [conversationId, currentProfileId]);
-
-    useEffect(() => {
+        // 3️⃣ Load initial messages
         const getMessages = async () => {
             const messages = await loadInitMessages(conversationId);
+            if (!isMounted) return;
 
-            if (messages !== undefined && messages.length > 0) {
-                setFirstUnreadIndex(
-                    messages.findIndex((m) => !m.message_reads.some((r) => r.profile_id === currentProfileId))
-                );
-            }
-
+            // ⬇️ Keep your original setMessages block EXACTLY as you wrote it
             setMessages(
                 (
                     messages as {
@@ -126,14 +145,12 @@ export default function Messages({
 
             setLoading(false);
         };
-
         getMessages().catch(console.error);
 
+        // 4️⃣ Subscribe to Supabase message events
         const channel = supabase
             .channel(`conversation-${conversationId}`)
             .on("broadcast", { event: "message" }, ({ payload }) => {
-                console.log("New Message broadcast:", payload);
-
                 const message: Message = {
                     id: BigInt(payload.id),
                     conversation_id: payload.conversation_id,
@@ -168,85 +185,17 @@ export default function Messages({
                     message_reactions: payload.message_reactions ?? null,
                     message_reads: payload.message_reads ?? [],
                 };
-
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
             })
-            .on("broadcast", { event: "message_edited" }, ({ payload }) => {
-                console.log("Message edited:", payload);
-
-                setMessages((prev) =>
-                    prev.map((m) =>
-                        m.id === BigInt(payload.id)
-                            ? {
-                                  ...m,
-                                  content: payload.content ?? m.content,
-                                  edited_at: payload.edited_at ? new Date(payload.edited_at) : m.edited_at,
-                              }
-                            : m
-                    )
-                );
-            })
-            .on("broadcast", { event: "message_deleted" }, ({ payload }) => {
-                console.log("Message deleted:", payload);
-
-                setMessages((prev) => prev.map((m) => (m.id === BigInt(payload.id) ? { ...m, deleted: true } : m)));
-            })
-            .on("broadcast", { event: "user_typing" }, ({ payload }) => {
-                console.log("User typing broadcast received:", payload);
-
-                const name = payload.username as string;
-
-                if (name === currentUsername) return;
-
-                setTypers((prev) => {
-                    // Add user, remove after 3 s
-                    if (prev.includes(name)) return prev;
-                    setTimeout(() => setTypers((p) => p.filter((n) => n !== name)), 3000);
-                    return [...prev, name];
-                });
-            })
-            .on("broadcast", { event: "reaction_added" }, ({ payload }) => {
-                console.log("Reaction added broadcast received:", payload);
-                setMessages((prev) =>
-                    prev.map((m) =>
-                        m.id === BigInt(payload.message_id)
-                            ? {
-                                  ...m,
-                                  message_reactions: [
-                                      ...(m.message_reactions ?? []),
-                                      {
-                                          ...payload,
-                                          id: BigInt(payload.id),
-                                          profile_id: BigInt(payload.profile_id),
-                                          message_id: BigInt(payload.message_id),
-                                      },
-                                  ],
-                              }
-                            : m
-                    )
-                );
-            })
-            .on("broadcast", { event: "reaction_removed" }, ({ payload }) => {
-                console.log("Reaction removed broadcast received:", payload);
-                setMessages((prev) =>
-                    prev.map((m) =>
-                        m.id === BigInt(payload.message_id)
-                            ? {
-                                  ...m,
-                                  message_reactions: (m.message_reactions ?? []).filter(
-                                      (r) => r.id !== BigInt(payload.id)
-                                  ),
-                              }
-                            : m
-                    )
-                );
-            })
+            // ...keep your other .on handlers unchanged...
             .subscribe();
 
         return () => {
+            isMounted = false;
+            window.removeEventListener("visibilitychange", handleVisibilityChange);
             supabase.removeChannel(channel);
         };
-    }, [conversationId, currentUsername]);
+    }, [conversationId, currentProfileId, currentUsername]);
 
     function handleNewMessage(msg: Message) {
         setMessages((prev) => {
