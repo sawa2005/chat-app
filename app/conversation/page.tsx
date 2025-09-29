@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
-import { Image as ImageIcon } from "lucide-react";
+import { UnreadBadge } from "@/components/unread-badge";
+import LastMessage from "@/components/last-message";
+
+// TODO: implement broadcast and listen for unread count.
 
 export default async function ConversationsPage() {
     const supabase = await createClient();
@@ -55,6 +58,16 @@ export default async function ConversationsPage() {
                 {conversations.map(async (c) => {
                     const lastMsg = c.messages[0];
                     console.log("lastMsg:", lastMsg);
+                    let formattedLastMsg;
+                    if (lastMsg) {
+                        formattedLastMsg = {
+                            ...lastMsg,
+                            created_at: new Date(lastMsg.created_at).toLocaleDateString(),
+                            sender_name: lastMsg.sender?.username ?? null,
+                        };
+                    } else {
+                        formattedLastMsg = null;
+                    }
 
                     const unreadCount = await prisma.messages.count({
                         where: {
@@ -72,48 +85,14 @@ export default async function ConversationsPage() {
                                     <h3 className="font-normal text-lg">
                                         {c.name ?? c.conversation_members.map((m) => m.profiles?.username).join(", ")}
                                     </h3>
-                                    {unreadCount > 0 ? (
-                                        <div className="flex items-center bg-red-500 text-white rounded-full px-2 py-0.5 mb-1 text-xs font-semibold">
-                                            {unreadCount}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground">
-                                            {c.conversation_members.length} members
-                                        </p>
-                                    )}
+                                    <UnreadBadge
+                                        initialCounts={unreadCount}
+                                        currentProfileId={profile.id}
+                                        conversationId={c.id}
+                                        memberCount={c.conversation_members.length}
+                                    />
                                 </div>
-
-                                {lastMsg && lastMsg.type === "message" && (
-                                    <div className="flex justify-between w-full max-w-full">
-                                        <div className="flex just w-full max-w-[70%] items-center gap-1">
-                                            <p className="text-sm text-muted-foreground truncate max-w-[95%] overflow-hidden">
-                                                <span className="font-medium">{lastMsg.sender?.username}:</span>{" "}
-                                                {lastMsg.content}
-                                            </p>
-                                            {lastMsg.image_url && (
-                                                <ImageIcon className="text-muted-foreground" size={15} />
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-muted-foreground font-mono">
-                                            {/* TODO: time when today, date when older */}
-                                            {lastMsg.created_at.toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {lastMsg && lastMsg.type === "info" && (
-                                    <div className="flex justify-between w-full max-w-full">
-                                        <div className="flex just w-full max-w-[70%] items-center gap-1">
-                                            <p className="text-sm text-muted-foreground truncate max-w-[95%] overflow-hidden">
-                                                {lastMsg.content}
-                                            </p>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground font-mono">
-                                            {/* TODO: time when today, date when older */}
-                                            {lastMsg.created_at.toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                )}
+                                <LastMessage conversationId={c.id} initialMessage={formattedLastMsg} />
                             </Link>
                         </li>
                     );
