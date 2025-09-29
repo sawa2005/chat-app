@@ -62,7 +62,6 @@ export default function Messages({
     // TODO: consider switching message hover text to on click instead.
     // TODO: add functionality to clear new message indicator on key press or message send.
 
-    // TODO: don't scroll for reactions changing, or maybe scroll to the message in question.
     useEffect(() => {
         scrollToBottom(false, 0, true);
     });

@@ -4,8 +4,6 @@ import Link from "next/link";
 import { UnreadBadge } from "@/components/unread-badge";
 import LastMessage from "@/components/last-message";
 
-// TODO: implement broadcast and listen for unread count.
-
 export default async function ConversationsPage() {
     const supabase = await createClient();
     const {

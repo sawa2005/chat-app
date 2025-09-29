@@ -32,8 +32,6 @@ export function ReactionBar({
     isOwner: boolean;
     currentProfileId: bigint;
 }) {
-    // TODO: order reactions by count on realtime if possible.
-
     type UsernamesMap = Record<string, string[]>;
 
     const [usernames, setUsernames] = React.useState<UsernamesMap>({});

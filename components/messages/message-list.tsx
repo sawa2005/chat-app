@@ -17,8 +17,6 @@ interface MessageListProps {
     containerRef: RefObject<HTMLDivElement | null>;
 }
 
-// TODO: fix new message indicator always showing at the first message.
-
 export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageListProps) {
     useEffect(() => {
         console.log("First unread index:", firstUnreadIndex);
