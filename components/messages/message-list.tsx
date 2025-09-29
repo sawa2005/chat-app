@@ -1,8 +1,6 @@
 import { Message } from "@/lib/types";
 import { MessageItem } from "./message-item";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import React from "react";
-
+import React, { RefObject, Dispatch, SetStateAction, useEffect } from "react";
 interface MessageListProps {
     messages: Message[];
     currentUsername: string;
@@ -14,8 +12,9 @@ interface MessageListProps {
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     conversationId: string;
     handleDelete: (id: bigint) => void;
-    scrollToBottom: (smooth?: boolean) => void;
+    scrollToBottom: (smooth?: boolean, threshold?: number, force?: boolean) => void;
     firstUnreadIndex: number | null;
+    containerRef: RefObject<HTMLDivElement | null>;
 }
 
 // TODO: fix new message indicator always showing at the first message.

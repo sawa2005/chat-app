@@ -4,7 +4,7 @@ import { useState } from "react";
 interface ChatImageProps {
     src: string;
     alt: string;
-    onLoadingComplete?: () => void;
+    onLoadingComplete?: (e: HTMLImageElement) => void;
 }
 
 export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProps) {

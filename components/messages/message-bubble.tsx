@@ -1,5 +1,5 @@
 import { isEmojiOnly } from "./messages";
-import { Dispatch, SetStateAction, ReactNode } from "react";
+import { Dispatch, SetStateAction, ReactNode, RefObject } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
@@ -66,6 +66,7 @@ export function MessageBubble({
     isConsecutive,
     scrollToBottom,
     setEditingMessageId,
+    containerRef,
 }: {
     message: Message;
     isOwner: boolean;
@@ -74,8 +75,9 @@ export function MessageBubble({
     setEditContent: Dispatch<SetStateAction<string>>;
     onSubmitEdit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     isConsecutive: boolean;
-    scrollToBottom: (smooth?: boolean) => void;
+    scrollToBottom: (smooth?: boolean, threshold?: number, force?: boolean) => void;
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
+    containerRef: RefObject<HTMLDivElement | null>;
 }) {
     const emojiOnly = isEmojiOnly(message.content);
 
@@ -127,7 +129,7 @@ export function MessageBubble({
             <div
                 className={`group relative rounded-xl mb-2 w-fit break-words max-w-[80%] 
                 ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
-                ${emojiOnly && (isOwner ? "mr-[-1.5rem]" : "ml-[-1.5rem]")} 
+                ${emojiOnly && (isOwner ? "mr-[-1rem]" : "ml-[-1rem]")} 
                 ${!emojiOnly && !isOwner && "bg-accent"} 
                 ${!isOwner ? "rounded-tl-none" : "rounded-tr-none ml-auto"}`}
             >
@@ -138,7 +140,21 @@ export function MessageBubble({
                     <ChatImage
                         src={message.image_url}
                         alt="Message attachment"
-                        onLoadingComplete={() => scrollToBottom(false)}
+                        onLoadingComplete={(e: HTMLImageElement) => {
+                            const container = containerRef.current;
+                            if (!container) return;
+
+                            const imageBottom = e.offsetTop + e.offsetHeight;
+                            const distanceFromBottom = container.scrollHeight - imageBottom - container.scrollTop;
+
+                            if (distanceFromBottom < 350) {
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        scrollToBottom(true, 0, true);
+                                    });
+                                });
+                            }
+                        }}
                     />
                 )}
             </div>

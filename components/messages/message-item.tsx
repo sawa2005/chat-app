@@ -1,5 +1,5 @@
 import { Message } from "@/lib/types";
-import { Dispatch, SetStateAction } from "react";
+import { RefObject, Dispatch, SetStateAction } from "react";
 import { isConsecutiveMessage } from "./messages";
 import { MessageActions } from "./message-buttons";
 import { MessageBubble } from "./message-bubble";
@@ -21,6 +21,7 @@ export function MessageItem({
     setReplyTo,
     scrollToBottom,
     conversationId,
+    containerRef,
 }: {
     message: Message;
     prevMessage: Message;
@@ -33,7 +34,8 @@ export function MessageItem({
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     conversationId: string;
     handleDelete: (messageId: bigint) => void;
-    scrollToBottom: (smooth?: boolean) => void;
+    scrollToBottom: (smooth?: boolean, threshold?: number, force?: boolean) => void;
+    containerRef: RefObject<HTMLDivElement | null>;
 }) {
     if (!message.sender) return;
 
@@ -65,7 +67,7 @@ export function MessageItem({
     };
 
     return (
-        <li className={`relative group max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " my-5"}`}>
+        <li className={`relative group max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}>
             <div className={headerClasses}>
                 <MessageActions
                     isOwner={message.sender?.id === currentProfileId}
@@ -118,6 +120,7 @@ export function MessageItem({
                 }}
                 isConsecutive={isConsecutive}
                 scrollToBottom={scrollToBottom}
+                containerRef={containerRef}
                 setEditingMessageId={setEditingMessageId}
             />
 

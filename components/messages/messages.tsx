@@ -64,8 +64,12 @@ export default function Messages({
 
     // TODO: don't scroll for reactions changing, or maybe scroll to the message in question.
     useEffect(() => {
+        scrollToBottom(false, 0, true);
+    });
+
+    useEffect(() => {
         scrollToBottom();
-    }, [messages, scrollToBottom, loading, typers]);
+    }, [messages, scrollToBottom]);
 
     useEffect(() => {}, [conversationId, currentProfileId]);
 
@@ -74,7 +78,6 @@ export default function Messages({
 
         let isMounted = true;
 
-        // 1️⃣ Fetch initial unread index and mark messages as read
         const initUnread = async () => {
             try {
                 const initialIndex = await getFirstUnreadIndex(conversationId, currentProfileId);
@@ -91,7 +94,6 @@ export default function Messages({
         };
         initUnread();
 
-        // 2️⃣ Optional: mark messages as read again when tab becomes visible
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
                 markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
@@ -99,12 +101,10 @@ export default function Messages({
         };
         window.addEventListener("visibilitychange", handleVisibilityChange);
 
-        // 3️⃣ Load initial messages
         const getMessages = async () => {
             const messages = await loadInitMessages(conversationId);
             if (!isMounted) return;
 
-            // ⬇️ Keep your original setMessages block EXACTLY as you wrote it
             setMessages(
                 (
                     messages as {
@@ -148,7 +148,6 @@ export default function Messages({
         };
         getMessages().catch(console.error);
 
-        // 4️⃣ Subscribe to Supabase message events
         const channel = supabase
             .channel(`conversation-${conversationId}`)
             .on("broadcast", { event: "message" }, ({ payload }) => {
@@ -188,7 +187,76 @@ export default function Messages({
                 };
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
             })
-            // ...keep your other .on handlers unchanged...
+            .on("broadcast", { event: "message_edited" }, ({ payload }) => {
+                console.log("Message edited:", payload);
+
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === BigInt(payload.id)
+                            ? {
+                                  ...m,
+                                  content: payload.content ?? m.content,
+                                  edited_at: payload.edited_at ? new Date(payload.edited_at) : m.edited_at,
+                              }
+                            : m
+                    )
+                );
+            })
+            .on("broadcast", { event: "message_deleted" }, ({ payload }) => {
+                console.log("Message deleted:", payload);
+
+                setMessages((prev) => prev.map((m) => (m.id === BigInt(payload.id) ? { ...m, deleted: true } : m)));
+            })
+            .on("broadcast", { event: "user_typing" }, ({ payload }) => {
+                console.log("User typing broadcast received:", payload);
+
+                const name = payload.username as string;
+
+                if (name === currentUsername) return;
+
+                setTypers((prev) => {
+                    // Add user, remove after 3 s
+                    if (prev.includes(name)) return prev;
+                    setTimeout(() => setTypers((p) => p.filter((n) => n !== name)), 3000);
+                    return [...prev, name];
+                });
+            })
+            .on("broadcast", { event: "reaction_added" }, ({ payload }) => {
+                console.log("Reaction added broadcast received:", payload);
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === BigInt(payload.message_id)
+                            ? {
+                                  ...m,
+                                  message_reactions: [
+                                      ...(m.message_reactions ?? []),
+                                      {
+                                          ...payload,
+                                          id: BigInt(payload.id),
+                                          profile_id: BigInt(payload.profile_id),
+                                          message_id: BigInt(payload.message_id),
+                                      },
+                                  ],
+                              }
+                            : m
+                    )
+                );
+            })
+            .on("broadcast", { event: "reaction_removed" }, ({ payload }) => {
+                console.log("Reaction removed broadcast received:", payload);
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === BigInt(payload.message_id)
+                            ? {
+                                  ...m,
+                                  message_reactions: (m.message_reactions ?? []).filter(
+                                      (r) => r.id !== BigInt(payload.id)
+                                  ),
+                              }
+                            : m
+                    )
+                );
+            })
             .subscribe();
 
         return () => {
@@ -237,6 +305,7 @@ export default function Messages({
                         setEditingMessageId={setEditingMessageId}
                         handleDelete={handleDelete}
                         setReplyTo={setReplyTo}
+                        containerRef={containerRef}
                         scrollToBottom={scrollToBottom}
                         conversationId={conversationId}
                         firstUnreadIndex={firstUnreadIndex}
