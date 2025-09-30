@@ -61,16 +61,21 @@ export default function Messages({
     // TODO: if height is too small to show messages, collapse header and members.
     // TODO: consider switching message hover text to on click instead.
     // TODO: add functionality to clear new message indicator on key press or message send.
+    // TODO: scroll to bottom on message sent by current user.
 
+    // Initial scroll
     useEffect(() => {
-        scrollToBottom(false, 0, true);
+        requestAnimationFrame(() => {
+            scrollToBottom(false, true);
+        });
     });
 
+    // Scroll on new messages
     useEffect(() => {
-        scrollToBottom();
+        requestAnimationFrame(() => {
+            scrollToBottom();
+        });
     }, [messages, scrollToBottom]);
-
-    useEffect(() => {}, [conversationId, currentProfileId]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;

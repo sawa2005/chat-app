@@ -12,7 +12,7 @@ interface MessageListProps {
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     conversationId: string;
     handleDelete: (id: bigint) => void;
-    scrollToBottom: (smooth?: boolean, threshold?: number, force?: boolean) => void;
+    scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     firstUnreadIndex: number | null;
     containerRef: RefObject<HTMLDivElement | null>;
 }

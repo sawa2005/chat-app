@@ -75,7 +75,7 @@ export function MessageBubble({
     setEditContent: Dispatch<SetStateAction<string>>;
     onSubmitEdit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     isConsecutive: boolean;
-    scrollToBottom: (smooth?: boolean, threshold?: number, force?: boolean) => void;
+    scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
     containerRef: RefObject<HTMLDivElement | null>;
 }) {
@@ -140,20 +140,13 @@ export function MessageBubble({
                     <ChatImage
                         src={message.image_url}
                         alt="Message attachment"
-                        onLoadingComplete={(e: HTMLImageElement) => {
-                            const container = containerRef.current;
-                            if (!container) return;
-
-                            const imageBottom = e.offsetTop + e.offsetHeight;
-                            const distanceFromBottom = container.scrollHeight - imageBottom - container.scrollTop;
-
-                            if (distanceFromBottom < 350) {
+                        onLoadingComplete={(img: HTMLImageElement) => {
+                            requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
-                                    requestAnimationFrame(() => {
-                                        scrollToBottom(true, 0, true);
-                                    });
+                                    console.log("Loaded image..");
+                                    scrollToBottom(true, false, true, img.naturalHeight);
                                 });
-                            }
+                            });
                         }}
                     />
                 )}

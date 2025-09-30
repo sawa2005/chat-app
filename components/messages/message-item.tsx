@@ -34,7 +34,7 @@ export function MessageItem({
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     conversationId: string;
     handleDelete: (messageId: bigint) => void;
-    scrollToBottom: (smooth?: boolean, threshold?: number, force?: boolean) => void;
+    scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     containerRef: RefObject<HTMLDivElement | null>;
 }) {
     if (!message.sender) return;
