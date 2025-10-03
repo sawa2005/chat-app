@@ -58,10 +58,8 @@ export default function Messages({
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
 
-    // TODO: if height is too small to show messages, collapse header and members.
     // TODO: consider switching message hover text to on click instead.
     // TODO: add functionality to clear new message indicator on key press or message send.
-    // TODO: scroll to bottom on message sent by current user.
 
     // Initial scroll
     useEffect(() => {
@@ -328,6 +326,7 @@ export default function Messages({
                 onNewMessage={handleNewMessage}
                 replyTo={replyTo ?? null}
                 setReplyTo={setReplyTo}
+                setFirstUnreadIndex={setFirstUnreadIndex}
             />
         </div>
     );

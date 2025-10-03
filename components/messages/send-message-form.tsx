@@ -22,6 +22,7 @@ type SendMessageFormProps = {
     sendMessage: typeof sendMessage;
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
+    setFirstUnreadIndex: Dispatch<SetStateAction<number | null>>;
     onNewMessage: (message: {
         id: bigint;
         conversation_id: string;
@@ -60,8 +61,6 @@ type SendMessageFormProps = {
     }) => void;
 };
 
-// TODO: test uploading of files that aren't images (gifs, mp4, mp3 etc.)
-
 export default function SendMessageForm({
     conversationId,
     currentProfileId,
@@ -71,6 +70,7 @@ export default function SendMessageForm({
     onNewMessage,
     replyTo,
     setReplyTo,
+    setFirstUnreadIndex,
 }: SendMessageFormProps) {
     const [isPending, setIsPending] = useState(false);
     const [content, setContent] = useState("");
@@ -228,6 +228,7 @@ export default function SendMessageForm({
         setImgPreview(null);
         setFile(null);
         setReplyTo(null);
+        setFirstUnreadIndex(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setIsPending(false);
     }
