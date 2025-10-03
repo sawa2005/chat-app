@@ -148,3 +148,25 @@
 .emoji-picker button[data-slot="emoji-picker-emoji"] {
   font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', 'Android Emoji', 'Twemoji Mozilla', 'EmojiSymbols' !important;
 }
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-fade {
+  animation: fadeInOut 3s ease-in-out forwards;
+}

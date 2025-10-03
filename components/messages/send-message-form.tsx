@@ -4,11 +4,12 @@ import { createClient } from "@/lib/client";
 import { useState, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import EmojiComponent from "../emoji-component";
 import type { sendMessage } from "@/app/conversation/create/actions";
 import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, AlertCircleIcon } from "lucide-react";
 import GifComponent from "../gif-component";
 
 const supabase = createClient();
@@ -76,12 +77,22 @@ export default function SendMessageForm({
     const [imgPreview, setImgPreview] = useState<string | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [alert, setAlert] = useState<React.ReactNode | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
     let typingTimeout: NodeJS.Timeout | null = null;
+
+    function showAlert(message: React.ReactNode) {
+        setAlert(message);
+
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            setAlert(null);
+        }, 3000);
+    }
 
     function handleInputChange(value: string | React.ChangeEvent<HTMLInputElement>) {
         const newValue = typeof value === "string" ? value : value.target.value;
@@ -107,6 +118,23 @@ export default function SendMessageForm({
         const uploadedFile = e.target.files?.[0];
         setFile(uploadedFile ?? null);
         if (!uploadedFile) return;
+
+        console.log("Selected file type:", uploadedFile.type);
+
+        if (!uploadedFile.type.startsWith("image/")) {
+            console.log("File type incorrect.");
+            showAlert(
+                <Alert className="absolute animate-fade z-50 bottom-0" variant="destructive">
+                    <AlertCircleIcon />
+                    <AlertTitle>Invalid file type.</AlertTitle>
+                    <AlertDescription>
+                        <p>Only images are allowed for upload.</p>
+                    </AlertDescription>
+                </Alert>
+            );
+            return;
+        }
+
         setImgPreview(URL.createObjectURL(uploadedFile));
     }
 
@@ -213,6 +241,7 @@ export default function SendMessageForm({
 
     return (
         <>
+            <div className="relative">{alert ?? null}</div>
             {replyTo && (
                 <div className="flex items-center font-mono text-xs text-muted-foreground">
                     replying to message #{replyTo.toString()}
