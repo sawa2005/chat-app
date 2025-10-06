@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 import { logout } from "@/app/login/actions";
 
+import { ThemeToggleButton } from "./theme-toggle-button";
+
 export default async function Navigation() {
     const supabase = await createClient();
 
@@ -42,6 +44,9 @@ export default async function Navigation() {
                     <NavigationMenuLink asChild>
                         <Link href="/private">Private</Link>
                     </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                    <ThemeToggleButton />
                 </NavigationMenuItem>
             </NavigationMenuList>
             {currentUserEmail ? (
