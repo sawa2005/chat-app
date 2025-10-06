@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2Icon } from "lucide-react";
 import { updateProfile, checkUsernameAvailability } from "@/app/login/actions";
 import { useEffect, useState } from "react";
 import AvatarUpload from "./avatar-upload";
@@ -35,6 +37,8 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
     const [normalizedValue, setNormalizedValue] = useState(username.trim().toLowerCase());
     const [normalizedOld, setNormalizedOld] = useState(oldUsername ? oldUsername.trim().toLowerCase() : undefined);
     const [messagesVisible, setMessagesVisible] = useState(true);
+    const [alert, setAlert] = useState<React.ReactNode | null>(null);
+    const [loading, setLoading] = useState(false);
     let checkTimeout: NodeJS.Timeout;
     let lastCheckedValue = "";
 
@@ -101,9 +105,11 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
         const validationError = validateUsername(username);
         if (validationError) {
             setError(validationError);
+            setLoading(false);
             return;
         }
 
@@ -113,7 +119,18 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
             formData.append("avatar", avatarFile, avatarFile.name);
         }
 
-        await updateProfile(formData);
+        const result = await updateProfile(formData);
+
+        if (result) {
+            setAlert(
+                <Alert className="absolute animate-fade text-foreground font-sans top-1/5" variant="destructive">
+                    <CheckCircle2Icon />
+                    <AlertTitle>Success! Your changes have been saved</AlertTitle>
+                </Alert>
+            );
+        }
+
+        setLoading(false);
     };
 
     const isDisabled = !!error;
@@ -134,61 +151,71 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
     }, [checking, normalizedOld, normalizedValue, isAvailable]);
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="font-sans flex flex-col gap-5 p-5 max-w-md m-auto mt-10"
-            method="post"
-            encType="multipart/form-data"
-        >
-            <input type="hidden" name="user_id" value={userId} />
-            <div className="flex flex-col gap-1">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required disabled value={userEmail} />
-            </div>
-            <div className="flex flex-col gap-1">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" required disabled value={".................."} />
-            </div>
-            <div className="flex flex-col gap-1">
-                <Label htmlFor="username">Username</Label>
-                <p className="text-xs font-mono text-muted-foreground">/ same as email by default</p>
-                <Input
-                    id="username"
-                    name="username"
-                    type="text"
-                    placeholder={username}
-                    required
-                    value={username}
-                    onChange={handleUsernameChange}
+        <>
+            <div className="relative">{alert ?? null}</div>
+            <form
+                onSubmit={handleSubmit}
+                className="font-sans flex flex-col gap-5 p-5 max-w-md m-auto mt-10"
+                method="post"
+                encType="multipart/form-data"
+            >
+                <input type="hidden" name="user_id" value={userId} />
+                <div className="flex flex-col gap-1">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" name="email" type="email" required disabled value={userEmail} />
+                </div>
+                <div className="flex flex-col gap-1">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        disabled
+                        value={".................."}
+                    />
+                </div>
+                <div className="flex flex-col gap-1">
+                    <Label htmlFor="username">Username</Label>
+                    <p className="text-xs font-mono text-muted-foreground">/ same as email by default</p>
+                    <Input
+                        id="username"
+                        name="username"
+                        type="text"
+                        placeholder={username}
+                        required
+                        value={username}
+                        onChange={handleUsernameChange}
+                    />
+                    {messagesVisible && (
+                        <>
+                            {checking && <p className="text-sm text-blue-500">Checking availability...</p>}
+                            {!checking && error && <p className="text-sm text-red-500">{error}</p>}
+                            {!checking && isAvailable && !error && (
+                                <p className="text-sm text-green-500">Username is available!</p>
+                            )}
+                        </>
+                    )}
+                </div>
+                <div className="flex flex-col gap-1">
+                    <Label htmlFor="display-name">Display Name</Label>
+                    <Input
+                        id="display-name"
+                        name="display-name"
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                    />
+                </div>
+                <AvatarUpload
+                    username={username}
+                    onAvatarReady={(f) => setAvatarFile(f)}
+                    existingAvatarUrl={profile.avatar ?? null}
                 />
-                {messagesVisible && (
-                    <>
-                        {checking && <p className="text-sm text-blue-500">Checking availability...</p>}
-                        {!checking && error && <p className="text-sm text-red-500">{error}</p>}
-                        {!checking && isAvailable && !error && (
-                            <p className="text-sm text-green-500">Username is available!</p>
-                        )}
-                    </>
-                )}
-            </div>
-            <div className="flex flex-col gap-1">
-                <Label htmlFor="display-name">Display Name</Label>
-                <Input
-                    id="display-name"
-                    name="display-name"
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                />
-            </div>
-            <AvatarUpload
-                username={username}
-                onAvatarReady={(f) => setAvatarFile(f)}
-                existingAvatarUrl={profile.avatar ?? null}
-            />
-            <Button className="cursor-pointer" type="submit" disabled={isDisabled}>
-                Update Profile
-            </Button>
-        </form>
+                <Button className="cursor-pointer" type="submit" disabled={isDisabled || loading}>
+                    {loading ? "Updating..." : "Update Profile"}
+                </Button>
+            </form>
+        </>
     );
 }

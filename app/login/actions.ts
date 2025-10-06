@@ -144,10 +144,14 @@ export async function updateProfile(formData: FormData) {
     if (avatar_url !== null) updates.avatar = avatar_url;
 
     try {
-        await prisma.profiles.update({
+        const result = await prisma.profiles.update({
             where: { user_id: user.id },
             data: updates,
         });
+
+        console.log("Profile update successful:", result);
+
+        return result;
     } catch (error) {
         console.error("Profile update error:", error);
     }
