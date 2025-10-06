@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
 import { getCroppedImg } from "@/utils/crop-image";
 import AvatarPreview from "./avatar-preview";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 interface AvatarUploadProps {
     username: string;
@@ -56,7 +56,7 @@ export default function AvatarUpload({ username, onAvatarReady, existingAvatarUr
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
-                        className="file:font-sans file:font-semibold file:text-md!important file:mr-3 file:text-black font-mono text-sm text-muted-foreground cursor-pointer file:cursor-pointer"
+                        className="file:font-sans file:font-semibold file:text-md!important file:mr-3 file:text-foreground font-mono text-sm text-muted-foreground cursor-pointer file:cursor-pointer"
                     />
                 </div>
 
@@ -77,8 +77,15 @@ export default function AvatarUpload({ username, onAvatarReady, existingAvatarUr
                         />
                         <Button
                             type="button"
+                            onClick={() => setImageSrc(null)}
+                            className="absolute bottom-2 left-2 bg-red-800 border-1 border-background cursor-pointer"
+                        >
+                            <X className="w-5 h-5" />
+                        </Button>
+                        <Button
+                            type="button"
                             onClick={handleSave}
-                            className="absolute bottom-2 right-2 bg-green-800 border-1 border-white cursor-pointer"
+                            className="absolute bottom-2 right-2 bg-green-800 border-1 border-background cursor-pointer"
                         >
                             <Check className="w-5 h-5" />
                         </Button>
