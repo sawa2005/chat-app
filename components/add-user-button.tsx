@@ -28,6 +28,7 @@ export function AddUserButton({
 }) {
     const [username, setUsername] = useState("");
     const [open, setOpen] = useState(false);
+    const [error, setError] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     const handleAdd = () => {
@@ -37,8 +38,8 @@ export function AddUserButton({
                 setUsername("");
                 setOpen(false);
             } catch (err) {
-                // TODO: show this error in the frontend.
-                console.error("Failed to add user:", err);
+                setError(true);
+                console.log("Failed to add user:", err);
             }
         });
     };
@@ -62,6 +63,11 @@ export function AddUserButton({
                         <Label className="mb-2">Username</Label>
                         <Input name="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                     </div>
+                    {error ? (
+                        <div className="text-red-500 font-sans text-sm text-center">
+                            {"User could not be added, you sure that's the right username?"}
+                        </div>
+                    ) : null}
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline" className="cursor-pointer">

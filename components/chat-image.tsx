@@ -35,8 +35,11 @@ export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProp
                         setWidth(target.naturalWidth);
                         setHeight(target.naturalHeight);
                         setLoaded(true);
+
+                        if (onLoadingComplete) {
+                            onLoadingComplete(target);
+                        }
                     }}
-                    onLoadingComplete={onLoadingComplete}
                 />
             </div>
         </a>

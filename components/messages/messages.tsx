@@ -50,6 +50,7 @@ export default function Messages({
     currentUserAvatar: string | null;
 }) {
     const { containerRef, scrollToBottom } = useChatScroll();
+    const [initialLoad, setInitialLoad] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
@@ -59,7 +60,17 @@ export default function Messages({
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
 
     // TODO: consider switching message hover text to on click instead.
-    // TODO: add functionality to clear new message indicator on key press or message send.
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setFirstUnreadIndex(null);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    });
 
     // Initial scroll
     useEffect(() => {
@@ -311,6 +322,8 @@ export default function Messages({
                         scrollToBottom={scrollToBottom}
                         conversationId={conversationId}
                         firstUnreadIndex={firstUnreadIndex}
+                        initialLoad={initialLoad}
+                        setInitialLoad={setInitialLoad}
                     />
                 </div>
             )}

@@ -131,14 +131,11 @@ export async function updateProfile(formData: FormData) {
             where: { user_id: user.id },
             data: updates,
         });
-
-        /* revalidatePath("/profile", "page");
-        redirect("/profile"); */
-
-        redirect("/profile/edit");
     } catch (error) {
         console.error("Profile update error:", error);
     }
+
+    redirect("/profile/edit");
 }
 
 export async function checkUsernameAvailability(

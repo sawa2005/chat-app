@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
 import { Image as ImageIcon } from "lucide-react";
+import { msgOld } from "@/lib/utils";
 
 const supabase = createClient();
 
@@ -29,7 +30,12 @@ export default function LastMessage({
             .on("broadcast", { event: "message" }, ({ payload }) => {
                 setLastMessage({
                     content: payload.content ?? "",
-                    created_at: new Date(payload.created_at).toLocaleDateString(),
+                    created_at: msgOld(new Date(payload.created_at))
+                        ? payload.created_at
+                        : new Date(payload.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                          }),
                     sender_name: payload.sender?.username ?? null,
                     image_url: payload.image_url ?? null,
                     type: payload.type ?? "message",
@@ -54,23 +60,17 @@ export default function LastMessage({
                 </p>
                 {lastMessage.image_url && <ImageIcon className="text-muted-foreground" size={15} />}
             </div>
-            <p className="text-sm text-muted-foreground font-mono">
-                {/* TODO: time when today, date when older */}
-                {lastMessage.created_at}
-            </p>
+            <p className="text-sm text-muted-foreground font-mono">{lastMessage.created_at}</p>
         </div>
     ) : (
         lastMessage && lastMessage.type === "info" && (
             <div className="flex justify-between w-full max-w-full">
                 <div className="flex just w-full max-w-[70%] items-center gap-1">
                     <p className="text-sm text-muted-foreground truncate max-w-[95%] overflow-hidden">
-                        {lastMessage.content}
+                        {lastMessage.created_at}
                     </p>
                 </div>
-                <p className="text-sm text-muted-foreground font-mono">
-                    {/* TODO: time when today, date when older */}
-                    {lastMessage.created_at}
-                </p>
+                <p className="text-sm text-muted-foreground font-mono">{lastMessage.created_at}</p>
             </div>
         )
     );

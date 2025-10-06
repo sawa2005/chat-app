@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { UnreadBadge } from "@/components/unread-badge";
 import LastMessage from "@/components/last-message";
+import { msgOld } from "@/lib/utils";
 
 export default async function ConversationsPage() {
     const supabase = await createClient();
@@ -60,7 +61,12 @@ export default async function ConversationsPage() {
                     if (lastMsg) {
                         formattedLastMsg = {
                             ...lastMsg,
-                            created_at: new Date(lastMsg.created_at).toLocaleDateString(),
+                            created_at: msgOld(new Date(lastMsg.created_at))
+                                ? lastMsg.created_at.toLocaleDateString()
+                                : new Date(lastMsg.created_at).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                  }),
                             sender_name: lastMsg.sender?.username ?? null,
                         };
                     } else {

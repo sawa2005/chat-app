@@ -13,6 +13,8 @@ interface MessageListProps {
     conversationId: string;
     handleDelete: (id: bigint) => void;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
+    initialLoad: boolean;
+    setInitialLoad: Dispatch<SetStateAction<boolean>>;
     firstUnreadIndex: number | null;
     containerRef: RefObject<HTMLDivElement | null>;
 }

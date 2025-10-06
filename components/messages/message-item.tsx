@@ -7,6 +7,7 @@ import { editMessage, addReaction, removeReaction } from "@/app/conversation/cre
 import Avatar from "../avatar";
 import { getAvatarUrlById } from "@/app/login/actions";
 import { ReactionBar } from "../reaction-bar";
+import { msgOld } from "@/lib/utils";
 
 export function MessageItem({
     message,
@@ -20,6 +21,8 @@ export function MessageItem({
     handleDelete,
     setReplyTo,
     scrollToBottom,
+    initialLoad,
+    setInitialLoad,
     conversationId,
     containerRef,
 }: {
@@ -35,6 +38,8 @@ export function MessageItem({
     conversationId: string;
     handleDelete: (messageId: bigint) => void;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
+    initialLoad: boolean;
+    setInitialLoad: Dispatch<SetStateAction<boolean>>;
     containerRef: RefObject<HTMLDivElement | null>;
 }) {
     if (!message.sender) return;
@@ -48,19 +53,6 @@ export function MessageItem({
         : `${
               isOwner ? "text-right" : "flex-row-reverse justify-end"
           } mt-5 mb-1 text-xs hidden group-hover:flex justify-end items-center gap-2`;
-
-    const msgOld = (msgDate: Date) => {
-        const currentDate = new Date();
-
-        const milliDiff = currentDate.getTime() - msgDate.getTime();
-        const hoursDiff = Math.floor(milliDiff / (1000 * 60 * 60));
-
-        if (hoursDiff >= 24) {
-            return true;
-        } else {
-            return false;
-        }
-    };
 
     const hasReacted = (emoji: string) => {
         return message.message_reactions?.some((r) => r.emoji === emoji && r.profile_id === currentProfileId);
@@ -120,6 +112,8 @@ export function MessageItem({
                 }}
                 isConsecutive={isConsecutive}
                 scrollToBottom={scrollToBottom}
+                initialLoad={initialLoad}
+                setInitialLoad={setInitialLoad}
                 containerRef={containerRef}
                 setEditingMessageId={setEditingMessageId}
             />

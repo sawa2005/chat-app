@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Messages from "@/components/messages/messages";
 import ConversationHeader from "@/components/conversation-header";
+import { isValidUUID } from "@/lib/utils";
 
 interface ConversationPageProps {
     params: Promise<{ id: string }>;
@@ -32,6 +33,10 @@ export default async function ConversationPage({ params }: ConversationPageProps
         redirect("/login");
     }
 
+    if (!isValidUUID(id)) {
+        return <div className="p-6 text-red-500 font-sans text-center">Invalid conversation id.</div>;
+    }
+
     const conversation = await prisma.conversations.findUnique({
         where: { id },
         include: {
@@ -46,7 +51,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
     });
 
     if (!conversation) {
-        return <div className="p-6 text-red-500">Conversation not found.</div>;
+        return <div className="p-6 text-red-500 font-sans text-center">Conversation not found.</div>;
     }
 
     // Get current user's avatar from Prisma

@@ -65,6 +65,8 @@ export function MessageBubble({
     onSubmitEdit,
     isConsecutive,
     scrollToBottom,
+    initialLoad,
+    setInitialLoad,
     setEditingMessageId,
     containerRef,
 }: {
@@ -76,6 +78,8 @@ export function MessageBubble({
     onSubmitEdit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     isConsecutive: boolean;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
+    initialLoad: boolean;
+    setInitialLoad: Dispatch<SetStateAction<boolean>>;
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
     containerRef: RefObject<HTMLDivElement | null>;
 }) {
@@ -144,7 +148,12 @@ export function MessageBubble({
                             requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
                                     console.log("Loaded image..");
-                                    scrollToBottom(true, false, true, img.naturalHeight);
+                                    if (initialLoad === true) {
+                                        scrollToBottom(true, true, true, img.naturalHeight);
+                                        setInitialLoad(false);
+                                    } else {
+                                        scrollToBottom(true, false, true, img.naturalHeight);
+                                    }
                                 });
                             });
                         }}
