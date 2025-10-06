@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
 import { getCroppedImg } from "@/utils/crop-image";
-import Avatar from "./avatar";
+import AvatarPreview from "./avatar-preview";
 import { Check } from "lucide-react";
 
 interface AvatarUploadProps {
@@ -60,7 +60,7 @@ export default function AvatarUpload({ username, onAvatarReady, existingAvatarUr
                     />
                 </div>
 
-                <Avatar size={100} avatarUrl={avatarUrl} username={username} />
+                <AvatarPreview size={100} src={avatarUrl} username={username} />
             </div>
             {imageSrc && (
                 <div className="w-full flex justify-center my-3">

@@ -101,22 +101,39 @@ export async function updateProfile(formData: FormData) {
         redirect("/login");
     }
 
+    const profile = await prisma.profiles.findUnique({
+        where: { user_id: user.id },
+    });
+
+    if (!profile) {
+        console.error("No profile found for user id:", user.id);
+        return;
+    }
+
     const username = formData.get("username") as string;
     const display_name = formData.get("display-name") as string;
     const avatarFile = formData.get("avatar") as File;
 
-    let avatar_url: string | null = null;
+    let avatar_url: string | null = profile.avatar ?? null;
 
     if (avatarFile && avatarFile.size > 0) {
-        const filePath = `avatars/${avatarFile.name}`;
+        const ext = avatarFile.name.split(".").pop() ?? "png";
+        const filename = `avatar-${Date.now()}.${ext}`;
+        const filePath = `${profile.id.toString()}/${filename}`;
 
         const { error: uploadError } = await supabase.storage
             .from("avatars")
-            .upload(filePath, avatarFile, { contentType: "image/jpeg", upsert: true });
+            .upload(filePath, avatarFile, { contentType: avatarFile.type, upsert: true });
 
         if (uploadError) {
             console.error("Avatar upload error:", uploadError);
         } else {
+            if (profile.avatar && profile.avatar !== filePath) {
+                const { error: removeError } = await supabase.storage.from("avatars").remove([profile.avatar]);
+                if (removeError) {
+                    console.error("Failed to remove old avatar:", removeError);
+                }
+            }
             avatar_url = filePath;
         }
     }

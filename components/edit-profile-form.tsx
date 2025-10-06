@@ -181,7 +181,11 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
                     onChange={(e) => setDisplayName(e.target.value)}
                 />
             </div>
-            <AvatarUpload username={username} onAvatarReady={setAvatarFile} existingAvatarUrl={profile.avatar} />
+            <AvatarUpload
+                username={username}
+                onAvatarReady={(f) => setAvatarFile(f)}
+                existingAvatarUrl={profile.avatar ?? null}
+            />
             <Button className="cursor-pointer" type="submit" disabled={isDisabled}>
                 Update Profile
             </Button>
