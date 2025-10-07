@@ -3,9 +3,6 @@ import EditProfileForm from "@/components/edit-profile-form";
 import { prisma } from "@/lib/prisma";
 import { getUsername } from "@/app/login/actions";
 
-// TODO: redirect causes error in profile edit.
-// TODO: add confirmation when profile is successfully updated (shadcn component).
-
 export default async function EditProfilePage() {
     const supabase = await createClient();
 

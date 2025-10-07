@@ -105,6 +105,7 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setAlert(null);
         setLoading(true);
         const validationError = validateUsername(username);
         if (validationError) {

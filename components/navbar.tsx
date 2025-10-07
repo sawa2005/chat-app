@@ -25,6 +25,8 @@ import { logout } from "@/app/login/actions";
 
 import { ThemeToggleButton } from "./theme-toggle-button";
 
+// TODO: remove unused links and pages
+
 export default async function Navigation() {
     const supabase = await createClient();
 

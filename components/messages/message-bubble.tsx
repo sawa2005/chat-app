@@ -5,8 +5,6 @@ import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
 
-// TODO: fix chat styling on dark mode
-
 function linkifyMessage(text: string) {
     // Regex to match URLs (simple version)
     const urlRegex = /(https?:\/\/[^\s]+)/g;

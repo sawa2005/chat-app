@@ -6,8 +6,6 @@ import { getUsername, logout } from "./login/actions";
 import Link from "next/link";
 import ConversationsPage from "./conversation/page";
 
-// TODO: add consistent page content width and responsive behavior.
-
 export default async function Home() {
     const supabase = await createClient();
 
