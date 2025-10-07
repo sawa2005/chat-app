@@ -134,7 +134,7 @@
 
 .GifPickerReact .gpr-search {
   font-size: 0.85rem;
-  color: black !important;
+  color: var(--foreground) !important;
 }
 
 .GifPickerReact .gpr-category-name, .GifPickerReact.gpr-main .gpr-text-trending-category span {

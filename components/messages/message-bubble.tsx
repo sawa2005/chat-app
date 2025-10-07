@@ -5,6 +5,8 @@ import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
 
+// TODO: fix chat styling on dark mode
+
 function linkifyMessage(text: string) {
     // Regex to match URLs (simple version)
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -87,34 +89,38 @@ export function MessageBubble({
 
     if (isEditing) {
         return (
-            <div
-                className={`group relative ${
-                    !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
-                } rounded-xl mb-4 shadow-lg/8 w-fit max-w-[80%]`}
-            >
-                <form onSubmit={onSubmitEdit}>
-                    <input
-                        type="text"
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        autoFocus
-                        onKeyDown={(e) => e.key === "Escape" && setEditingMessageId(null)}
-                        className="py-2 px-4"
-                    />
-                </form>
-            </div>
+            <>
+                {/* Edit message bubble */}
+                <div
+                    className={`group relative ${
+                        !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
+                    } rounded-xl mb-4 shadow-lg/8 shadow-accent-foreground w-fit max-w-[80%]`}
+                >
+                    <form onSubmit={onSubmitEdit}>
+                        <input
+                            type="text"
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            autoFocus
+                            onKeyDown={(e) => e.key === "Escape" && setEditingMessageId(null)}
+                            className="py-2 px-4"
+                        />
+                    </form>
+                </div>
+            </>
         );
     }
 
     return (
         <>
+            {/* Reply bubble */}
             {message.messages && (
                 <div className={`${isOwner ? "ml-auto" : ""} flex items-center w-fit mb-2 gap-1`}>
-                    <div className="flex items-center bg-gray-100 py-1 px-2 rounded-full w-fit max-w-80">
+                    <div className="flex items-center bg-secondary py-1 px-2 rounded-full w-fit max-w-80">
                         <span className="text-sm font-semibold mr-1">
                             {message.messages.sender?.username || "Unknown"}
                         </span>
-                        <span className="text-sm text-gray-600 truncate max-w-[100%]">
+                        <span className="text-sm truncate max-w-[100%]">
                             {message.messages.content === "" ? (
                                 message.messages.image_url ? (
                                     <ImageIcon className="text-muted-foreground" size={15} />
@@ -126,12 +132,13 @@ export function MessageBubble({
                             )}
                         </span>
                     </div>
-                    <MessageSquareReply size={18} className="text-gray-300" />
+                    <MessageSquareReply size={18} className="text-accent-foreground" />
                 </div>
             )}
 
+            {/* Main text message bubble */}
             <div
-                className={`group relative rounded-xl mb-2 w-fit break-words max-w-[80%] 
+                className={`group relative rounded-xl mb-2 w-fit break-words max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted
                 ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
                 ${emojiOnly && (isOwner ? "mr-[-1rem]" : "ml-[-1rem]")} 
                 ${!emojiOnly && !isOwner && "bg-accent"} 
