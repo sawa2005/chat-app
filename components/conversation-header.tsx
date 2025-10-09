@@ -97,7 +97,11 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                                 <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
                             </DropdownMenuItem>
 
-                            <LeaveButton conversationId={conversation.id} profileId={currentProfileId} />
+                            <LeaveButton
+                                conversationId={conversation.id}
+                                profileId={currentProfileId}
+                                memberCount={members.length}
+                            />
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -122,7 +126,11 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="max-w-56 w-fit font-sans">
                             <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
-                            <LeaveButton conversationId={conversation.id} profileId={currentProfileId} />
+                            <LeaveButton
+                                conversationId={conversation.id}
+                                profileId={currentProfileId}
+                                memberCount={members.length}
+                            />
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

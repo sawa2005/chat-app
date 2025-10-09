@@ -292,6 +292,11 @@ export async function addMemberToConversation(conversationId: string, username: 
     await broadcastMember(conversationId, member, "added");
 }
 
+export async function deleteConversation(conversationId: string) {
+    const response = await prisma.conversations.delete({ where: { id: conversationId } });
+    console.log("Deleted conversation:", response);
+}
+
 export async function leaveConversation(conversationId: string, profileId: bigint) {
     await prisma.conversation_members.delete({
         where: {
@@ -350,6 +355,7 @@ export async function updateConversationName(conversationId: string, newName: st
     return updated;
 }
 
+// TODO: check if username exists before adding and display error/don't create if it doesn't exist.
 export async function handleCreateConversation(formData: FormData) {
     const currentProfileId = await getCurrentProfileId();
     if (!currentProfileId) throw new Error("Not authenticated or profile missing");

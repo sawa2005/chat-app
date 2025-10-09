@@ -21,8 +21,6 @@ import {
 
 import { InfoIcon } from "lucide-react";
 
-// TODO: better error messages for form validation failure (like password incorrect etc.)
-
 function isValidEmail(email: string) {
     const re =
         /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

@@ -23,7 +23,6 @@ export async function getAvatarUrlById(senderId: bigint | null): Promise<string 
 export async function login(formData: FormData) {
     const supabase = await createClient();
 
-    // TODO: Input validation
     const data = {
         email: formData.get("email") as string,
         password: formData.get("password") as string,

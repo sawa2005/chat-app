@@ -14,22 +14,27 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import { leaveConversation } from "@/app/conversation/create/actions";
+import { deleteConversation, leaveConversation } from "@/app/conversation/create/actions";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "./ui/button";
 
 interface LeaveButtonProps {
     conversationId: string;
     profileId: bigint;
+    memberCount: number;
 }
 
-export default function LeaveButton({ conversationId, profileId }: LeaveButtonProps) {
+export default function LeaveButton({ conversationId, profileId, memberCount }: LeaveButtonProps) {
     const [isPending, startTransition] = useTransition();
 
     const handleLeave = async () => {
         startTransition(async () => {
             try {
-                await leaveConversation(conversationId, profileId);
+                if (memberCount <= 1) {
+                    await deleteConversation(conversationId);
+                } else {
+                    await leaveConversation(conversationId, profileId);
+                }
 
                 window.location.href = "/";
             } catch (err) {
@@ -52,10 +57,17 @@ export default function LeaveButton({ conversationId, profileId }: LeaveButtonPr
                 <AlertDialogContent className="font-sans">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription className="font-mono text-xs pb-3">
-                            Are you sure you want to leave? A member of the conversation will have to add you back if
-                            you change your mind.
-                        </AlertDialogDescription>
+                        {memberCount <= 1 ? (
+                            <AlertDialogDescription className="font-mono text-xs pb-3">
+                                Are you sure you want to leave? If you leave this conversation it will be deleted since
+                                you are the last member.
+                            </AlertDialogDescription>
+                        ) : (
+                            <AlertDialogDescription className="font-mono text-xs pb-3">
+                                Are you sure you want to leave? A member of the conversation will have to add you back
+                                if you change your mind.
+                            </AlertDialogDescription>
+                        )}
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
