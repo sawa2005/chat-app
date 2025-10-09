@@ -33,8 +33,7 @@ export async function login(formData: FormData) {
 
     if (error) {
         console.error("Login error:", error);
-        // Redirect to error page if login fails
-        redirect("/error");
+        return error;
     }
 
     revalidatePath("/", "layout");
@@ -47,13 +46,29 @@ export async function signup(formData: FormData) {
     const data = {
         email: formData.get("email") as string,
         password: formData.get("password") as string,
+        confirm: formData.get("confirm") as string,
     };
+
+    if (data.password !== data.confirm) {
+        return;
+    }
 
     const { data: signupData, error: signupError } = await supabase.auth.signUp(data);
 
     if (signupError) {
         console.error("Signup error:", signupError);
+        return;
     }
+
+    /* // Mocked signup data for testing
+    const signupError = null;
+    const signupData = {
+        user: {
+            id: "mock-user-id-123",
+            email: data.email,
+        },
+        session: null, // null = confirmation required
+    }; */
 
     if (signupData?.user) {
         await prisma.profiles.upsert({
@@ -63,14 +78,28 @@ export async function signup(formData: FormData) {
         });
     }
 
-    // If email confirmation is required, Supabase won't log the user in
+    // Handle confirmation required flow (this is what you’re testing)
     if (signupData?.user && !signupData.session && signupData.user.email !== undefined) {
         console.log("Confirmation email sent to:", signupData.user.email);
-        redirect("/confirm?email=" + encodeURIComponent(signupData.user.email));
+
+        // redirect("/confirm?email=" + encodeURIComponent(signupData.user.email));
+
+        return {
+            success: true,
+            confirmationNeeded: true,
+            email: signupData.user.email,
+        };
     }
 
+    // Normal signup success (if confirmation isn’t required)
     revalidatePath("/", "layout");
-    redirect("/");
+
+    // redirect("/");
+
+    return {
+        success: true,
+        confirmationNeeded: false,
+    };
 }
 
 export async function logout() {

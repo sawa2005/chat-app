@@ -1,7 +1,7 @@
 "use client";
 
 import { login, signup } from "./actions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +22,53 @@ import {
 import { InfoIcon } from "lucide-react";
 
 // TODO: better error messages for form validation failure (like password incorrect etc.)
-// TODO: show message that confirmation is needed to sign in after sign up.
+
+function isValidEmail(email: string) {
+    const re =
+        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
 
 export default function LoginPage() {
-    const [success, setSuccess] = useState(true);
+    const [password, setPassword] = useState("");
+    const [confirmPass, setConfirmPass] = useState("");
+    const [emailInput, setEmailInput] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+    const [confirmEmail, setConfirmEmail] = useState<string | undefined>();
+
+    useEffect(() => {
+        if (!emailInput) return setError("");
+
+        setError(isValidEmail(emailInput) ? "" : "Please enter a valid email.");
+    }, [emailInput]);
+
+    useEffect(() => {
+        if (!password || !confirmPass) return setError("");
+
+        if (password !== confirmPass) return setError("Password and confirm password has to match.");
+        if (password.length < 6) return setError("Password must have at least 6 characters.");
+
+        setError(null);
+    }, [password, confirmPass]);
+
+    async function handleLogin(formData: FormData) {
+        const response = await login(formData);
+
+        if (response) {
+            setError(response.message);
+        }
+    }
+
+    async function handleSignup(formData: FormData) {
+        const result = await signup(formData);
+
+        // Open the alert only if confirmation is required
+        if (result?.confirmationNeeded) {
+            setConfirmEmail(result.email);
+            setSuccess(true);
+        }
+    }
     return (
         <div className="font-sans flex w-full max-w-md flex-col gap-6 mt-[15vh] m-auto">
             {success && (
@@ -36,8 +79,9 @@ export default function LoginPage() {
                                 <InfoIcon /> Confirmation needed
                             </AlertDialogTitle>
                             <AlertDialogDescription className="font-mono text-xs">
-                                To use your account you first have to confirm it. Please check your email (and spam
-                                folder) for the confirmation instructions and then come back.
+                                To use your account you first have to confirm it. Please check your email:
+                                <span className="text-foreground"> {confirmEmail}</span> (and spam folder) for the
+                                confirmation instructions and then you can close this tab.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -61,24 +105,40 @@ export default function LoginPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Log In</CardTitle>
-                            <CardDescription className="font-mono text-xs">
-                                Log in to your existing account here. If you don&apos;t have an account, click on
-                                &quot;Sign Up&quot; instead.
-                            </CardDescription>
+                            {error ? (
+                                <div className="text-red-500 font-mono text-xs">{error}</div>
+                            ) : (
+                                <CardDescription className="font-mono text-xs">
+                                    Log in to your existing account here. If you don&apos;t have an account, click on
+                                    &quot;Sign Up&quot; instead.
+                                </CardDescription>
+                            )}
                         </CardHeader>
                         <form className="flex flex-col gap-6 w-full m-auto" method="post">
                             <CardContent className="flex flex-col gap-3">
                                 <div className="flex flex-col gap-1">
                                     <Label htmlFor="email">Email</Label>
-                                    <Input id="email" name="email" type="email" required />
+                                    <Input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        onChange={() => setError(null)}
+                                        required
+                                    />
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label htmlFor="password">Password</Label>
-                                    <Input id="password" name="password" type="password" required />
+                                    <Input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        onChange={() => setError(null)}
+                                        required
+                                    />
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button className="cursor-pointer" formAction={login}>
+                                <Button className="cursor-pointer" formAction={handleLogin}>
                                     Log In
                                 </Button>
                             </CardFooter>
@@ -89,24 +149,53 @@ export default function LoginPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Sign Up</CardTitle>
-                            <CardDescription className="font-mono text-xs">
-                                Create an account to start chatting! If you already have an account, click on &quot;Log
-                                In&quot; instead.
-                            </CardDescription>
+                            {error ? (
+                                <div className="text-red-500 font-mono text-xs">{error}</div>
+                            ) : (
+                                <CardDescription className="font-mono text-xs">
+                                    Create an account to start chatting! If you already have an account, click on
+                                    &quot;Log In&quot; instead.
+                                </CardDescription>
+                            )}
                         </CardHeader>
-                        <form className="flex flex-col gap-6 w-full m-auto" method="post">
+                        <form className="flex flex-col gap-6 w-full m-auto mb-10" method="post">
                             <CardContent className="flex flex-col gap-3">
                                 <div className="flex flex-col gap-1">
                                     <Label htmlFor="email">Email</Label>
-                                    <Input id="email" name="email" type="email" required />
+                                    <Input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value={emailInput}
+                                        onChange={(e) => setEmailInput(e.target.value)}
+                                        required
+                                    />
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <Label htmlFor="password">Password</Label>
-                                    <Input id="password" name="password" type="password" required />
+                                    <Input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <Label htmlFor="password">Confirm Password</Label>
+                                    <Input
+                                        id="confirm"
+                                        name="confirm"
+                                        type="password"
+                                        value={confirmPass}
+                                        onChange={(e) => setConfirmPass(e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button className="cursor-pointer" formAction={signup}>
+                                <Button className="cursor-pointer" formAction={handleSignup} disabled={error !== null}>
                                     Sign Up
                                 </Button>
                             </CardFooter>
