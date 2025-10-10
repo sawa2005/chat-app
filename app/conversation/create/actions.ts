@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { broadcastMember, broadcastMessage, broadcastReaction } from "@/lib/broadcast";
 import { createClient } from "@/lib/server";
 
-import { Member, Reaction } from "@/lib/types";
+import { Member } from "@/lib/types";
 
 export async function getFirstUnreadIndex(conversationId: string, profileId: bigint) {
     // Calculate the index of the first unread message
@@ -355,6 +355,7 @@ export async function updateConversationName(conversationId: string, newName: st
     return updated;
 }
 
+// TODO: check if there are duplicate usernames.
 // TODO: check if username exists before adding and display error/don't create if it doesn't exist.
 export async function handleCreateConversation(formData: FormData) {
     const currentProfileId = await getCurrentProfileId();
@@ -369,9 +370,21 @@ export async function handleCreateConversation(formData: FormData) {
 
     const groupName = formData.get("group-name")?.toString() ?? undefined;
     const firstMessage = formData.get("first-message")?.toString() ?? "";
+    const missingUsernames: string[] = [];
 
     if (!selectedProfileNames.length || !firstMessage) {
         throw new Error("Missing required fields");
+    }
+
+    for (const username of selectedProfileNames) {
+        const profile = await prisma.profiles.findFirst({ where: { username } });
+        if (!profile) missingUsernames.push(username);
+    }
+
+    if (missingUsernames.length > 0) {
+        redirect(
+            `/conversation/create?error=missing_usernames&users=${encodeURIComponent(missingUsernames.join(","))}`
+        );
     }
 
     const selectedProfiles = await prisma.profiles.findMany({

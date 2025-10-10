@@ -63,12 +63,10 @@ export function MessageBubble({
     editContent,
     setEditContent,
     onSubmitEdit,
-    isConsecutive,
     scrollToBottom,
     initialLoad,
     setInitialLoad,
     setEditingMessageId,
-    containerRef,
 }: {
     message: Message;
     isOwner: boolean;

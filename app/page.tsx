@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { getUsername, logout } from "./login/actions";
 import Link from "next/link";
 import ConversationsPage from "./conversation/page";
 
@@ -14,8 +13,6 @@ export default async function Home() {
     if (error || !data?.user) {
         redirect("/login");
     }
-
-    const username = await getUsername(data.user.id);
 
     const messages = await prisma.messages.findMany();
     console.log(messages);

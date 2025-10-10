@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/client";
+import Image from "next/image";
 
+// TODO: add loading
 export default function AvatarPreview({ size, src, username }: { size: number; src: string | null; username: string }) {
     const [displaySrc, setDisplaySrc] = useState<string | null>(null);
 
@@ -53,7 +55,7 @@ export default function AvatarPreview({ size, src, username }: { size: number; s
     const imgSrc = displaySrc || fallback;
 
     return (
-        <img
+        <Image
             src={imgSrc}
             alt={`${username} avatar`}
             title={username}

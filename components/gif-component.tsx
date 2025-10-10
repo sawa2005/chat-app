@@ -4,7 +4,7 @@ import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { ScanSearch } from "lucide-react";
 import { useTheme } from "next-themes";
 
-interface TenorImage {
+/* interface TenorImage {
     id: string;
     title: string;
     url: string;
@@ -13,7 +13,7 @@ interface TenorImage {
         mediumgif?: { url: string; dims: [number, number]; size: string };
         mp4: { url: string; dims: [number, number]; size: string };
     }>;
-}
+} */
 
 interface GifComponentProps {
     imgPreview: string | null;

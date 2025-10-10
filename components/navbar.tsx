@@ -1,12 +1,8 @@
 import {
     NavigationMenu,
-    NavigationMenuContent,
-    NavigationMenuIndicator,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-    NavigationMenuTrigger,
-    NavigationMenuViewport,
 } from "@/components/ui/navigation-menu";
 
 import {
@@ -31,6 +27,8 @@ export default async function Navigation() {
     const supabase = await createClient();
 
     const { data, error } = await supabase.auth.getUser();
+
+    if (error) throw new Error(error.message);
 
     const currentUserEmail = data.user?.email;
 

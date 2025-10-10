@@ -8,7 +8,6 @@ import {
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { AddUserButton } from "@/components/add-user-button";
 import Avatar from "@/components/avatar";

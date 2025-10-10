@@ -1,13 +1,16 @@
-import { prisma } from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createConversation, handleCreateConversation } from "./actions";
+import { handleCreateConversation } from "./actions";
 
-export default async function CreateConversationPage() {
+export default async function CreateConversationPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ error?: string; users?: string }>;
+}) {
     const supabase = await createClient();
 
     const { data, error } = await supabase.auth.getUser();
@@ -15,6 +18,12 @@ export default async function CreateConversationPage() {
     if (error || !data?.user) {
         redirect("/login");
     }
+
+    const params = await searchParams;
+
+    // read errors from searchParams and render a small banner in the page
+    const errorKey = params.error ?? null;
+    const missingUsers = params.users ? decodeURIComponent(params.users).split(",") : [];
 
     return (
         <div className="font-sans flex flex-col justify-center m-auto w-fit mt-20">
@@ -25,6 +34,11 @@ export default async function CreateConversationPage() {
                     <p className="text-xs font-mono text-muted-foreground">
                         / for a group, seperate usernames with a comma - (,).
                     </p>
+                    {errorKey === "missing_usernames" && (
+                        <div className="text-xs font-mono text-red-600">
+                            The following usernames were not found: {missingUsers.join(", ")}
+                        </div>
+                    )}
                     <Input id="selected-profile-names" name="selected-profile-names" type="text" required />
                 </div>
                 {/* TODO: add placeholder which automatically shows the selected usernames in the group name */}
