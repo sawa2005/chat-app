@@ -1,68 +1,85 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/client";
 import Image from "next/image";
+import { Skeleton } from "./ui/skeleton";
 
-// TODO: add loading
 export default function AvatarPreview({ size, src, username }: { size: number; src: string | null; username: string }) {
-    const [displaySrc, setDisplaySrc] = useState<string | null>(null);
+    const [displaySrc, setDisplaySrc] = useState<string | null | undefined>(undefined);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let cancelled = false;
         const supabase = createClient();
 
-        const isBlobOrData = (s: string) => /^blob:|^data:/i.test(s);
-        const isHttp = (s: string) => /^https?:\/\//i.test(s);
-
         (async () => {
+            setLoading(true); // start loading whenever src changes
+
+            // 1. No src at all → no image
             if (!src) {
-                if (!cancelled) setDisplaySrc(null); // <- skip if effect is stale/unmounted
+                if (!cancelled) {
+                    setDisplaySrc(null);
+                    setLoading(false);
+                }
                 return;
             }
 
-            // blob/data or full http(s) URL -> use directly
-            if (isBlobOrData(src) || isHttp(src)) {
-                if (!cancelled) setDisplaySrc(src);
-                return;
-            }
-
-            // treat as storage path: use Supabase helper to build public url then check existence
+            // 3. Otherwise, treat as Supabase storage path
             try {
                 const { data } = supabase.storage.from("avatars").getPublicUrl(src);
                 const publicUrl = data?.publicUrl;
+
                 if (!publicUrl) {
-                    if (!cancelled) setDisplaySrc(null);
+                    if (!cancelled) {
+                        setDisplaySrc(null);
+                        setLoading(false);
+                    }
                     return;
                 }
 
-                // check that the uploaded object is actually accessible before using it
+                // Check if actually accessible
                 const res = await fetch(publicUrl, { method: "HEAD" });
-                if (!cancelled && res.ok) {
-                    setDisplaySrc(publicUrl);
-                } else {
-                    if (!cancelled) setDisplaySrc(null);
+
+                if (!cancelled) {
+                    if (res.ok) {
+                        setDisplaySrc(publicUrl);
+                    } else {
+                        setDisplaySrc(null);
+                    }
+                    setLoading(false);
                 }
             } catch {
-                if (!cancelled) setDisplaySrc(null);
+                if (!cancelled) {
+                    setDisplaySrc(null);
+                    setLoading(false);
+                }
             }
         })();
 
         return () => {
-            cancelled = true; // <- marks the async result as stale
+            cancelled = true;
         };
     }, [src, username]);
 
     const fallback = `https://api.dicebear.com/9.x/identicon/jpg?seed=${encodeURIComponent(username)}`;
-    const imgSrc = displaySrc || fallback;
+    const imgSrc = displaySrc ?? fallback;
 
     return (
-        <Image
-            src={imgSrc}
-            alt={`${username} avatar`}
-            title={username}
-            width={size}
-            height={size}
-            className="rounded-full object-cover"
-            style={{ width: size, height: size }}
-        />
+        <div className="min-w-[100px] relative">
+            {loading && <Skeleton className={`absolute z-100 rounded-full`} style={{ width: size, height: size }} />}
+            <Image
+                src={imgSrc}
+                alt={`${username} avatar`}
+                title={username}
+                width={size}
+                height={size}
+                className={`${
+                    loading ? "opacity-0" : "opacity-100"
+                } transition-all ease-in-out duration-1000 rounded-full object-cover`}
+                style={{ width: size, height: size }}
+                onLoad={() => {
+                    if (displaySrc !== undefined) setLoading(false);
+                }}
+            />
+        </div>
     );
 }
