@@ -21,14 +21,10 @@ import { logout } from "@/app/login/actions";
 
 import { ThemeToggleButton } from "./theme-toggle-button";
 
-// TODO: remove unused links and pages
-
 export default async function Navigation() {
     const supabase = await createClient();
 
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error) throw new Error(error.message);
+    const { data /* , error */ } = await supabase.auth.getUser();
 
     const currentUserEmail = data.user?.email;
 
@@ -37,12 +33,7 @@ export default async function Navigation() {
             <NavigationMenuList>
                 <NavigationMenuItem>
                     <NavigationMenuLink asChild>
-                        <Link href="/">Home</Link>
-                    </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                    <NavigationMenuLink asChild>
-                        <Link href="/private">Private</Link>
+                        <Link href="/">My Conversations</Link>
                     </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
@@ -65,12 +56,6 @@ export default async function Navigation() {
                             <Link href="/profile/edit" className="cursor-pointer">
                                 Edit Profile
                             </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                            <Link href="#">Upload Avatars</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                            <Link href="#">Your Chats</Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>

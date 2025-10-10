@@ -1,18 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import ConversationsPage from "./conversation/page";
+import PrivatePage from "./private/page";
 
 export default async function Home() {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error || !data?.user) {
-        redirect("/login");
-    }
+    await PrivatePage();
 
     const messages = await prisma.messages.findMany();
     console.log(messages);

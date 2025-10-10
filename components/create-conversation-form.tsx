@@ -56,13 +56,12 @@ export function CreateConversationForm({
                     required
                 />
             </div>
-            {/* TODO: add placeholder which automatically shows the selected usernames in the group name */}
             <div className="flex flex-col gap-1">
                 <Label htmlFor="group-name">What do you want to call this conversation?</Label>
                 <p className="text-xs font-mono text-muted-foreground">
                     / by default, it will be the same as selected usernames.
                 </p>
-                <Input id="group-name" name="group-name" type="text" />
+                <Input id="group-name" name="group-name" type="text" placeholder={usernames} />
             </div>
             <div className="flex flex-col gap-1">
                 <Label htmlFor="first-message">What do you want to say?</Label>
