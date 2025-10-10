@@ -27,6 +27,14 @@ export function isEmojiOnly(message: string) {
     return matched !== null && matched.join("") === stripped;
 }
 
+// TODO: scroll force with images loading but only if the user hasn't scrolled the page yet.
+// TODO: re-fetch messages when user re-focuses browser.
+// TODO: automatically select message input field after image/gif has been picked.
+// TODO: automatically select message input field after clicking reply.
+// TODO: reaction styling in dark mode.
+// TODO: check conversation title edit broadcast.
+// TODO: remove saved info suggestions in chat input.
+
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
     if (prev.type === "info" || current.type === "info") return false;
@@ -75,7 +83,9 @@ export default function Messages({
     // Initial scroll
     useEffect(() => {
         requestAnimationFrame(() => {
-            scrollToBottom(false, true);
+            requestAnimationFrame(() => {
+                scrollToBottom(false, true);
+            });
         });
     });
 

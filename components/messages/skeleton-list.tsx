@@ -2,13 +2,14 @@ import { Skeleton } from "../ui/skeleton";
 
 export default function SkeletonList() {
     return (
-        <div className="mt-4">
-            <Skeleton className="h-[50px] w-[50%] rounded-xl" />
-            <Skeleton className="h-[40px] w-[55%] rounded-xl mt-3" />
-            <Skeleton className="h-[60px] w-[53%] rounded-xl mt-5 ml-auto" />
-            <Skeleton className="h-[40px] w-[59%] rounded-xl mt-5" />
-            <Skeleton className="h-[40px] w-[43%] rounded-xl mt-5 ml-auto" />
-            <Skeleton className="h-[80px] w-[55%] rounded-xl mt-3 ml-auto" />
+        <div className="mt-4 h-full flex flex-col justify-between gap-2">
+            <Skeleton className="h-[10%] w-[50%] min-h-8 rounded-xl" />
+            <Skeleton className="h-[20%] w-[55%] min-h-8 rounded-xl" />
+            <Skeleton className="h-[15%] w-[53%] min-h-8 rounded-xl ml-auto" />
+            <Skeleton className="h-[7%] w-[59%] min-h-8 rounded-xl" />
+            <Skeleton className="h-[10%] w-[43%] min-h-8 rounded-xl ml-auto" />
+            <Skeleton className="h-[7%] w-[43%] min-h-8 rounded-xl ml-auto" />
+            <Skeleton className="h-[10%] w-[55%] min-h-8 rounded-xl ml-auto" />
         </div>
     );
 }
