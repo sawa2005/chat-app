@@ -9,6 +9,4 @@ export default async function PrivatePage() {
     if (error || !data?.user) {
         redirect("/login");
     }
-
-    return <p className="font-sans text-center mt-10">Hello {data.user.email}</p>;
 }

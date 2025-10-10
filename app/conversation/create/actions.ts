@@ -355,8 +355,6 @@ export async function updateConversationName(conversationId: string, newName: st
     return updated;
 }
 
-// TODO: check if there are duplicate usernames.
-// TODO: check if username exists before adding and display error/don't create if it doesn't exist.
 export async function handleCreateConversation(formData: FormData) {
     const currentProfileId = await getCurrentProfileId();
     if (!currentProfileId) throw new Error("Not authenticated or profile missing");
