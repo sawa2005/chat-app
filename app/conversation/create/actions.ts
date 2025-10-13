@@ -3,7 +3,7 @@
 import { getCurrentProfileId } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { broadcastMember, broadcastMessage, broadcastReaction } from "@/lib/broadcast";
+import { broadcastMember, broadcastMessage, broadcastNameChange, broadcastReaction } from "@/lib/broadcast";
 import { createClient } from "@/lib/server";
 
 import { Member } from "@/lib/types";
@@ -344,13 +344,22 @@ export async function updateConversationName(conversationId: string, newName: st
         data: { name: newName },
     });
 
-    await prisma.messages.create({
+    const msg = await prisma.messages.create({
         data: {
             conversation_id: conversationId,
             content: `${profile.username} changed the conversation name to '${newName}'.`,
             type: "info",
         },
     });
+
+    const msgWithParent = {
+        ...msg,
+        messages: null,
+        sender_avatar: null,
+    };
+
+    await broadcastMessage(conversationId, msgWithParent);
+    await broadcastNameChange(conversationId, newName);
 
     return updated;
 }

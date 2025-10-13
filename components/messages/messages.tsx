@@ -31,9 +31,6 @@ export function isEmojiOnly(message: string) {
 // TODO: re-fetch messages when user re-focuses browser.
 // TODO: automatically select message input field after image/gif has been picked.
 // TODO: automatically select message input field after clicking reply.
-// TODO: reaction styling in dark mode.
-// TODO: check conversation title edit broadcast.
-// TODO: remove saved info suggestions in chat input.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -209,6 +206,7 @@ export default function Messages({
                     message_reads: payload.message_reads ?? [],
                 };
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
+                console.log("Received new message:", message);
             })
             .on("broadcast", { event: "message_edited" }, ({ payload }) => {
                 console.log("Message edited:", payload);

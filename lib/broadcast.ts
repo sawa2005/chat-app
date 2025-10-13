@@ -79,6 +79,8 @@ export async function broadcastMessage(
             : null,
     };
 
+    console.log("Broadcasting message:", payload);
+
     return supabase.channel(`conversation-${conversationId}`).send({
         type: "broadcast",
         event: "message",
@@ -114,6 +116,21 @@ export async function broadcastMember(
     return supabase.channel(`conversation-${conversationId}`).send({
         type: "broadcast",
         event: action === "added" ? "member_added" : "member_removed",
+        payload,
+    });
+}
+
+export async function broadcastNameChange(conversationId: string, newName: string) {
+    const payload = {
+        id: conversationId,
+        name: newName,
+    };
+
+    console.log("Broadcasting conversation name change:", payload);
+
+    return supabase.channel(`conversation-${conversationId}`).send({
+        type: "broadcast",
+        event: "name_edited",
         payload,
     });
 }

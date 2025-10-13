@@ -256,7 +256,7 @@ export default function SendMessageForm({
                 </div>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} autoComplete="off">
                 <div className="flex gap-1">
                     <div className="relative flex gap-1 w-full">
                         <Input
@@ -268,6 +268,7 @@ export default function SendMessageForm({
                             disabled={isPending}
                             value={content}
                             onChange={handleInputChange}
+                            autoComplete="none"
                         />
                         <Input
                             type="file"

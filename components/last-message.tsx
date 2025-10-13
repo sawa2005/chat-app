@@ -67,7 +67,7 @@ export default function LastMessage({
             <div className="flex justify-between w-full max-w-full">
                 <div className="flex just w-full max-w-[70%] items-center gap-1">
                     <p className="text-sm text-muted-foreground truncate max-w-[95%] overflow-hidden">
-                        {lastMessage.created_at}
+                        {lastMessage.content}
                     </p>
                 </div>
                 <p className="text-sm text-muted-foreground font-mono">{lastMessage.created_at}</p>

@@ -43,6 +43,7 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
     const [isExpanded, setIsExpanded] = useState(false);
     const [members, setMembers] = useState<Member[]>([]);
     const [loadingMembers, setLoadingMembers] = useState(true);
+    const [name, setName] = useState(conversation.name);
     const supabase = createClient();
 
     useEffect(() => {
@@ -73,6 +74,10 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                 console.log("Member removed!");
                 setMembers((prev) => prev.filter((m) => m.id.toString() !== payload.id.toString()));
             })
+            .on("broadcast", { event: "name_edited" }, ({ payload }) => {
+                console.log("Conversation name edit received:", payload);
+                setName(payload.name);
+            })
             .subscribe();
 
         return () => {
@@ -84,7 +89,12 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
         return (
             <div>
                 <div className="flex justify-between w-full flex-1 min-h-0 h-min overflow-y-auto">
-                    <ConversationTitle id={conversation.id} initialName={conversation.name} />
+                    <ConversationTitle
+                        id={conversation.id}
+                        name={name}
+                        setName={setName}
+                        initialName={conversation.name}
+                    />
                     <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <button className="text-muted-foreground hover:text-primary cursor-pointer mb-auto">
@@ -116,7 +126,12 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
         return (
             <div>
                 <div className="flex justify-between w-full">
-                    <ConversationTitle id={conversation.id} initialName={conversation.name} />
+                    <ConversationTitle
+                        id={conversation.id}
+                        name={name}
+                        setName={setName}
+                        initialName={conversation.name}
+                    />
                     <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <button className="text-muted-foreground hover:text-primary cursor-pointer mb-auto">

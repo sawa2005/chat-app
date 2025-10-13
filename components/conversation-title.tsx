@@ -1,15 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { updateConversationName } from "@/app/conversation/create/actions";
 import { Input } from "./ui/input";
 import { Check } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import { X } from "lucide-react";
+import { createClient } from "@/lib/client";
+import { broadcastMessage } from "@/lib/broadcast";
 
-export default function ConversationTitle({ id, initialName }: { id: string; initialName: string }) {
+export default function ConversationTitle({
+    id,
+    name,
+    setName,
+    initialName,
+}: {
+    id: string;
+    name: string;
+    initialName: string;
+    setName: Dispatch<SetStateAction<string>>;
+}) {
     const [editing, setEditing] = useState(false);
-    const [name, setName] = useState(initialName);
     const [existingName, setExistingName] = useState(initialName);
 
     async function handleSave() {
