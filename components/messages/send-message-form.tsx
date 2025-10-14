@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/client";
-import { useState, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -84,6 +84,10 @@ export default function SendMessageForm({
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
     let typingTimeout: NodeJS.Timeout | null = null;
+
+    useEffect(() => {
+        inputRef.current?.focus();
+    }, [replyTo, imgPreview]);
 
     function showAlert(message: React.ReactNode) {
         setAlert(message);
