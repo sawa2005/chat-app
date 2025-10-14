@@ -17,6 +17,8 @@ interface MessageListProps {
     setInitialLoad: Dispatch<SetStateAction<boolean>>;
     firstUnreadIndex: number | null;
     containerRef: RefObject<HTMLDivElement | null>;
+    imageCount: number;
+    setImageLoading: Dispatch<SetStateAction<boolean>>;
 }
 
 export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageListProps) {

@@ -1,5 +1,5 @@
 import { isEmojiOnly } from "./messages";
-import { Dispatch, SetStateAction, ReactNode, RefObject } from "react";
+import { Dispatch, SetStateAction, ReactNode, RefObject, useEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
@@ -67,6 +67,8 @@ export function MessageBubble({
     initialLoad,
     setInitialLoad,
     setEditingMessageId,
+    imageCount,
+    setImageLoading,
 }: {
     message: Message;
     isOwner: boolean;
@@ -80,8 +82,11 @@ export function MessageBubble({
     setInitialLoad: Dispatch<SetStateAction<boolean>>;
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
     containerRef: RefObject<HTMLDivElement | null>;
+    imageCount: number;
+    setImageLoading: Dispatch<SetStateAction<boolean>>;
 }) {
     const emojiOnly = isEmojiOnly(message.content);
+    let loadedCount = 0;
 
     if (isEditing) {
         return (
@@ -159,6 +164,11 @@ export function MessageBubble({
                                     }
                                 });
                             });
+
+                            loadedCount++;
+                            if (loadedCount > 0) {
+                                setImageLoading(false);
+                            }
                         }}
                     />
                 )}

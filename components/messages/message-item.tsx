@@ -25,6 +25,8 @@ export function MessageItem({
     setInitialLoad,
     conversationId,
     containerRef,
+    imageCount,
+    setImageLoading,
 }: {
     message: Message;
     prevMessage: Message;
@@ -41,6 +43,8 @@ export function MessageItem({
     initialLoad: boolean;
     setInitialLoad: Dispatch<SetStateAction<boolean>>;
     containerRef: RefObject<HTMLDivElement | null>;
+    imageCount: number;
+    setImageLoading: Dispatch<SetStateAction<boolean>>;
 }) {
     if (!message.sender) return;
 
@@ -116,6 +120,8 @@ export function MessageItem({
                 setInitialLoad={setInitialLoad}
                 containerRef={containerRef}
                 setEditingMessageId={setEditingMessageId}
+                imageCount={imageCount}
+                setImageLoading={setImageLoading}
             />
 
             {message.message_reactions && message.message_reactions.length > 0 && (

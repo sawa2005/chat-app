@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 
 export function useChatScroll() {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -31,3 +31,31 @@ export function useChatScroll() {
 
     return { containerRef, scrollToBottom };
 }
+
+export const useIsScrollOnTop = (
+    ref: React.RefObject<HTMLDivElement | null>,
+    loading: boolean,
+    imageLoading: boolean
+): boolean => {
+    const [isAtTop, setIsAtTop] = useState(false);
+
+    useEffect(() => {
+        const target = ref?.current || window;
+        const handleScroll = () => {
+            if (ref?.current && !loading && !imageLoading) {
+                console.log("current scroll height:", ref.current?.scrollHeight);
+                console.log("current scroll position:", ref.current?.scrollTop);
+                setIsAtTop(ref.current.scrollTop === 0);
+            } else {
+                return;
+            }
+        };
+        handleScroll();
+        target.addEventListener("scroll", handleScroll);
+        return () => {
+            target.removeEventListener("scroll", handleScroll);
+        };
+    }, [ref, loading, imageLoading]);
+
+    return isAtTop;
+};

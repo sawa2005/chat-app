@@ -8,9 +8,10 @@ import {
     markMessagesAsRead,
     loadInitMessages,
     getFirstUnreadIndex,
+    loadMoreMessages,
 } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
-import { useChatScroll } from "@/hooks/use-chat-scroll";
+import { useChatScroll, useIsScrollOnTop } from "@/hooks/use-chat-scroll";
 import TypingIndicator from "../typing-indicator";
 import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
@@ -59,12 +60,94 @@ export default function Messages({
     const [messages, setMessages] = useState<Message[]>([]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+    const [imageLoading, setImageLoading] = useState(true);
+    const [imageCount, setImageCount] = useState(0);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
 
+    const isAtTop = useIsScrollOnTop(containerRef, loading, imageLoading);
+
     // TODO: consider switching message hover text to on click instead.
+
+    useEffect(() => {
+        console.log("imageLoading:", imageLoading);
+    }, [imageLoading]);
+
+    useEffect(() => {
+        console.log("imageCount:", imageCount);
+    }, [imageCount]);
+
+    useEffect(() => {
+        console.log("isAtTop:", isAtTop);
+    }, [isAtTop]);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        if (isAtTop && !loading) {
+            const getMoreMessages = async () => {
+                setLoading(true);
+
+                const newMessages = await loadMoreMessages(conversationId, messages[0].id);
+
+                const formatted = (
+                    newMessages as {
+                        id: bigint;
+                        conversation_id: string;
+                        content: string | null;
+                        created_at: string;
+                        edited_at: string | null;
+                        image_url: string | null;
+                        type: string;
+                        deleted: boolean;
+                        sender:
+                            | { id: bigint; username: string; avatar: string | null }[]
+                            | { id: bigint; username: string; avatar: string | null };
+                        parent_id: bigint | null;
+                        messages: {
+                            id: bigint;
+                            content: string | null;
+                            image_url: string | null;
+                            sender: { id: bigint; username: string; avatar: string } | null;
+                        } | null;
+                        message_reactions:
+                            | {
+                                  id: bigint;
+                                  emoji: string;
+                                  created_at: Date;
+                                  profile_id: bigint;
+                                  message_id: bigint;
+                              }[]
+                            | null;
+                        message_reads: { profile_id: bigint }[];
+                    }[]
+                ).map((msg) => ({
+                    ...msg,
+                    sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
+                    created_at: new Date(msg.created_at),
+                })) as Message[];
+
+                console.log("loading more messages:", newMessages);
+
+                setMessages((prevMessages) => [...formatted, ...prevMessages]);
+
+                setLoading(false);
+
+                if (messages?.every((message) => message.image_url === null)) {
+                    setImageLoading(false);
+                } else {
+                    setImageCount(
+                        messages?.filter((message) => message.image_url !== null && message.deleted !== true).length ??
+                            0
+                    );
+                }
+            };
+            getMoreMessages();
+        }
+    }, [isAtTop, conversationId]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -123,6 +206,8 @@ export default function Messages({
 
         const getMessages = async () => {
             const messages = await loadInitMessages(conversationId);
+            console.log("loading inital messages:", messages);
+
             if (!isMounted) return;
 
             setMessages(
@@ -165,6 +250,14 @@ export default function Messages({
             );
 
             setLoading(false);
+
+            if (messages?.every((message) => message.image_url === null)) {
+                setImageLoading(false);
+            } else {
+                setImageCount(
+                    messages?.filter((message) => message.image_url !== null && message.deleted !== true).length ?? 0
+                );
+            }
         };
         getMessages().catch(console.error);
 
@@ -332,6 +425,8 @@ export default function Messages({
                         firstUnreadIndex={firstUnreadIndex}
                         initialLoad={initialLoad}
                         setInitialLoad={setInitialLoad}
+                        imageCount={imageCount}
+                        setImageLoading={setImageLoading}
                     />
                 </div>
             )}

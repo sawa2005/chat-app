@@ -128,7 +128,8 @@ export async function loadInitMessages(conversationId: string) {
     try {
         const prismaMessages = await prisma.messages.findMany({
             where: { conversation_id: conversationId },
-            orderBy: { created_at: "asc" },
+            orderBy: { created_at: "desc" },
+            take: 20,
             select: {
                 id: true,
                 conversation_id: true,
@@ -153,7 +154,7 @@ export async function loadInitMessages(conversationId: string) {
         });
 
         if (prismaMessages) {
-            const messages = prismaMessages.map((msg) => ({
+            const messages = prismaMessages.reverse().map((msg) => ({
                 ...msg,
                 // convert IDs to bigint
                 id: BigInt(msg.id),
@@ -167,6 +168,56 @@ export async function loadInitMessages(conversationId: string) {
         }
     } catch (err) {
         console.error("Error loading messages:", err);
+    }
+}
+
+export async function loadMoreMessages(conversationId: string, beforeMessageId: bigint) {
+    try {
+        const prismaMessages = await prisma.messages.findMany({
+            where: {
+                conversation_id: conversationId,
+                id: { lt: beforeMessageId },
+            },
+            orderBy: { created_at: "desc" },
+            take: 20,
+            select: {
+                id: true,
+                conversation_id: true,
+                content: true,
+                created_at: true,
+                edited_at: true,
+                image_url: true,
+                type: true,
+                deleted: true,
+                sender: { select: { id: true, username: true, avatar: true } },
+                messages: {
+                    select: {
+                        id: true,
+                        content: true,
+                        image_url: true,
+                        sender: { select: { id: true, username: true } },
+                    },
+                },
+                message_reactions: { select: { emoji: true, profile_id: true } },
+                message_reads: { select: { profile_id: true } },
+            },
+        });
+
+        if (prismaMessages) {
+            const messages = prismaMessages.reverse().map((msg) => ({
+                ...msg,
+                // convert IDs to bigint
+                id: BigInt(msg.id),
+                sender: msg.sender
+                    ? { id: BigInt(msg.sender.id), username: msg.sender.username, avatar: msg.sender.avatar }
+                    : null,
+                created_at: msg.created_at.toISOString(),
+            }));
+
+            return messages;
+        }
+    } catch (err) {
+        console.error("Error loading more messages:", err);
     }
 }
 
