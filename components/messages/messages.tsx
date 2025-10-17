@@ -9,6 +9,7 @@ import {
     loadInitMessages,
     getFirstUnreadIndex,
     loadMoreMessages,
+    getMessageIds,
 } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll, useIsScrollOnTop } from "@/hooks/use-chat-scroll";
@@ -31,8 +32,9 @@ export function isEmojiOnly(message: string) {
 
 // TODO: scroll force with images loading but only if the user hasn't scrolled the page yet.
 // TODO: re-fetch messages when user re-focuses browser.
-// TODO: automatically select message input field after image/gif has been picked.
-// TODO: automatically select message input field after clicking reply.
+// TODO: if user is scrolled more than box height away from bottom, don't mark new messages as read.
+// TODO: if user is scrolled high enough, display back to bottom button.
+// TODO: custom scroll bar styles.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -68,6 +70,7 @@ export default function Messages({
     const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
+    const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
     const scrollStateRef = useRef({ scrollPos: 0, scrollHeight: 0 });
 
     const isAtTop = useIsScrollOnTop(containerRef, loading, imageLoading);
@@ -76,6 +79,8 @@ export default function Messages({
     // TODO: different scroll animation and state for loading more messages.
     // TODO: don't autoscroll after more messages load.
     // TODO: number of unread messages in tab title.
+    // TODO: check chat autoscrolling on first image load.
+    // TODO: fix unintended loading more messages on initial load.
 
     useEffect(() => {
         console.log("imageLoading:", imageLoading);
@@ -108,7 +113,7 @@ export default function Messages({
         const container = containerRef.current;
         if (!container) return;
 
-        if (isAtTop && !isLoadingMore) {
+        if (isAtTop && !isLoadingMore && !allMessagesLoaded) {
             const getMoreMessages = async () => {
                 setIsLoadingMore(true);
 
@@ -179,6 +184,16 @@ export default function Messages({
 
         container.scrollTop = scrollPos + heightDifference;
         setIsLoadingMore(false);
+
+        (async () => {
+            const messageIds = await getMessageIds(conversationId);
+            console.log(messageIds);
+
+            // Check if all messages have loaded
+            if (messages[0].id === messageIds[0]) {
+                setAllMessagesLoaded(true);
+            }
+        })();
     }, [messages]);
 
     useEffect(() => {

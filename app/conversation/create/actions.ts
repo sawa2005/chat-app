@@ -270,6 +270,17 @@ export async function deleteMessage(messageId: bigint) {
     return msg;
 }
 
+export async function getMessageIds(conversationId: string): Promise<bigint[]> {
+    const rawIds = await prisma.messages.findMany({
+        where: { conversation_id: conversationId },
+        select: {
+            id: true,
+        },
+    });
+
+    return Array.from(rawIds, (i) => i.id);
+}
+
 export async function getConversationMembers(conversationId: string): Promise<Member[]> {
     const members = await prisma.conversation_members.findMany({
         where: { conversation_id: conversationId },
