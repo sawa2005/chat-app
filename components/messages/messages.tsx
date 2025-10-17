@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
     sendMessage,
     deleteMessage,
@@ -17,6 +17,7 @@ import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
 import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
+import { Spinner } from "../ui/spinner";
 
 const supabase = createClient();
 
@@ -60,16 +61,21 @@ export default function Messages({
     const [messages, setMessages] = useState<Message[]>([]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
     const [imageCount, setImageCount] = useState(0);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
+    const scrollStateRef = useRef({ scrollPos: 0, scrollHeight: 0 });
 
     const isAtTop = useIsScrollOnTop(containerRef, loading, imageLoading);
 
     // TODO: consider switching message hover text to on click instead.
+    // TODO: different scroll animation and state for loading more messages.
+    // TODO: don't autoscroll after more messages load.
+    // TODO: number of unread messages in tab title.
 
     useEffect(() => {
         console.log("imageLoading:", imageLoading);
@@ -87,9 +93,24 @@ export default function Messages({
         const container = containerRef.current;
         if (!container) return;
 
-        if (isAtTop && !loading) {
+        const handleScroll = () => {
+            scrollStateRef.current = {
+                scrollPos: container.scrollTop,
+                scrollHeight: container.scrollHeight,
+            };
+        };
+
+        container.addEventListener("scroll", handleScroll);
+        return () => container.removeEventListener("scroll", handleScroll);
+    });
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        if (isAtTop && !isLoadingMore) {
             const getMoreMessages = async () => {
-                setLoading(true);
+                setIsLoadingMore(true);
 
                 const newMessages = await loadMoreMessages(conversationId, messages[0].id);
 
@@ -134,8 +155,6 @@ export default function Messages({
 
                 setMessages((prevMessages) => [...formatted, ...prevMessages]);
 
-                setLoading(false);
-
                 if (messages?.every((message) => message.image_url === null)) {
                     setImageLoading(false);
                 } else {
@@ -148,6 +167,19 @@ export default function Messages({
             getMoreMessages();
         }
     }, [isAtTop, conversationId]);
+
+    // Restore scroll position after more loaded messages
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container || !scrollStateRef.current.scrollHeight || !isLoadingMore) return;
+
+        const { scrollPos, scrollHeight } = scrollStateRef.current;
+        const newScrollHeight = container.scrollHeight;
+        const heightDifference = newScrollHeight - scrollHeight;
+
+        container.scrollTop = scrollPos + heightDifference;
+        setIsLoadingMore(false);
+    }, [messages]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -164,7 +196,7 @@ export default function Messages({
     useEffect(() => {
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                scrollToBottom(false, true);
+                scrollToBottom(false, false);
             });
         });
     });
@@ -409,6 +441,11 @@ export default function Messages({
                 <SkeletonList />
             ) : (
                 <div ref={containerRef} className="flex-1 min-h-0 pr-4 mt-5 overflow-y-auto overflow-x-hidden">
+                    {isLoadingMore && (
+                        <div className="m-auto w-fit py-5">
+                            <Spinner />
+                        </div>
+                    )}
                     <MessageList
                         messages={messages}
                         currentUsername={currentUsername}

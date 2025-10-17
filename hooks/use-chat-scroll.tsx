@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect, RefObject } from "react";
 
 export function useChatScroll() {
     const containerRef = useRef<HTMLDivElement>(null);
