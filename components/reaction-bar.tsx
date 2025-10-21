@@ -3,6 +3,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import React from "react";
 import { getUsernameList } from "@/app/conversation/create/actions";
 
+// TODO: update usernames from broadcasted reaction.
+
 function aggregateReactions(reactions: Reaction[], currentProfileId: bigint) {
     const reactionMap: { [emoji: string]: { count: number; reacted: boolean; profile_ids: bigint[] } } = {};
     reactions.forEach((r) => {
@@ -43,13 +45,22 @@ export function ReactionBar({
     ).sort((a, b) => b.count - a.count);
 
     async function handleHover(emoji: string, profileIds: bigint[]) {
-        if (usernames[emoji] || loading[emoji]) return;
+        const profileIdSet = new Set(profileIds);
+
+        // Only skip if we've already fetched the exact same set of IDs
+        if (loading[emoji]) return;
+        if (usernames[emoji] && usernames[emoji].length === profileIdSet.size) return;
 
         setLoading((prev) => ({ ...prev, [emoji]: true }));
 
-        const fetched = await getUsernameList([...new Set(profileIds)]);
-        setUsernames((prev) => ({ ...prev, [emoji]: profileIds.map((id) => fetched[id.toString()] ?? "Unknown") }));
+        const fetched = await getUsernameList([...profileIdSet]);
+        setUsernames((prev) => ({
+            ...prev,
+            [emoji]: Array.from(profileIdSet).map((id) => fetched[id.toString()] ?? "Unknown"),
+        }));
         setLoading((prev) => ({ ...prev, [emoji]: false }));
+
+        console.log("Hovered reaction usernames:", fetched);
     }
 
     if (reactions.length === 0) return null;
@@ -62,11 +73,11 @@ export function ReactionBar({
                         <button
                             onClick={() => onToggle(r.emoji)}
                             onMouseEnter={() => handleHover(r.emoji, r.profile_ids)}
-                            className={`cursor-pointer flex items-center gap-1 rounded-lg px-2 py-0.5 text-sm
+                            className={`cursor-pointer flex items-center gap-1 rounded-lg pl-0.5 pr-1.5 text-xl
                             border transition
                             ${
                                 r.reacted
-                                    ? "bg-accent border-accent-foreground"
+                                    ? "bg-accent border-accent-foreground font-bold"
                                     : "bg-background border-muted-foreground"
                             }`}
                         >

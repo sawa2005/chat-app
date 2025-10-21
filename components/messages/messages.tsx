@@ -35,6 +35,7 @@ export function isEmojiOnly(message: string) {
 // TODO: if user is scrolled more than box height away from bottom, don't mark new messages as read.
 // TODO: if user is scrolled high enough, display back to bottom button.
 // TODO: custom scroll bar styles.
+// TODO: list profile pictures of users who have read a message.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
