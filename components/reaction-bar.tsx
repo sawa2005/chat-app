@@ -3,8 +3,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import React from "react";
 import { getUsernameList } from "@/app/conversation/create/actions";
 
-// TODO: update usernames from broadcasted reaction.
-
 function aggregateReactions(reactions: Reaction[], currentProfileId: bigint) {
     const reactionMap: { [emoji: string]: { count: number; reacted: boolean; profile_ids: bigint[] } } = {};
     reactions.forEach((r) => {

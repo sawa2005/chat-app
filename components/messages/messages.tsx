@@ -37,6 +37,11 @@ export function isEmojiOnly(message: string) {
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 
+// TODO: consider switching message hover text to on click instead.
+// TODO: number of unread messages in tab title.
+// TODO: check chat autoscrolling on first image load.
+// TODO: fix unintended loading more messages on initial load.
+
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
     if (prev.type === "info" || current.type === "info") return false;
@@ -75,13 +80,6 @@ export default function Messages({
     const scrollStateRef = useRef({ scrollPos: 0, scrollHeight: 0 });
 
     const isAtTop = useIsScrollOnTop(containerRef, loading, imageLoading);
-
-    // TODO: consider switching message hover text to on click instead.
-    // TODO: different scroll animation and state for loading more messages.
-    // TODO: don't autoscroll after more messages load.
-    // TODO: number of unread messages in tab title.
-    // TODO: check chat autoscrolling on first image load.
-    // TODO: fix unintended loading more messages on initial load.
 
     useEffect(() => {
         console.log("imageLoading:", imageLoading);
