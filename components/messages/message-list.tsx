@@ -14,11 +14,11 @@ interface MessageListProps {
     handleDelete: (id: bigint) => void;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     initialLoad: boolean;
-    setInitialLoad: Dispatch<SetStateAction<boolean>>;
     firstUnreadIndex: number | null;
     containerRef: RefObject<HTMLDivElement | null>;
     imageCount: number;
     setImageLoading: Dispatch<SetStateAction<boolean>>;
+    onImageLoad?: () => void;
 }
 
 export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageListProps) {
@@ -32,9 +32,9 @@ export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageList
 
     const newMessageComponent = (
         <li className="relative my-4 flex items-center">
-            <div className="flex-grow border-t border-gray-300"></div>
+            <div className="grow border-t border-gray-300"></div>
             <span className="mx-2 text-xs text-gray-500 font-mono">New Messages</span>
-            <div className="flex-grow border-t border-gray-300"></div>
+            <div className="grow border-t border-gray-300"></div>
         </li>
     );
 

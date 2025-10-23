@@ -39,8 +39,6 @@ export function isEmojiOnly(message: string) {
 
 // TODO: consider switching message hover text to on click instead.
 // TODO: number of unread messages in tab title.
-// TODO: check chat autoscrolling on first image load.
-// TODO: fix unintended loading more messages on initial load.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -77,9 +75,42 @@ export default function Messages({
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
+    const [userHasScrolled, setUserHasScrolled] = useState(false);
+    const [hasDoneInitialScroll, setHasDoneInitialScroll] = useState(false);
     const scrollStateRef = useRef({ scrollPos: 0, scrollHeight: 0 });
+    const isProgrammaticScroll = useRef(false);
+    const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null);
+    const hasTriggeredLoadRef = useRef(false);
 
-    const isAtTop = useIsScrollOnTop(containerRef, loading, imageLoading);
+    const isAtTop = useIsScrollOnTop(containerRef, loading || isLoadingMore);
+
+    // Handle image loading completion
+    const handleImageLoad = () => {
+        console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled);
+        // Scroll with same parameters as initial load if user hasn't scrolled
+        if (!userHasScrolled) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // Use force=true for initial scroll, smooth=false for subsequent images
+                    const isInitialScroll = !hasDoneInitialScroll;
+                    console.log("Scrolling due to image load, isInitialScroll:", isInitialScroll);
+                    scrollToBottom(
+                        !isInitialScroll, // smooth: false for initial, true for subsequent
+                        true, // force: always true for images
+                        true, // isImage: true
+                        undefined,
+                        (value) => {
+                            isProgrammaticScroll.current = value;
+                        }
+                    );
+
+                    if (isInitialScroll) {
+                        setHasDoneInitialScroll(true);
+                    }
+                });
+            });
+        }
+    };
 
     useEffect(() => {
         console.log("imageLoading:", imageLoading);
@@ -90,8 +121,17 @@ export default function Messages({
     }, [imageCount]);
 
     useEffect(() => {
-        console.log("isAtTop:", isAtTop);
-    }, [isAtTop]);
+        console.log(
+            "isAtTop:",
+            isAtTop,
+            "isLoadingMore:",
+            isLoadingMore,
+            "allMessagesLoaded:",
+            allMessagesLoaded,
+            "initialLoad:",
+            initialLoad
+        );
+    }, [isAtTop, isLoadingMore, allMessagesLoaded, initialLoad]);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -102,75 +142,155 @@ export default function Messages({
                 scrollPos: container.scrollTop,
                 scrollHeight: container.scrollHeight,
             };
+
+            const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+            console.log(
+                "Scroll event - isProgrammaticScroll:",
+                isProgrammaticScroll.current,
+                "distanceFromBottom:",
+                distanceFromBottom,
+                "userHasScrolled:",
+                userHasScrolled
+            );
+
+            // Only track user scrolling, not programmatic scrolling
+            if (!isProgrammaticScroll.current) {
+                if (initialLoad) setInitialLoad(false);
+
+                // Clear existing debounce timeout
+                if (scrollDebounceRef.current) {
+                    clearTimeout(scrollDebounceRef.current);
+                }
+
+                // Debounce the scroll state change
+                scrollDebounceRef.current = setTimeout(() => {
+                    if (distanceFromBottom > 100) {
+                        // Increased threshold to 100px
+                        console.log("Setting userHasScrolled to true due to distance:", distanceFromBottom);
+                        setUserHasScrolled(true);
+                    } else if (distanceFromBottom <= 20) {
+                        // Increased reset threshold to 20px
+                        console.log("Setting userHasScrolled to false due to distance:", distanceFromBottom);
+                        setUserHasScrolled(false);
+                    }
+                }, 150); // 150ms debounce
+            } else {
+                console.log("Ignoring scroll event - programmatic scroll detected");
+            }
         };
 
         container.addEventListener("scroll", handleScroll);
-        return () => container.removeEventListener("scroll", handleScroll);
+        return () => {
+            container.removeEventListener("scroll", handleScroll);
+            if (scrollDebounceRef.current) {
+                clearTimeout(scrollDebounceRef.current);
+            }
+        };
     });
 
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
 
-        if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad) {
+        if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad && !hasTriggeredLoadRef.current) {
+            console.log(
+                "Loading more messages - isAtTop:",
+                isAtTop,
+                "isLoadingMore:",
+                isLoadingMore,
+                "allMessagesLoaded:",
+                allMessagesLoaded,
+                "initialLoad:",
+                initialLoad
+            );
+
+            // Set the flag to prevent multiple loads
+            hasTriggeredLoadRef.current = true;
+
             const getMoreMessages = async () => {
                 setIsLoadingMore(true);
 
-                const newMessages = await loadMoreMessages(conversationId, messages[0].id);
+                try {
+                    const firstMessageId = messages[0]?.id;
+                    if (!firstMessageId) {
+                        setIsLoadingMore(false);
+                        hasTriggeredLoadRef.current = false;
+                        return;
+                    }
 
-                const formatted = (
-                    newMessages as {
-                        id: bigint;
-                        conversation_id: string;
-                        content: string | null;
-                        created_at: string;
-                        edited_at: string | null;
-                        image_url: string | null;
-                        type: string;
-                        deleted: boolean;
-                        sender:
-                            | { id: bigint; username: string; avatar: string | null }[]
-                            | { id: bigint; username: string; avatar: string | null };
-                        parent_id: bigint | null;
-                        messages: {
+                    const newMessages = await loadMoreMessages(conversationId, firstMessageId);
+
+                    if (!newMessages || newMessages.length === 0) {
+                        console.log("No more messages to load");
+                        setAllMessagesLoaded(true);
+                        setIsLoadingMore(false);
+                        return;
+                    }
+
+                    const formatted = (
+                        newMessages as {
                             id: bigint;
+                            conversation_id: string;
                             content: string | null;
+                            created_at: string;
+                            edited_at: string | null;
                             image_url: string | null;
-                            sender: { id: bigint; username: string; avatar: string } | null;
-                        } | null;
-                        message_reactions:
-                            | {
-                                  id: bigint;
-                                  emoji: string;
-                                  created_at: Date;
-                                  profile_id: bigint;
-                                  message_id: bigint;
-                              }[]
-                            | null;
-                        message_reads: { profile_id: bigint }[];
-                    }[]
-                ).map((msg) => ({
-                    ...msg,
-                    sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
-                    created_at: new Date(msg.created_at),
-                })) as Message[];
+                            type: string;
+                            deleted: boolean;
+                            sender:
+                                | { id: bigint; username: string; avatar: string | null }[]
+                                | { id: bigint; username: string; avatar: string | null };
+                            parent_id: bigint | null;
+                            messages: {
+                                id: bigint;
+                                content: string | null;
+                                image_url: string | null;
+                                sender: { id: bigint; username: string; avatar: string } | null;
+                            } | null;
+                            message_reactions:
+                                | {
+                                      id: bigint;
+                                      emoji: string;
+                                      created_at: Date;
+                                      profile_id: bigint;
+                                      message_id: bigint;
+                                  }[]
+                                | null;
+                            message_reads: { profile_id: bigint }[];
+                        }[]
+                    ).map((msg) => ({
+                        ...msg,
+                        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
+                        created_at: new Date(msg.created_at),
+                    })) as Message[];
 
-                console.log("loading more messages:", newMessages);
+                    console.log("loading more messages:", newMessages);
 
-                setMessages((prevMessages) => [...formatted, ...prevMessages]);
+                    setMessages((prevMessages) => {
+                        const updatedMessages = [...formatted, ...prevMessages];
 
-                if (messages?.every((message) => message.image_url === null)) {
-                    setImageLoading(false);
-                } else {
-                    setImageCount(
-                        messages?.filter((message) => message.image_url !== null && message.deleted !== true).length ??
-                            0
-                    );
+                        // Count images and set loading state for the updated messages
+                        const imageMessages = updatedMessages.filter(
+                            (message) => message.image_url !== null && message.deleted !== true
+                        );
+                        if (imageMessages.length === 0) {
+                            setImageLoading(false);
+                        } else {
+                            setImageCount(imageMessages.length);
+                            setImageLoading(true);
+                        }
+
+                        return updatedMessages;
+                    });
+                } catch (error) {
+                    console.error("Error loading more messages:", error);
+                    setIsLoadingMore(false);
+                    hasTriggeredLoadRef.current = false;
                 }
             };
             getMoreMessages();
         }
-    }, [isAtTop, conversationId]);
+    }, [isAtTop, conversationId, isLoadingMore, allMessagesLoaded, initialLoad]);
 
     // Restore scroll position after more loaded messages
     useEffect(() => {
@@ -183,13 +303,15 @@ export default function Messages({
 
         container.scrollTop = scrollPos + heightDifference;
         setIsLoadingMore(false);
+        hasTriggeredLoadRef.current = false;
 
         (async () => {
             const messageIds = await getMessageIds(conversationId);
             console.log(messageIds);
 
-            // Check if all messages have loaded
-            if (messages[0].id === messageIds[0]) {
+            // Check if all messages have loaded using current messages state
+            const firstMessageId = messages[0]?.id;
+            if (firstMessageId && messageIds[0] && firstMessageId === messageIds[0]) {
                 setAllMessagesLoaded(true);
             }
         })();
@@ -206,24 +328,105 @@ export default function Messages({
         return () => window.removeEventListener("keydown", handleKeyDown);
     });
 
-    // Initial scroll
+    // Initial scroll - handle both cases
     useEffect(() => {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                scrollToBottom(false, false);
-            });
-        });
-    });
+        if (!loading && !hasDoneInitialScroll) {
+            console.log(
+                "Initial scroll check - imageCount:",
+                imageCount,
+                "loading:",
+                loading,
+                "hasDoneInitialScroll:",
+                hasDoneInitialScroll
+            );
+            if (imageCount === 0) {
+                // No images, scroll immediately
+                console.log("No images, scrolling immediately");
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        scrollToBottom(false, false, false, undefined, (value) => {
+                            isProgrammaticScroll.current = value;
+                        });
+                        setHasDoneInitialScroll(true);
+                    });
+                });
+            } else {
+                // Has images, set up multiple fallback mechanisms
+                console.log("Has images, setting up fallback mechanisms");
+
+                // Primary fallback: timeout
+                const fallbackTimeout = setTimeout(() => {
+                    if (!hasDoneInitialScroll) {
+                        console.log("Fallback scroll triggered - images may not have loaded properly");
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                // Force scroll to absolute bottom
+                                scrollToBottom(false, true, false, undefined, (value) => {
+                                    isProgrammaticScroll.current = value;
+                                });
+                                setHasDoneInitialScroll(true);
+                            });
+                        });
+                    }
+                }, 1000); // 1 second fallback - more aggressive
+
+                // Secondary fallback: MutationObserver to watch for image changes
+                const container = containerRef.current;
+                let mutationTimeout: NodeJS.Timeout;
+
+                if (container) {
+                    const observer = new MutationObserver(() => {
+                        if (!hasDoneInitialScroll) {
+                            clearTimeout(mutationTimeout);
+                            mutationTimeout = setTimeout(() => {
+                                console.log("MutationObserver fallback scroll triggered");
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        scrollToBottom(false, true, false, undefined, (value) => {
+                                            isProgrammaticScroll.current = value;
+                                        });
+                                        setHasDoneInitialScroll(true);
+                                    });
+                                });
+                            }, 500); // Wait 500ms after DOM changes
+                        }
+                    });
+
+                    observer.observe(container, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true,
+                        attributeFilter: ["style", "class"],
+                    });
+
+                    return () => {
+                        clearTimeout(fallbackTimeout);
+                        clearTimeout(mutationTimeout);
+                        observer.disconnect();
+                    };
+                }
+
+                return () => clearTimeout(fallbackTimeout);
+            }
+        }
+    }, [loading, imageCount, hasDoneInitialScroll, scrollToBottom, containerRef]);
 
     // Scroll on new messages
     useEffect(() => {
         requestAnimationFrame(() => {
-            scrollToBottom();
+            scrollToBottom(true, false, false, undefined, (value) => {
+                isProgrammaticScroll.current = value;
+            });
         });
     }, [messages, scrollToBottom]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
+
+        // Reset scroll state for new conversation
+        setUserHasScrolled(false);
+        setInitialLoad(true);
+        setHasDoneInitialScroll(false);
 
         let isMounted = true;
 
@@ -297,12 +500,14 @@ export default function Messages({
 
             setLoading(false);
 
-            if (messages?.every((message) => message.image_url === null)) {
+            // Count images and set loading state
+            const imageMessages =
+                messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
+            if (imageMessages.length === 0) {
                 setImageLoading(false);
             } else {
-                setImageCount(
-                    messages?.filter((message) => message.image_url !== null && message.deleted !== true).length ?? 0
-                );
+                setImageCount(imageMessages.length);
+                setImageLoading(true);
             }
         };
         getMessages().catch(console.error);
@@ -475,9 +680,9 @@ export default function Messages({
                         conversationId={conversationId}
                         firstUnreadIndex={firstUnreadIndex}
                         initialLoad={initialLoad}
-                        setInitialLoad={setInitialLoad}
                         imageCount={imageCount}
                         setImageLoading={setImageLoading}
+                        onImageLoad={handleImageLoad}
                     />
                 </div>
             )}

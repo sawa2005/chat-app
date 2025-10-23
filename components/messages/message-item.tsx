@@ -5,7 +5,6 @@ import { MessageActions } from "./message-buttons";
 import { MessageBubble } from "./message-bubble";
 import { editMessage, addReaction, removeReaction } from "@/app/conversation/create/actions";
 import Avatar from "../avatar";
-import { getAvatarUrlById } from "@/app/login/actions";
 import { ReactionBar } from "../reaction-bar";
 import { msgOld } from "@/lib/utils";
 
@@ -22,11 +21,9 @@ export function MessageItem({
     setReplyTo,
     scrollToBottom,
     initialLoad,
-    setInitialLoad,
     conversationId,
     containerRef,
-    imageCount,
-    setImageLoading,
+    onImageLoad,
 }: {
     message: Message;
     prevMessage: Message;
@@ -41,10 +38,8 @@ export function MessageItem({
     handleDelete: (messageId: bigint) => void;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     initialLoad: boolean;
-    setInitialLoad: Dispatch<SetStateAction<boolean>>;
     containerRef: RefObject<HTMLDivElement | null>;
-    imageCount: number;
-    setImageLoading: Dispatch<SetStateAction<boolean>>;
+    onImageLoad?: () => void;
 }) {
     if (!message.sender) return;
 
@@ -117,11 +112,9 @@ export function MessageItem({
                 isConsecutive={isConsecutive}
                 scrollToBottom={scrollToBottom}
                 initialLoad={initialLoad}
-                setInitialLoad={setInitialLoad}
                 containerRef={containerRef}
                 setEditingMessageId={setEditingMessageId}
-                imageCount={imageCount}
-                setImageLoading={setImageLoading}
+                onImageLoad={onImageLoad}
             />
 
             {message.message_reactions && message.message_reactions.length > 0 && (
