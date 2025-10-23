@@ -112,7 +112,7 @@ export default function Messages({
         const container = containerRef.current;
         if (!container) return;
 
-        if (isAtTop && !isLoadingMore && !allMessagesLoaded) {
+        if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad) {
             const getMoreMessages = async () => {
                 setIsLoadingMore(true);
 
