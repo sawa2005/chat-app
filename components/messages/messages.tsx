@@ -7,7 +7,6 @@ import {
     deleteMessage,
     markMessagesAsRead,
     loadInitMessages,
-    getFirstUnreadIndex,
     loadMoreMessages,
     getMessageIds,
 } from "@/app/conversation/create/actions";
@@ -39,7 +38,6 @@ export function isEmojiOnly(message: string) {
 
 // TODO: consider switching message hover text to on click instead.
 // TODO: number of unread messages in tab title.
-// TODO: fix new message indicator no longer showing.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -112,6 +110,17 @@ export default function Messages({
             });
         }
     };
+
+    useEffect(() => {
+        if (messages.length > 0) {
+            const index = messages.findIndex(
+                (message) =>
+                    message.sender?.id !== currentProfileId &&
+                    !message.message_reads.some((read) => read.profile_id === currentProfileId)
+            );
+            setFirstUnreadIndex(index !== -1 ? index : null);
+        }
+    }, [messages, currentProfileId]);
 
     /* useEffect(() => {
         console.log("imageLoading:", imageLoading);
@@ -332,15 +341,13 @@ export default function Messages({
     // Initial scroll - handle both cases
     useEffect(() => {
         if (!loading && !hasDoneInitialScroll) {
-            /* console.log(
-                "Initial scroll check - imageCount:",
-                imageCount,
-                "loading:",
-                loading,
-                "hasDoneInitialScroll:",
-                hasDoneInitialScroll
-            ); */
-            if (imageCount === 0) {
+            if (firstUnreadIndex !== null) {
+                const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
+                if (unreadElement) {
+                    unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                }
+                setHasDoneInitialScroll(true);
+            } else if (imageCount === 0) {
                 // No images, scroll immediately
                 console.log("No images, scrolling immediately");
                 requestAnimationFrame(() => {
@@ -410,7 +417,7 @@ export default function Messages({
                 return () => clearTimeout(fallbackTimeout);
             }
         }
-    }, [loading, imageCount, hasDoneInitialScroll, scrollToBottom, containerRef]);
+    }, [loading, imageCount, hasDoneInitialScroll, scrollToBottom, containerRef, firstUnreadIndex, messages]);
 
     // Scroll on new messages
     useEffect(() => {
@@ -431,13 +438,63 @@ export default function Messages({
 
         let isMounted = true;
 
-        const initUnread = async () => {
+        const init = async () => {
             try {
-                const initialIndex = await getFirstUnreadIndex(conversationId, currentProfileId);
+                const messages = await loadInitMessages(conversationId);
+                console.log("loading inital messages:", messages);
+
                 if (!isMounted) return;
 
-                // Freeze the unread index in state
-                setFirstUnreadIndex(initialIndex !== null ? Number(initialIndex) : null);
+                setMessages(
+                    (
+                        messages as {
+                            id: bigint;
+                            conversation_id: string;
+                            content: string | null;
+                            created_at: string;
+                            edited_at: string | null;
+                            image_url: string | null;
+                            type: string;
+                            deleted: boolean;
+                            sender:
+                                | { id: bigint; username: string; avatar: string | null }[]
+                                | { id: bigint; username: string; avatar: string | null };
+                            parent_id: bigint | null;
+                            messages: {
+                                id: bigint;
+                                content: string | null;
+                                image_url: string | null;
+                                sender: { id: bigint; username: string; avatar: string } | null;
+                            } | null;
+                            message_reactions:
+                                | {
+                                      id: bigint;
+                                      emoji: string;
+                                      created_at: Date;
+                                      profile_id: bigint;
+                                      message_id: bigint;
+                                  }[]
+                                | null;
+                            message_reads: { profile_id: bigint }[];
+                        }[]
+                    ).map((msg) => ({
+                        ...msg,
+                        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
+                        created_at: new Date(msg.created_at),
+                    })) as Message[]
+                );
+
+                setLoading(false);
+
+                // Count images and set loading state
+                const imageMessages =
+                    messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
+                if (imageMessages.length === 0) {
+                    setImageLoading(false);
+                } else {
+                    setImageCount(imageMessages.length);
+                    setImageLoading(true);
+                }
 
                 // Mark messages as read in DB (UI state remains)
                 await markMessagesAsRead(conversationId, currentProfileId);
@@ -445,7 +502,7 @@ export default function Messages({
                 console.error(err);
             }
         };
-        initUnread();
+        init();
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
@@ -453,65 +510,6 @@ export default function Messages({
             }
         };
         window.addEventListener("visibilitychange", handleVisibilityChange);
-
-        const getMessages = async () => {
-            const messages = await loadInitMessages(conversationId);
-            console.log("loading inital messages:", messages);
-
-            if (!isMounted) return;
-
-            setMessages(
-                (
-                    messages as {
-                        id: bigint;
-                        conversation_id: string;
-                        content: string | null;
-                        created_at: string;
-                        edited_at: string | null;
-                        image_url: string | null;
-                        type: string;
-                        deleted: boolean;
-                        sender:
-                            | { id: bigint; username: string; avatar: string | null }[]
-                            | { id: bigint; username: string; avatar: string | null };
-                        parent_id: bigint | null;
-                        messages: {
-                            id: bigint;
-                            content: string | null;
-                            image_url: string | null;
-                            sender: { id: bigint; username: string; avatar: string } | null;
-                        } | null;
-                        message_reactions:
-                            | {
-                                  id: bigint;
-                                  emoji: string;
-                                  created_at: Date;
-                                  profile_id: bigint;
-                                  message_id: bigint;
-                              }[]
-                            | null;
-                        message_reads: { profile_id: bigint }[];
-                    }[]
-                ).map((msg) => ({
-                    ...msg,
-                    sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
-                    created_at: new Date(msg.created_at),
-                })) as Message[]
-            );
-
-            setLoading(false);
-
-            // Count images and set loading state
-            const imageMessages =
-                messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
-            if (imageMessages.length === 0) {
-                setImageLoading(false);
-            } else {
-                setImageCount(imageMessages.length);
-                setImageLoading(true);
-            }
-        };
-        getMessages().catch(console.error);
 
         const channel = supabase
             .channel(`conversation-${conversationId}`)
