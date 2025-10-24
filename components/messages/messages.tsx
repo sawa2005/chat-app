@@ -31,8 +31,6 @@ export function isEmojiOnly(message: string) {
 }
 
 // TODO: re-fetch messages when user re-focuses browser.
-// TODO: if user is scrolled more than box height away from bottom, don't mark new messages as read.
-// TODO: if user is scrolled high enough, display back to bottom button.
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 
@@ -331,6 +329,7 @@ export default function Messages({
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setFirstUnreadIndex(null);
+                markMessagesAsRead(conversationId, currentProfileId);
             }
         };
 
@@ -429,6 +428,12 @@ export default function Messages({
     }, [messages, scrollToBottom]);
 
     useEffect(() => {
+        if (!userHasScrolled) {
+            markMessagesAsRead(conversationId, currentProfileId);
+        }
+    }, [userHasScrolled, conversationId, currentProfileId]);
+
+    useEffect(() => {
         if (!conversationId || !currentProfileId) return;
 
         // Reset scroll state for new conversation
@@ -495,9 +500,6 @@ export default function Messages({
                     setImageCount(imageMessages.length);
                     setImageLoading(true);
                 }
-
-                // Mark messages as read in DB (UI state remains)
-                await markMessagesAsRead(conversationId, currentProfileId);
             } catch (err) {
                 console.error(err);
             }
@@ -505,7 +507,7 @@ export default function Messages({
         init();
 
         const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible") {
+            if (document.visibilityState === "visible" && !userHasScrolled) {
                 markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
             }
         };

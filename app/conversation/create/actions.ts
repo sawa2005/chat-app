@@ -93,6 +93,8 @@ export async function removeReaction(conversationId: string, messageId: bigint, 
     return removedReaction;
 }
 
+// TODO: conditional take which takes more messages if there are more unreads than 20.
+
 export async function loadInitMessages(conversationId: string) {
     try {
         const prismaMessages = await prisma.messages.findMany({
