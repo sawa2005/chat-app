@@ -39,6 +39,7 @@ export function isEmojiOnly(message: string) {
 
 // TODO: consider switching message hover text to on click instead.
 // TODO: number of unread messages in tab title.
+// TODO: fix new message indicator no longer showing.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -86,14 +87,14 @@ export default function Messages({
 
     // Handle image loading completion
     const handleImageLoad = () => {
-        console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled);
+        /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
         if (!userHasScrolled) {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     // Use force=true for initial scroll, smooth=false for subsequent images
                     const isInitialScroll = !hasDoneInitialScroll;
-                    console.log("Scrolling due to image load, isInitialScroll:", isInitialScroll);
+                    /* console.log("Scrolling due to image load, isInitialScroll:", isInitialScroll); */
                     scrollToBottom(
                         !isInitialScroll, // smooth: false for initial, true for subsequent
                         true, // force: always true for images
@@ -112,7 +113,7 @@ export default function Messages({
         }
     };
 
-    useEffect(() => {
+    /* useEffect(() => {
         console.log("imageLoading:", imageLoading);
     }, [imageLoading]);
 
@@ -131,7 +132,7 @@ export default function Messages({
             "initialLoad:",
             initialLoad
         );
-    }, [isAtTop, isLoadingMore, allMessagesLoaded, initialLoad]);
+    }, [isAtTop, isLoadingMore, allMessagesLoaded, initialLoad]); */
 
     useEffect(() => {
         const container = containerRef.current;
@@ -144,14 +145,14 @@ export default function Messages({
             };
 
             const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-            console.log(
+            /* console.log(
                 "Scroll event - isProgrammaticScroll:",
                 isProgrammaticScroll.current,
                 "distanceFromBottom:",
                 distanceFromBottom,
                 "userHasScrolled:",
                 userHasScrolled
-            );
+            ); */
 
             // Only track user scrolling, not programmatic scrolling
             if (!isProgrammaticScroll.current) {
@@ -166,16 +167,16 @@ export default function Messages({
                 scrollDebounceRef.current = setTimeout(() => {
                     if (distanceFromBottom > 100) {
                         // Increased threshold to 100px
-                        console.log("Setting userHasScrolled to true due to distance:", distanceFromBottom);
+                        /* console.log("Setting userHasScrolled to true due to distance:", distanceFromBottom); */
                         setUserHasScrolled(true);
                     } else if (distanceFromBottom <= 20) {
                         // Increased reset threshold to 20px
-                        console.log("Setting userHasScrolled to false due to distance:", distanceFromBottom);
+                        /* console.log("Setting userHasScrolled to false due to distance:", distanceFromBottom); */
                         setUserHasScrolled(false);
                     }
                 }, 150); // 150ms debounce
             } else {
-                console.log("Ignoring scroll event - programmatic scroll detected");
+                /* console.log("Ignoring scroll event - programmatic scroll detected"); */
             }
         };
 
@@ -193,7 +194,7 @@ export default function Messages({
         if (!container) return;
 
         if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad && !hasTriggeredLoadRef.current) {
-            console.log(
+            /* console.log(
                 "Loading more messages - isAtTop:",
                 isAtTop,
                 "isLoadingMore:",
@@ -202,7 +203,7 @@ export default function Messages({
                 allMessagesLoaded,
                 "initialLoad:",
                 initialLoad
-            );
+            ); */
 
             // Set the flag to prevent multiple loads
             hasTriggeredLoadRef.current = true;
@@ -331,14 +332,14 @@ export default function Messages({
     // Initial scroll - handle both cases
     useEffect(() => {
         if (!loading && !hasDoneInitialScroll) {
-            console.log(
+            /* console.log(
                 "Initial scroll check - imageCount:",
                 imageCount,
                 "loading:",
                 loading,
                 "hasDoneInitialScroll:",
                 hasDoneInitialScroll
-            );
+            ); */
             if (imageCount === 0) {
                 // No images, scroll immediately
                 console.log("No images, scrolling immediately");

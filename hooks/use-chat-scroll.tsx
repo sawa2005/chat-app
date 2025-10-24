@@ -57,10 +57,7 @@ export const useIsScrollOnTop = (
         const target = ref?.current || window;
         const handleScroll = () => {
             if (ref?.current && !loading) {
-                console.log("isAtTop check - scroll height:", ref.current?.scrollHeight);
-                console.log("isAtTop check - scroll position:", ref.current?.scrollTop);
                 const atTop = ref.current.scrollTop === 0;
-                console.log("isAtTop result:", atTop);
                 setIsAtTop(atTop);
             } else {
                 return;
