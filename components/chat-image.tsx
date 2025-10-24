@@ -32,6 +32,14 @@ export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProp
                     unoptimized
                     onLoad={(e) => {
                         const target = e.currentTarget as HTMLImageElement;
+                        console.log(
+                            "ChatImage onLoad triggered for:",
+                            src,
+                            "naturalWidth:",
+                            target.naturalWidth,
+                            "naturalHeight:",
+                            target.naturalHeight
+                        );
                         setWidth(target.naturalWidth);
                         setHeight(target.naturalHeight);
                         setLoaded(true);

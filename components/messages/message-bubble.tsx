@@ -65,8 +65,8 @@ export function MessageBubble({
     onSubmitEdit,
     scrollToBottom,
     initialLoad,
-    setInitialLoad,
     setEditingMessageId,
+    onImageLoad,
 }: {
     message: Message;
     isOwner: boolean;
@@ -75,11 +75,17 @@ export function MessageBubble({
     setEditContent: Dispatch<SetStateAction<string>>;
     onSubmitEdit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
     isConsecutive: boolean;
-    scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
+    scrollToBottom: (
+        smooth?: boolean,
+        force?: boolean,
+        isImage?: boolean,
+        imageHeight?: number,
+        setProgrammaticScroll?: (value: boolean) => void
+    ) => void;
     initialLoad: boolean;
-    setInitialLoad: Dispatch<SetStateAction<boolean>>;
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
     containerRef: RefObject<HTMLDivElement | null>;
+    onImageLoad?: () => void;
 }) {
     const emojiOnly = isEmojiOnly(message.content);
 
@@ -116,7 +122,7 @@ export function MessageBubble({
                         <span className="text-sm font-semibold mr-1">
                             {message.messages.sender?.username || "Unknown"}
                         </span>
-                        <span className="text-sm truncate max-w-[100%]">
+                        <span className="text-sm truncate max-w-full">
                             {message.messages.content === "" ? (
                                 message.messages.image_url ? (
                                     <ImageIcon className="text-muted-foreground" size={15} />
@@ -134,9 +140,9 @@ export function MessageBubble({
 
             {/* Main text message bubble */}
             <div
-                className={`group relative rounded-xl mb-2 w-fit break-words max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted
+                className={`group relative rounded-xl mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted
                 ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
-                ${emojiOnly && (isOwner ? "mr-[-1rem]" : "ml-[-1rem]")} 
+                ${emojiOnly && (isOwner ? "-mr-4" : "-mr-4")} 
                 ${!emojiOnly && !isOwner && "bg-accent"} 
                 ${!isOwner ? "rounded-tl-none" : "rounded-tr-none ml-auto"}`}
             >
@@ -151,10 +157,11 @@ export function MessageBubble({
                             requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
                                     console.log("Loaded image..");
-                                    if (initialLoad === true) {
-                                        scrollToBottom(true, true, true, img.naturalHeight);
-                                        setInitialLoad(false);
-                                    } else {
+                                    // Always call the parent's image load handler for continuous scrolling
+                                    onImageLoad?.();
+
+                                    // Also handle individual scroll for non-initial loads
+                                    if (!initialLoad) {
                                         scrollToBottom(true, false, true, img.naturalHeight);
                                     }
                                 });

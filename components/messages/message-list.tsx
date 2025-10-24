@@ -14,9 +14,11 @@ interface MessageListProps {
     handleDelete: (id: bigint) => void;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     initialLoad: boolean;
-    setInitialLoad: Dispatch<SetStateAction<boolean>>;
     firstUnreadIndex: number | null;
     containerRef: RefObject<HTMLDivElement | null>;
+    imageCount: number;
+    setImageLoading: Dispatch<SetStateAction<boolean>>;
+    onImageLoad?: () => void;
 }
 
 export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageListProps) {
@@ -28,11 +30,11 @@ export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageList
         return <div className="text-center text-sm text-gray-500 my-10">No messages yet. Start the conversation!</div>;
     }
 
-    const newMessageComponent = (
+    const newMessageIndicator = (
         <li className="relative my-4 flex items-center">
-            <div className="flex-grow border-t border-gray-300"></div>
+            <div className="grow border-t border-gray-300"></div>
             <span className="mx-2 text-xs text-gray-500 font-mono">New Messages</span>
-            <div className="flex-grow border-t border-gray-300"></div>
+            <div className="grow border-t border-gray-300"></div>
         </li>
     );
 
@@ -42,7 +44,7 @@ export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageList
                 if (m.type === "info") {
                     return (
                         <React.Fragment key={m.id}>
-                            {i === firstUnreadIndex && newMessageComponent}
+                            {i === firstUnreadIndex && newMessageIndicator}
                             <li className="text-xs font-mono text-muted-foreground m-auto block w-fit my-10 text-center">
                                 {m.content}
                             </li>
@@ -52,7 +54,7 @@ export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageList
                 if (m.type === "message" && !m.deleted) {
                     return (
                         <React.Fragment key={m.id}>
-                            {i === firstUnreadIndex && newMessageComponent}
+                            {i === firstUnreadIndex && newMessageIndicator}
                             <MessageItem message={m} prevMessage={messages[i - 1]} {...rest} />
                         </React.Fragment>
                     );
