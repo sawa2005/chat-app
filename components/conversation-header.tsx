@@ -22,6 +22,8 @@ import { createClient } from "@/lib/client";
 
 import type { Member } from "@/lib/types";
 
+// TODO: refactor expand logic for less code repetition.
+
 type ConversationWithRelations = PrismaClient.conversationsGetPayload<{
     include: {
         conversation_members: {

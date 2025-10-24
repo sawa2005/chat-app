@@ -15,6 +15,7 @@ import { useChatScroll, useIsScrollOnTop } from "@/hooks/use-chat-scroll";
 import TypingIndicator from "../typing-indicator";
 import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
+import { BackToBottom } from "./back-to-bottom";
 import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
 import { Spinner } from "../ui/spinner";
@@ -29,7 +30,6 @@ export function isEmojiOnly(message: string) {
     return matched !== null && matched.join("") === stripped;
 }
 
-// TODO: scroll force with images loading but only if the user hasn't scrolled the page yet.
 // TODO: re-fetch messages when user re-focuses browser.
 // TODO: if user is scrolled more than box height away from bottom, don't mark new messages as read.
 // TODO: if user is scrolled high enough, display back to bottom button.
@@ -654,36 +654,48 @@ export default function Messages({
     }
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 gap-5">
+        <div className="relative flex flex-col flex-1 min-h-0 gap-5">
             {loading ? (
                 <SkeletonList />
             ) : (
-                <div ref={containerRef} className="flex-1 min-h-0 pr-4 mt-5 overflow-y-auto overflow-x-hidden">
-                    {isLoadingMore && (
-                        <div className="m-auto w-fit py-5">
-                            <Spinner />
+                <>
+                    {userHasScrolled && (
+                        <div className="absolute top-0 z-10 w-full">
+                            <BackToBottom onClick={() => scrollToBottom(true, true)} />
                         </div>
                     )}
-                    <MessageList
-                        messages={messages}
-                        currentUsername={currentUsername}
-                        currentProfileId={currentProfileId}
-                        editingMessageId={editingMessageId}
-                        editContent={editContent}
-                        setEditContent={setEditContent}
-                        setEditingMessageId={setEditingMessageId}
-                        handleDelete={handleDelete}
-                        setReplyTo={setReplyTo}
-                        containerRef={containerRef}
-                        scrollToBottom={scrollToBottom}
-                        conversationId={conversationId}
-                        firstUnreadIndex={firstUnreadIndex}
-                        initialLoad={initialLoad}
-                        imageCount={imageCount}
-                        setImageLoading={setImageLoading}
-                        onImageLoad={handleImageLoad}
-                    />
-                </div>
+                    <div
+                        ref={containerRef}
+                        className={`${
+                            userHasScrolled ? "mt-12" : "mt-5"
+                        } relative flex-1 min-h-0 pr-4 overflow-y-auto overflow-x-hidden`}
+                    >
+                        {isLoadingMore && (
+                            <div className="m-auto w-fit py-5">
+                                <Spinner />
+                            </div>
+                        )}
+                        <MessageList
+                            messages={messages}
+                            currentUsername={currentUsername}
+                            currentProfileId={currentProfileId}
+                            editingMessageId={editingMessageId}
+                            editContent={editContent}
+                            setEditContent={setEditContent}
+                            setEditingMessageId={setEditingMessageId}
+                            handleDelete={handleDelete}
+                            setReplyTo={setReplyTo}
+                            containerRef={containerRef}
+                            scrollToBottom={scrollToBottom}
+                            conversationId={conversationId}
+                            firstUnreadIndex={firstUnreadIndex}
+                            initialLoad={initialLoad}
+                            imageCount={imageCount}
+                            setImageLoading={setImageLoading}
+                            onImageLoad={handleImageLoad}
+                        />
+                    </div>
+                </>
             )}
 
             <TypingIndicator users={typers} />
