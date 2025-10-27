@@ -74,6 +74,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
             <ConversationHeader conversation={conversation} currentProfileId={currentProfileId} />
             <Messages
                 conversationId={conversation.id}
+                conversationName={conversation.name}
                 currentUsername={username}
                 currentProfileId={currentProfileId}
                 currentUserAvatar={currentUserAvatar}

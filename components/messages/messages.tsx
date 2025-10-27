@@ -12,6 +12,7 @@ import {
 } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll, useIsScrollOnTop } from "@/hooks/use-chat-scroll";
+import { useTabTitle } from "@/hooks/use-tab-title";
 import TypingIndicator from "../typing-indicator";
 import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
@@ -33,9 +34,8 @@ export function isEmojiOnly(message: string) {
 // TODO: re-fetch messages when user re-focuses browser.
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
-
+// TODO: first unread index resets to same index after new message is received even if it's cleared.
 // TODO: consider switching message hover text to on click instead.
-// TODO: number of unread messages in tab title.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -50,12 +50,14 @@ export function isConsecutiveMessage(prev: Message | undefined, current: Message
 
 export default function Messages({
     conversationId,
+    conversationName,
     currentUsername,
     currentProfileId,
     currentUserAvatar,
     initialUnreadCount,
 }: {
     conversationId: string;
+    conversationName: string;
     currentUsername: string;
     currentProfileId: bigint;
     currentUserAvatar: string | null;
@@ -77,6 +79,8 @@ export default function Messages({
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
     const [userHasScrolled, setUserHasScrolled] = useState(false);
     const [hasDoneInitialScroll, setHasDoneInitialScroll] = useState(false);
+    const [unreadCount, setUnreadCount] = useState<number>(initialUnreadCount ?? 0);
+    const setTitle = useTabTitle(conversationName);
     const scrollStateRef = useRef({ scrollPos: 0, scrollHeight: 0 });
     const isProgrammaticScroll = useRef(false);
     const scrollDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,6 +115,14 @@ export default function Messages({
             });
         }
     };
+
+    useEffect(() => {
+        if (unreadCount > 0) {
+            setTitle(`(${unreadCount}) ${conversationName}`);
+        } else {
+            setTitle(conversationName);
+        }
+    }, [unreadCount, conversationName, setTitle]);
 
     useEffect(() => {
         if (messages.length > 0) {
@@ -333,6 +345,7 @@ export default function Messages({
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setFirstUnreadIndex(null);
+                setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId);
             }
         };
@@ -462,7 +475,16 @@ export default function Messages({
                 }
             }
         }
-    }, [loading, imageCount, hasDoneInitialScroll, firstUnreadIndexCalculated, firstUnreadIndex, messages, scrollToBottom, containerRef]);
+    }, [
+        loading,
+        imageCount,
+        hasDoneInitialScroll,
+        firstUnreadIndexCalculated,
+        firstUnreadIndex,
+        messages,
+        scrollToBottom,
+        containerRef,
+    ]);
 
     // Scroll on new messages
     useEffect(() => {
@@ -478,6 +500,7 @@ export default function Messages({
     useEffect(() => {
         if (!userHasScrolled && !initialLoad) {
             markMessagesAsRead(conversationId, currentProfileId);
+            setUnreadCount(0);
         }
     }, [userHasScrolled, conversationId, currentProfileId, initialLoad]);
 
@@ -557,6 +580,7 @@ export default function Messages({
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible" && !userHasScrolled) {
+                setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
             }
         };
@@ -600,6 +624,7 @@ export default function Messages({
                     message_reads: payload.message_reads ?? [],
                 };
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
+                setUnreadCount((prev) => prev + 1);
                 console.log("Received new message:", message);
             })
             .on("broadcast", { event: "message_edited" }, ({ payload }) => {
