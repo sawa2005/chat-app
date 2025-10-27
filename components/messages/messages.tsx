@@ -31,8 +31,6 @@ export function isEmojiOnly(message: string) {
 }
 
 // TODO: re-fetch messages when user re-focuses browser.
-// TODO: if user is scrolled more than box height away from bottom, don't mark new messages as read.
-// TODO: if user is scrolled high enough, display back to bottom button.
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 
@@ -55,16 +53,19 @@ export default function Messages({
     currentUsername,
     currentProfileId,
     currentUserAvatar,
+    initialUnreadCount,
 }: {
     conversationId: string;
     currentUsername: string;
     currentProfileId: bigint;
     currentUserAvatar: string | null;
+    initialUnreadCount: number | null;
 }) {
     const { containerRef, scrollToBottom } = useChatScroll();
     const [initialLoad, setInitialLoad] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
+    const [firstUnreadIndexCalculated, setFirstUnreadIndexCalculated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
@@ -87,7 +88,7 @@ export default function Messages({
     const handleImageLoad = () => {
         /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
-        if (!userHasScrolled) {
+        if (!userHasScrolled && firstUnreadIndex === null) {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     // Use force=true for initial scroll, smooth=false for subsequent images
@@ -119,6 +120,7 @@ export default function Messages({
                     !message.message_reads.some((read) => read.profile_id === currentProfileId)
             );
             setFirstUnreadIndex(index !== -1 ? index : null);
+            setFirstUnreadIndexCalculated(true);
         }
     }, [messages, currentProfileId]);
 
@@ -331,6 +333,7 @@ export default function Messages({
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setFirstUnreadIndex(null);
+                markMessagesAsRead(conversationId, currentProfileId);
             }
         };
 
@@ -340,93 +343,143 @@ export default function Messages({
 
     // Initial scroll - handle both cases
     useEffect(() => {
-        if (!loading && !hasDoneInitialScroll) {
+        if (!loading && !hasDoneInitialScroll && firstUnreadIndexCalculated) {
             if (firstUnreadIndex !== null) {
-                const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
-                if (unreadElement) {
-                    unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                // Has unread messages
+                if (imageCount === 0) {
+                    // No images, scroll immediately
+                    const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
+                    if (unreadElement) {
+                        unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                    }
+                    setHasDoneInitialScroll(true);
+                } else {
+                    // Has images, use fallbacks to scroll to unread
+                    const unreadElementId = `message-item-${messages[firstUnreadIndex].id}`;
+
+                    const performScroll = () => {
+                        const unreadElement = document.getElementById(unreadElementId);
+                        if (unreadElement) {
+                            unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                        }
+                        setHasDoneInitialScroll(true);
+                    };
+
+                    // Primary fallback: timeout
+                    const fallbackTimeout = setTimeout(() => {
+                        if (!hasDoneInitialScroll) {
+                            performScroll();
+                        }
+                    }, 1000);
+
+                    // Secondary fallback: MutationObserver
+                    const container = containerRef.current;
+                    let mutationTimeout: NodeJS.Timeout;
+
+                    if (container) {
+                        const observer = new MutationObserver(() => {
+                            if (!hasDoneInitialScroll) {
+                                clearTimeout(mutationTimeout);
+                                mutationTimeout = setTimeout(() => {
+                                    performScroll();
+                                }, 500);
+                            }
+                        });
+
+                        observer.observe(container, {
+                            childList: true,
+                            subtree: true,
+                            attributes: true,
+                            attributeFilter: ["style", "class", "src"],
+                        });
+
+                        return () => {
+                            clearTimeout(fallbackTimeout);
+                            clearTimeout(mutationTimeout);
+                            observer.disconnect();
+                        };
+                    }
+
+                    return () => clearTimeout(fallbackTimeout);
                 }
-                setHasDoneInitialScroll(true);
-            } else if (imageCount === 0) {
-                // No images, scroll immediately
-                console.log("No images, scrolling immediately");
-                requestAnimationFrame(() => {
+            } else {
+                // No unread messages
+                if (imageCount === 0) {
+                    // No images, scroll to bottom immediately
                     requestAnimationFrame(() => {
-                        scrollToBottom(false, false, false, undefined, (value) => {
+                        requestAnimationFrame(() => {
+                            scrollToBottom(false, true, false, undefined, (value) => {
+                                isProgrammaticScroll.current = value;
+                            });
+                            setHasDoneInitialScroll(true);
+                        });
+                    });
+                } else {
+                    // Has images, use fallbacks to scroll to bottom
+                    const performScrollToBottom = () => {
+                        scrollToBottom(false, true, false, undefined, (value) => {
                             isProgrammaticScroll.current = value;
                         });
                         setHasDoneInitialScroll(true);
-                    });
-                });
-            } else {
-                // Has images, set up multiple fallback mechanisms
-                console.log("Has images, setting up fallback mechanisms");
-
-                // Primary fallback: timeout
-                const fallbackTimeout = setTimeout(() => {
-                    if (!hasDoneInitialScroll) {
-                        console.log("Fallback scroll triggered - images may not have loaded properly");
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                // Force scroll to absolute bottom
-                                scrollToBottom(false, true, false, undefined, (value) => {
-                                    isProgrammaticScroll.current = value;
-                                });
-                                setHasDoneInitialScroll(true);
-                            });
-                        });
-                    }
-                }, 1000); // 1 second fallback - more aggressive
-
-                // Secondary fallback: MutationObserver to watch for image changes
-                const container = containerRef.current;
-                let mutationTimeout: NodeJS.Timeout;
-
-                if (container) {
-                    const observer = new MutationObserver(() => {
-                        if (!hasDoneInitialScroll) {
-                            clearTimeout(mutationTimeout);
-                            mutationTimeout = setTimeout(() => {
-                                console.log("MutationObserver fallback scroll triggered");
-                                requestAnimationFrame(() => {
-                                    requestAnimationFrame(() => {
-                                        scrollToBottom(false, true, false, undefined, (value) => {
-                                            isProgrammaticScroll.current = value;
-                                        });
-                                        setHasDoneInitialScroll(true);
-                                    });
-                                });
-                            }, 500); // Wait 500ms after DOM changes
-                        }
-                    });
-
-                    observer.observe(container, {
-                        childList: true,
-                        subtree: true,
-                        attributes: true,
-                        attributeFilter: ["style", "class"],
-                    });
-
-                    return () => {
-                        clearTimeout(fallbackTimeout);
-                        clearTimeout(mutationTimeout);
-                        observer.disconnect();
                     };
-                }
 
-                return () => clearTimeout(fallbackTimeout);
+                    // Primary fallback: timeout
+                    const fallbackTimeout = setTimeout(() => {
+                        if (!hasDoneInitialScroll) {
+                            performScrollToBottom();
+                        }
+                    }, 1000);
+
+                    // Secondary fallback: MutationObserver
+                    const container = containerRef.current;
+                    let mutationTimeout: NodeJS.Timeout;
+
+                    if (container) {
+                        const observer = new MutationObserver(() => {
+                            if (!hasDoneInitialScroll) {
+                                clearTimeout(mutationTimeout);
+                                mutationTimeout = setTimeout(() => {
+                                    performScrollToBottom();
+                                }, 500);
+                            }
+                        });
+
+                        observer.observe(container, {
+                            childList: true,
+                            subtree: true,
+                            attributes: true,
+                            attributeFilter: ["style", "class", "src"],
+                        });
+
+                        return () => {
+                            clearTimeout(fallbackTimeout);
+                            clearTimeout(mutationTimeout);
+                            observer.disconnect();
+                        };
+                    }
+
+                    return () => clearTimeout(fallbackTimeout);
+                }
             }
         }
-    }, [loading, imageCount, hasDoneInitialScroll, scrollToBottom, containerRef, firstUnreadIndex, messages]);
+    }, [loading, imageCount, hasDoneInitialScroll, firstUnreadIndexCalculated, firstUnreadIndex, messages, scrollToBottom, containerRef]);
 
     // Scroll on new messages
     useEffect(() => {
-        requestAnimationFrame(() => {
-            scrollToBottom(true, false, false, undefined, (value) => {
-                isProgrammaticScroll.current = value;
+        if (hasDoneInitialScroll) {
+            requestAnimationFrame(() => {
+                scrollToBottom(true, false, false, undefined, (value) => {
+                    isProgrammaticScroll.current = value;
+                });
             });
-        });
-    }, [messages, scrollToBottom]);
+        }
+    }, [messages, scrollToBottom, hasDoneInitialScroll]);
+
+    useEffect(() => {
+        if (!userHasScrolled && !initialLoad) {
+            markMessagesAsRead(conversationId, currentProfileId);
+        }
+    }, [userHasScrolled, conversationId, currentProfileId, initialLoad]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
@@ -435,12 +488,13 @@ export default function Messages({
         setUserHasScrolled(false);
         setInitialLoad(true);
         setHasDoneInitialScroll(false);
+        setFirstUnreadIndexCalculated(false);
 
         let isMounted = true;
 
         const init = async () => {
             try {
-                const messages = await loadInitMessages(conversationId);
+                const messages = await loadInitMessages(conversationId, initialUnreadCount ?? undefined);
                 console.log("loading inital messages:", messages);
 
                 if (!isMounted) return;
@@ -495,9 +549,6 @@ export default function Messages({
                     setImageCount(imageMessages.length);
                     setImageLoading(true);
                 }
-
-                // Mark messages as read in DB (UI state remains)
-                await markMessagesAsRead(conversationId, currentProfileId);
             } catch (err) {
                 console.error(err);
             }
@@ -505,7 +556,7 @@ export default function Messages({
         init();
 
         const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible") {
+            if (document.visibilityState === "visible" && !userHasScrolled) {
                 markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
             }
         };
@@ -710,6 +761,7 @@ export default function Messages({
                 replyTo={replyTo ?? null}
                 setReplyTo={setReplyTo}
                 setFirstUnreadIndex={setFirstUnreadIndex}
+                scrollToBottom={scrollToBottom}
             />
         </div>
     );

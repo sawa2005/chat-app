@@ -56,7 +56,15 @@ export default async function ConversationPage({ params }: ConversationPageProps
     // Get current user's avatar from Prisma
     const currentUser = await prisma.profiles.findUnique({
         where: { id: currentProfileId },
-        select: { avatar: true },
+        select: { id: true, avatar: true },
+    });
+
+    const unreadCount = await prisma.messages.count({
+        where: {
+            conversation_id: id,
+            NOT: { message_reads: { some: { profile_id: currentUser?.id } } },
+            sender_id: { not: currentUser?.id },
+        },
     });
 
     const currentUserAvatar = currentUser?.avatar ?? null;
@@ -69,6 +77,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
                 currentUsername={username}
                 currentProfileId={currentProfileId}
                 currentUserAvatar={currentUserAvatar}
+                initialUnreadCount={unreadCount ?? null}
             />
         </div>
     );
