@@ -65,6 +65,7 @@ export default function Messages({
     const [initialLoad, setInitialLoad] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
+    const [firstUnreadIndexCalculated, setFirstUnreadIndexCalculated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
@@ -119,6 +120,7 @@ export default function Messages({
                     !message.message_reads.some((read) => read.profile_id === currentProfileId)
             );
             setFirstUnreadIndex(index !== -1 ? index : null);
+            setFirstUnreadIndexCalculated(true);
         }
     }, [messages, currentProfileId]);
 
@@ -341,84 +343,126 @@ export default function Messages({
 
     // Initial scroll - handle both cases
     useEffect(() => {
-        if (!loading && !hasDoneInitialScroll) {
+        if (!loading && !hasDoneInitialScroll && firstUnreadIndexCalculated) {
             if (firstUnreadIndex !== null) {
-                const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
-                if (unreadElement) {
-                    unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                // Has unread messages
+                if (imageCount === 0) {
+                    // No images, scroll immediately
+                    const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
+                    if (unreadElement) {
+                        unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                    }
+                    setHasDoneInitialScroll(true);
+                } else {
+                    // Has images, use fallbacks to scroll to unread
+                    const unreadElementId = `message-item-${messages[firstUnreadIndex].id}`;
+
+                    const performScroll = () => {
+                        const unreadElement = document.getElementById(unreadElementId);
+                        if (unreadElement) {
+                            unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                        }
+                        setHasDoneInitialScroll(true);
+                    };
+
+                    // Primary fallback: timeout
+                    const fallbackTimeout = setTimeout(() => {
+                        if (!hasDoneInitialScroll) {
+                            performScroll();
+                        }
+                    }, 1000);
+
+                    // Secondary fallback: MutationObserver
+                    const container = containerRef.current;
+                    let mutationTimeout: NodeJS.Timeout;
+
+                    if (container) {
+                        const observer = new MutationObserver(() => {
+                            if (!hasDoneInitialScroll) {
+                                clearTimeout(mutationTimeout);
+                                mutationTimeout = setTimeout(() => {
+                                    performScroll();
+                                }, 500);
+                            }
+                        });
+
+                        observer.observe(container, {
+                            childList: true,
+                            subtree: true,
+                            attributes: true,
+                            attributeFilter: ["style", "class", "src"],
+                        });
+
+                        return () => {
+                            clearTimeout(fallbackTimeout);
+                            clearTimeout(mutationTimeout);
+                            observer.disconnect();
+                        };
+                    }
+
+                    return () => clearTimeout(fallbackTimeout);
                 }
-                setHasDoneInitialScroll(true);
-            } else if (imageCount === 0) {
-                // No images, scroll immediately
-                console.log("No images, scrolling immediately");
-                requestAnimationFrame(() => {
+            } else {
+                // No unread messages
+                if (imageCount === 0) {
+                    // No images, scroll to bottom immediately
                     requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            scrollToBottom(false, true, false, undefined, (value) => {
+                                isProgrammaticScroll.current = value;
+                            });
+                            setHasDoneInitialScroll(true);
+                        });
+                    });
+                } else {
+                    // Has images, use fallbacks to scroll to bottom
+                    const performScrollToBottom = () => {
                         scrollToBottom(false, true, false, undefined, (value) => {
                             isProgrammaticScroll.current = value;
                         });
                         setHasDoneInitialScroll(true);
-                    });
-                });
-            } else {
-                // Has images, set up multiple fallback mechanisms
-                console.log("Has images, setting up fallback mechanisms");
-
-                // Primary fallback: timeout
-                const fallbackTimeout = setTimeout(() => {
-                    if (!hasDoneInitialScroll) {
-                        console.log("Fallback scroll triggered - images may not have loaded properly");
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                // Force scroll to absolute bottom
-                                scrollToBottom(false, true, false, undefined, (value) => {
-                                    isProgrammaticScroll.current = value;
-                                });
-                                setHasDoneInitialScroll(true);
-                            });
-                        });
-                    }
-                }, 1000); // 1 second fallback - more aggressive
-
-                // Secondary fallback: MutationObserver to watch for image changes
-                const container = containerRef.current;
-                let mutationTimeout: NodeJS.Timeout;
-
-                if (container) {
-                    const observer = new MutationObserver(() => {
-                        if (!hasDoneInitialScroll) {
-                            clearTimeout(mutationTimeout);
-                            mutationTimeout = setTimeout(() => {
-                                console.log("MutationObserver fallback scroll triggered");
-                                requestAnimationFrame(() => {
-                                    requestAnimationFrame(() => {
-                                        scrollToBottom(false, true, false, undefined, (value) => {
-                                            isProgrammaticScroll.current = value;
-                                        });
-                                        setHasDoneInitialScroll(true);
-                                    });
-                                });
-                            }, 500); // Wait 500ms after DOM changes
-                        }
-                    });
-
-                    observer.observe(container, {
-                        childList: true,
-                        subtree: true,
-                        attributes: true,
-                        attributeFilter: ["style", "class"],
-                    });
-
-                    return () => {
-                        clearTimeout(fallbackTimeout);
-                        clearTimeout(mutationTimeout);
-                        observer.disconnect();
                     };
-                }
 
-                return () => clearTimeout(fallbackTimeout);
+                    // Primary fallback: timeout
+                    const fallbackTimeout = setTimeout(() => {
+                        if (!hasDoneInitialScroll) {
+                            performScrollToBottom();
+                        }
+                    }, 1000);
+
+                    // Secondary fallback: MutationObserver
+                    const container = containerRef.current;
+                    let mutationTimeout: NodeJS.Timeout;
+
+                    if (container) {
+                        const observer = new MutationObserver(() => {
+                            if (!hasDoneInitialScroll) {
+                                clearTimeout(mutationTimeout);
+                                mutationTimeout = setTimeout(() => {
+                                    performScrollToBottom();
+                                }, 500);
+                            }
+                        });
+
+                        observer.observe(container, {
+                            childList: true,
+                            subtree: true,
+                            attributes: true,
+                            attributeFilter: ["style", "class", "src"],
+                        });
+
+                        return () => {
+                            clearTimeout(fallbackTimeout);
+                            clearTimeout(mutationTimeout);
+                            observer.disconnect();
+                        };
+                    }
+
+                    return () => clearTimeout(fallbackTimeout);
+                }
             }
         }
-    }, [loading, imageCount, hasDoneInitialScroll, scrollToBottom, containerRef, firstUnreadIndex, messages]);
+    }, [loading, imageCount, hasDoneInitialScroll, firstUnreadIndexCalculated, firstUnreadIndex, messages, scrollToBottom, containerRef]);
 
     // Scroll on new messages
     useEffect(() => {
@@ -444,6 +488,7 @@ export default function Messages({
         setUserHasScrolled(false);
         setInitialLoad(true);
         setHasDoneInitialScroll(false);
+        setFirstUnreadIndexCalculated(false);
 
         let isMounted = true;
 

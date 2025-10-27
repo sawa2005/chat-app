@@ -243,12 +243,10 @@ export default function SendMessageForm({
         setReplyTo(null);
         setFirstUnreadIndex(null);
         setImageHeight(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-            fileInputRef.current.focus();
-        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
         setIsPending(false);
         requestAnimationFrame(() => {
+            if (inputRef.current) inputRef.current.focus();
             scrollToBottom(true, true, !!uploadedImageUrl, imageHeight ?? undefined);
         });
     }
