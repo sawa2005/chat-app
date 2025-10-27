@@ -716,6 +716,7 @@ export default function Messages({
                 replyTo={replyTo ?? null}
                 setReplyTo={setReplyTo}
                 setFirstUnreadIndex={setFirstUnreadIndex}
+                scrollToBottom={scrollToBottom}
             />
         </div>
     );

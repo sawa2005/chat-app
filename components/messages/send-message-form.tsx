@@ -23,6 +23,7 @@ type SendMessageFormProps = {
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     setFirstUnreadIndex: Dispatch<SetStateAction<number | null>>;
+    scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     onNewMessage: (message: {
         id: bigint;
         conversation_id: string;
@@ -71,6 +72,7 @@ export default function SendMessageForm({
     replyTo,
     setReplyTo,
     setFirstUnreadIndex,
+    scrollToBottom,
 }: SendMessageFormProps) {
     const [isPending, setIsPending] = useState(false);
     const [content, setContent] = useState("");
@@ -78,6 +80,7 @@ export default function SendMessageForm({
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [alert, setAlert] = useState<React.ReactNode | null>(null);
+    const [imageHeight, setImageHeight] = useState<number | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -139,7 +142,13 @@ export default function SendMessageForm({
             return;
         }
 
-        setImgPreview(URL.createObjectURL(uploadedFile));
+        const objectUrl = URL.createObjectURL(uploadedFile);
+        const img = new window.Image();
+        img.onload = () => {
+            setImageHeight(img.naturalHeight);
+        };
+        img.src = objectUrl;
+        setImgPreview(objectUrl);
     }
 
     async function handleSubmit(e: FormEvent) {
@@ -233,8 +242,15 @@ export default function SendMessageForm({
         setFile(null);
         setReplyTo(null);
         setFirstUnreadIndex(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        setImageHeight(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+            fileInputRef.current.focus();
+        }
         setIsPending(false);
+        requestAnimationFrame(() => {
+            scrollToBottom(true, true, !!uploadedImageUrl, imageHeight ?? undefined);
+        });
     }
 
     function handleUploadCancel() {
@@ -242,6 +258,7 @@ export default function SendMessageForm({
         setImgPreview(null);
         setFile(null);
         setUploading(false);
+        setImageHeight(null);
     }
 
     return (
