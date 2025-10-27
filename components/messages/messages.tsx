@@ -53,11 +53,13 @@ export default function Messages({
     currentUsername,
     currentProfileId,
     currentUserAvatar,
+    initialUnreadCount,
 }: {
     conversationId: string;
     currentUsername: string;
     currentProfileId: bigint;
     currentUserAvatar: string | null;
+    initialUnreadCount: number | null;
 }) {
     const { containerRef, scrollToBottom } = useChatScroll();
     const [initialLoad, setInitialLoad] = useState(true);
@@ -85,7 +87,7 @@ export default function Messages({
     const handleImageLoad = () => {
         /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
-        if (!userHasScrolled) {
+        if (!userHasScrolled && firstUnreadIndex === null) {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     // Use force=true for initial scroll, smooth=false for subsequent images
@@ -351,7 +353,7 @@ export default function Messages({
                 console.log("No images, scrolling immediately");
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
-                        scrollToBottom(false, false, false, undefined, (value) => {
+                        scrollToBottom(false, true, false, undefined, (value) => {
                             isProgrammaticScroll.current = value;
                         });
                         setHasDoneInitialScroll(true);
@@ -420,18 +422,20 @@ export default function Messages({
 
     // Scroll on new messages
     useEffect(() => {
-        requestAnimationFrame(() => {
-            scrollToBottom(true, false, false, undefined, (value) => {
-                isProgrammaticScroll.current = value;
+        if (hasDoneInitialScroll) {
+            requestAnimationFrame(() => {
+                scrollToBottom(true, false, false, undefined, (value) => {
+                    isProgrammaticScroll.current = value;
+                });
             });
-        });
-    }, [messages, scrollToBottom]);
+        }
+    }, [messages, scrollToBottom, hasDoneInitialScroll]);
 
     useEffect(() => {
-        if (!userHasScrolled) {
+        if (!userHasScrolled && !initialLoad) {
             markMessagesAsRead(conversationId, currentProfileId);
         }
-    }, [userHasScrolled, conversationId, currentProfileId]);
+    }, [userHasScrolled, conversationId, currentProfileId, initialLoad]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
@@ -445,7 +449,7 @@ export default function Messages({
 
         const init = async () => {
             try {
-                const messages = await loadInitMessages(conversationId);
+                const messages = await loadInitMessages(conversationId, initialUnreadCount ?? undefined);
                 console.log("loading inital messages:", messages);
 
                 if (!isMounted) return;
