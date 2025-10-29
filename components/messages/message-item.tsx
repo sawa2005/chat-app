@@ -66,7 +66,7 @@ export function MessageItem({
                     onDelete={() => handleDelete(message.id)}
                     onEdit={() => {
                         setEditingMessageId(message.id.toString());
-                        setEditContent(message.content);
+                        setEditContent(message.content ?? "");
                     }}
                     onCancelEdit={() => setEditingMessageId(null)}
                     onReply={() => setReplyTo(message.id)}

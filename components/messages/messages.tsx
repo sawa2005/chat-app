@@ -1,5 +1,3 @@
-"use client";
-
 import { createClient } from "@/lib/client";
 import { useEffect, useState, useRef } from "react";
 import {
@@ -9,6 +7,7 @@ import {
     loadInitMessages,
     loadMoreMessages,
     getMessageIds,
+    refetchMessages,
 } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll, useIsScrollOnTop } from "@/hooks/use-chat-scroll";
@@ -256,40 +255,8 @@ export default function Messages({
                         return;
                     }
 
-                    const formatted = (
-                        newMessages as {
-                            id: bigint;
-                            conversation_id: string;
-                            content: string | null;
-                            created_at: string;
-                            edited_at: string | null;
-                            image_url: string | null;
-                            type: string;
-                            deleted: boolean;
-                            sender:
-                                | { id: bigint; username: string; avatar: string | null }[]
-                                | { id: bigint; username: string; avatar: string | null };
-                            parent_id: bigint | null;
-                            messages: {
-                                id: bigint;
-                                content: string | null;
-                                image_url: string | null;
-                                sender: { id: bigint; username: string; avatar: string } | null;
-                            } | null;
-                            message_reactions:
-                                | {
-                                      id: bigint;
-                                      emoji: string;
-                                      created_at: Date;
-                                      profile_id: bigint;
-                                      message_id: bigint;
-                                  }[]
-                                | null;
-                            message_reads: { profile_id: bigint }[];
-                        }[]
-                    ).map((msg) => ({
+                    const formatted = newMessages.map((msg) => ({
                         ...msg,
-                        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
                         created_at: new Date(msg.created_at),
                     })) as Message[];
 
@@ -543,43 +510,11 @@ export default function Messages({
                 const messages = await loadInitMessages(conversationId, initialUnreadCount ?? undefined);
                 console.log("loading inital messages:", messages);
 
-                if (!isMounted) return;
+                if (!isMounted || !messages) return;
 
                 setMessages(
-                    (
-                        messages as {
-                            id: bigint;
-                            conversation_id: string;
-                            content: string | null;
-                            created_at: string;
-                            edited_at: string | null;
-                            image_url: string | null;
-                            type: string;
-                            deleted: boolean;
-                            sender:
-                                | { id: bigint; username: string; avatar: string | null }[]
-                                | { id: bigint; username: string; avatar: string | null };
-                            parent_id: bigint | null;
-                            messages: {
-                                id: bigint;
-                                content: string | null;
-                                image_url: string | null;
-                                sender: { id: bigint; username: string; avatar: string } | null;
-                            } | null;
-                            message_reactions:
-                                | {
-                                      id: bigint;
-                                      emoji: string;
-                                      created_at: Date;
-                                      profile_id: bigint;
-                                      message_id: bigint;
-                                  }[]
-                                | null;
-                            message_reads: { profile_id: bigint }[];
-                        }[]
-                    ).map((msg) => ({
+                    messages.map((msg) => ({
                         ...msg,
-                        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
                         created_at: new Date(msg.created_at),
                     })) as Message[]
                 );
@@ -601,18 +536,40 @@ export default function Messages({
         };
         init();
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible" && !userHasScrolledRef.current) {
-                setUnreadCount(0);
-                markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState === "visible") {
+                if (!userHasScrolledRef.current) {
+                    setUnreadCount(0);
+                    markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
 
-                // Optimistically update the messages state
-                setMessages((prevMessages) =>
-                    prevMessages.map((message) => ({
-                        ...message,
-                        message_reads: [...message.message_reads, { profile_id: currentProfileId }],
-                    }))
-                );
+                    // Optimistically update the messages state
+                    setMessages((prevMessages) =>
+                        prevMessages.map((message) => ({
+                            ...message,
+                            message_reads: [...message.message_reads, { profile_id: currentProfileId }],
+                        }))
+                    );
+                } else {
+                    const messageIds = messages.map((m) => m.id);
+                    const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : BigInt(0);
+                    const newMessages = await refetchMessages(conversationId, messageIds, lastMessageId);
+
+                    if (newMessages) {
+                        const newMessagesMap = new Map(newMessages.map((m) => [m.id.toString(), m]));
+                        setMessages((prevMessages) => {
+                            const updatedMessages = prevMessages.map((pm) => {
+                                const newMsg = newMessagesMap.get(pm.id.toString());
+                                return newMsg ? { ...pm, ...newMsg, created_at: new Date(newMsg.created_at) } : pm;
+                            });
+                            const existingIds = new Set(updatedMessages.map((m) => m.id.toString()));
+                            const newerMessages = newMessages.filter((nm) => !existingIds.has(nm.id.toString()));
+                            return [
+                                ...updatedMessages,
+                                ...newerMessages.map((nm) => ({ ...nm, created_at: new Date(nm.created_at) })),
+                            ];
+                        });
+                    }
+                }
             }
         };
         window.addEventListener("visibilitychange", handleVisibilityChange);

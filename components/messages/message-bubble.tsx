@@ -87,7 +87,7 @@ export function MessageBubble({
     containerRef: RefObject<HTMLDivElement | null>;
     onImageLoad?: () => void;
 }) {
-    const emojiOnly = isEmojiOnly(message.content);
+    const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
 
     if (isEditing) {
         return (
