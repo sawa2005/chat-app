@@ -76,6 +76,7 @@ export default function Messages({
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
+    const [newMessageDot, setNewMessageDot] = useState(false);
 
     const [userHasScrolled, setUserHasScrolled] = useState(false);
     const userHasScrolledRef = useRef(userHasScrolled);
@@ -616,6 +617,9 @@ export default function Messages({
                     message_reads: payload.message_reads ?? [],
                 };
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
+                if (userHasScrolledRef.current || document.visibilityState !== "visible") {
+                    setNewMessageDot(true);
+                }
                 setUnreadCount((prev) => prev + 1);
                 console.log("Received new message:", message);
             })
@@ -711,6 +715,9 @@ export default function Messages({
                 },
             ];
         });
+        if (!userHasScrolledRef.current) {
+            setNewMessageDot(false);
+        }
     }
 
     function handleDelete(messageId: bigint) {
@@ -722,6 +729,7 @@ export default function Messages({
     }
 
     function handleScrollToBottom() {
+        setNewMessageDot(false);
         if (unreadCount > 0 && firstUnreadIndex !== null) {
             const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
             if (unreadElement) {
@@ -741,7 +749,7 @@ export default function Messages({
                 <>
                     {userHasScrolled && (
                         <div className="absolute top-0 z-10 w-full">
-                            <BackToBottom onClick={() => handleScrollToBottom()} />
+                            <BackToBottom onClick={() => handleScrollToBottom()} newMessageDot={newMessageDot} />
                         </div>
                     )}
                     <div
