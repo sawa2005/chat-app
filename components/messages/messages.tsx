@@ -76,7 +76,13 @@ export default function Messages({
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
+
     const [userHasScrolled, setUserHasScrolled] = useState(false);
+    const userHasScrolledRef = useRef(userHasScrolled);
+    useEffect(() => {
+        userHasScrolledRef.current = userHasScrolled;
+    }, [userHasScrolled]);
+
     const [hasDoneInitialScroll, setHasDoneInitialScroll] = useState(false);
     const [unreadCount, setUnreadCount] = useState<number>(initialUnreadCount ?? 0);
     const setTitle = useTabTitle(conversationName);
@@ -371,6 +377,7 @@ export default function Messages({
                     const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
                     if (unreadElement) {
                         unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                        setUserHasScrolled(true);
                     }
                     setHasDoneInitialScroll(true);
                 } else {
@@ -431,6 +438,7 @@ export default function Messages({
                             scrollToBottom(false, true, false, undefined, (value) => {
                                 isProgrammaticScroll.current = value;
                             });
+                            setUserHasScrolled(false);
                             setHasDoneInitialScroll(true);
                         });
                     });
@@ -594,7 +602,7 @@ export default function Messages({
         init();
 
         const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible" && !userHasScrolled) {
+            if (document.visibilityState === "visible" && !userHasScrolledRef.current) {
                 setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
 
