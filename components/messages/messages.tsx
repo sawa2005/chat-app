@@ -34,7 +34,6 @@ export function isEmojiOnly(message: string) {
 // TODO: re-fetch messages when user re-focuses browser.
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
-// TODO: first unread index resets to same index after new message is received even if it's cleared.
 // TODO: consider switching message hover text to on click instead.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
@@ -347,6 +346,14 @@ export default function Messages({
                 setFirstUnreadIndex(null);
                 setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId);
+
+                // Optimistically update the messages state
+                setMessages((prevMessages) =>
+                    prevMessages.map((message) => ({
+                        ...message,
+                        message_reads: [...message.message_reads, { profile_id: currentProfileId }],
+                    }))
+                );
             }
         };
 
@@ -501,6 +508,14 @@ export default function Messages({
         if (!userHasScrolled && !initialLoad) {
             markMessagesAsRead(conversationId, currentProfileId);
             setUnreadCount(0);
+
+            // Optimistically update the messages state
+            setMessages((prevMessages) =>
+                prevMessages.map((message) => ({
+                    ...message,
+                    message_reads: [...message.message_reads, { profile_id: currentProfileId }],
+                }))
+            );
         }
     }, [userHasScrolled, conversationId, currentProfileId, initialLoad]);
 
@@ -582,6 +597,14 @@ export default function Messages({
             if (document.visibilityState === "visible" && !userHasScrolled) {
                 setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
+
+                // Optimistically update the messages state
+                setMessages((prevMessages) =>
+                    prevMessages.map((message) => ({
+                        ...message,
+                        message_reads: [...message.message_reads, { profile_id: currentProfileId }],
+                    }))
+                );
             }
         };
         window.addEventListener("visibilitychange", handleVisibilityChange);
