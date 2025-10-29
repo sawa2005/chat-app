@@ -32,7 +32,6 @@ export function isEmojiOnly(message: string) {
     return matched !== null && matched.join("") === stripped;
 }
 
-// TODO: re-fetch messages when user re-focuses browser.
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
@@ -293,7 +292,7 @@ export default function Messages({
     // Restore scroll position after more loaded messages
     useEffect(() => {
         const container = containerRef.current;
-        if (!container || !scrollStateRef.current.scrollHeight || !isLoadingMore) return;
+        if (!container || !scrollStateRef.current.scrollHeight || isLoadingMore) return;
 
         const { scrollPos, scrollHeight } = scrollStateRef.current;
         const newScrollHeight = container.scrollHeight;
@@ -552,6 +551,7 @@ export default function Messages({
                         }))
                     );
                 } else {
+                    setIsLoadingMore(true);
                     const messageIds = messages.map((m) => m.id);
                     const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : BigInt(0);
                     const newMessages = await refetchMessages(conversationId, messageIds, lastMessageId);
@@ -570,6 +570,8 @@ export default function Messages({
                                 ...newerMessages.map((nm) => ({ ...nm, created_at: new Date(nm.created_at) })),
                             ];
                         });
+                    } else {
+                        setIsLoadingMore(false);
                     }
                 }
             }
@@ -719,6 +721,18 @@ export default function Messages({
             .catch((err) => console.error("Delete failed:", err));
     }
 
+    function handleScrollToBottom() {
+        if (unreadCount > 0 && firstUnreadIndex !== null) {
+            const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
+            if (unreadElement) {
+                unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                setUserHasScrolled(true);
+            }
+        } else {
+            scrollToBottom(true, true);
+        }
+    }
+
     return (
         <div className="relative flex flex-col flex-1 min-h-0 gap-5">
             {loading ? (
@@ -727,7 +741,7 @@ export default function Messages({
                 <>
                     {userHasScrolled && (
                         <div className="absolute top-0 z-10 w-full">
-                            <BackToBottom onClick={() => scrollToBottom(true, true)} />
+                            <BackToBottom onClick={() => handleScrollToBottom()} />
                         </div>
                     )}
                     <div
