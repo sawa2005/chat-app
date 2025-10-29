@@ -35,6 +35,7 @@ export function isEmojiOnly(message: string) {
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
+// TODO: don't clear newmessageindicator or mark messages as read until images have loaded.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -76,7 +77,7 @@ export default function Messages({
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
-    const [newMessageDot, setNewMessageDot] = useState(false);
+    const [hasNewMessage, setHasNewMessage] = useState(false);
 
     const [userHasScrolled, setUserHasScrolled] = useState(false);
     const userHasScrolledRef = useRef(userHasScrolled);
@@ -345,8 +346,11 @@ export default function Messages({
                     // No images, scroll immediately
                     const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
                     if (unreadElement) {
+                        isProgrammaticScroll.current = true; // Set to true before programmatic scroll
                         unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
-                        setUserHasScrolled(true);
+                        setTimeout(() => {
+                            isProgrammaticScroll.current = false; // Reset after a short delay
+                        }, 300); // Adjust delay as needed
                     }
                     setHasDoneInitialScroll(true);
                 } else {
@@ -356,7 +360,11 @@ export default function Messages({
                     const performScroll = () => {
                         const unreadElement = document.getElementById(unreadElementId);
                         if (unreadElement) {
+                            isProgrammaticScroll.current = true; // Set to true before programmatic scroll
                             unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                            setTimeout(() => {
+                                isProgrammaticScroll.current = false; // Reset after a short delay
+                            }, 300); // Adjust delay as needed
                         }
                         setHasDoneInitialScroll(true);
                     };
@@ -618,7 +626,7 @@ export default function Messages({
                 };
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
                 if (userHasScrolledRef.current || document.visibilityState !== "visible") {
-                    setNewMessageDot(true);
+                    setHasNewMessage(true);
                 }
                 setUnreadCount((prev) => prev + 1);
                 console.log("Received new message:", message);
@@ -716,7 +724,7 @@ export default function Messages({
             ];
         });
         if (!userHasScrolledRef.current) {
-            setNewMessageDot(false);
+            setHasNewMessage(false);
         }
     }
 
@@ -729,7 +737,7 @@ export default function Messages({
     }
 
     function handleScrollToBottom() {
-        setNewMessageDot(false);
+        setHasNewMessage(false);
         if (unreadCount > 0 && firstUnreadIndex !== null) {
             const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
             if (unreadElement) {
@@ -749,7 +757,7 @@ export default function Messages({
                 <>
                     {userHasScrolled && (
                         <div className="absolute top-0 z-10 w-full">
-                            <BackToBottom onClick={() => handleScrollToBottom()} newMessageDot={newMessageDot} />
+                            <BackToBottom onClick={() => handleScrollToBottom()} hasNewMessage={hasNewMessage} />
                         </div>
                     )}
                     <div
