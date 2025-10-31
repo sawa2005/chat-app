@@ -346,11 +346,7 @@ export default function Messages({
                     // No images, scroll immediately
                     const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
                     if (unreadElement) {
-                        isProgrammaticScroll.current = true; // Set to true before programmatic scroll
                         unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
-                        setTimeout(() => {
-                            isProgrammaticScroll.current = false; // Reset after a short delay
-                        }, 300); // Adjust delay as needed
                     }
                     setHasDoneInitialScroll(true);
                 } else {
@@ -360,11 +356,7 @@ export default function Messages({
                     const performScroll = () => {
                         const unreadElement = document.getElementById(unreadElementId);
                         if (unreadElement) {
-                            isProgrammaticScroll.current = true; // Set to true before programmatic scroll
                             unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
-                            setTimeout(() => {
-                                isProgrammaticScroll.current = false; // Reset after a short delay
-                            }, 300); // Adjust delay as needed
                         }
                         setHasDoneInitialScroll(true);
                     };

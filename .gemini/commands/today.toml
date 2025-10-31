@@ -1,0 +1,4 @@
+description="Summarizes today's code changes in a single sentence"
+prompt = """
+Please summarize all the changes done to the code today by comparing the last commit with the last commit of yesterday. It should be summarized into a single sentence which broadly describes what was implemented today.
+"""
