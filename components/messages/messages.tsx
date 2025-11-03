@@ -35,6 +35,9 @@ export function isEmojiOnly(message: string) {
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
+// TODO: keep hover state of message if reaction component is open.
+// TODO: add timeout and animation to message hover state.
+// TODO: no country flags in emoji picker.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -70,7 +73,6 @@ export default function Messages({
         messagesRef.current = messages;
     }, [messages]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
-    const [firstUnreadIndexCalculated, setFirstUnreadIndexCalculated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
@@ -158,15 +160,12 @@ export default function Messages({
     }, [unreadCount, conversationName, setTitle]);
 
     useEffect(() => {
-        if (messages.length > 0) {
-            const index = messages.findIndex(
-                (message) =>
-                    message.sender?.id !== currentProfileId &&
-                    !message.message_reads.some((read) => read.profile_id === currentProfileId)
-            );
-            setFirstUnreadIndex(index !== -1 ? index : null);
-            setFirstUnreadIndexCalculated(true);
-        }
+        const index = messages.findIndex(
+            (message) =>
+                message.sender?.id !== currentProfileId &&
+                !message.message_reads.some((read) => read.profile_id === currentProfileId)
+        );
+        setFirstUnreadIndex(index !== -1 ? index : null);
     }, [messages, currentProfileId]);
 
     /* useEffect(() => {
@@ -200,7 +199,6 @@ export default function Messages({
                 scrollHeight: container.scrollHeight,
             };
 
-            const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
             /* console.log(
                 "Scroll event - isProgrammaticScroll:",
                 isProgrammaticScroll.current,
@@ -221,12 +219,13 @@ export default function Messages({
 
                 // Debounce the scroll state change
                 scrollDebounceRef.current = setTimeout(() => {
+                    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
                     if (distanceFromBottom > 100) {
                         // Increased threshold to 100px
                         /* console.log("Setting userHasScrolled to true due to distance:", distanceFromBottom); */
                         setUserHasScrolled(true);
-                        if (userHasScrolled) setHasEverScrolledUp(true);
-                    } else if (distanceFromBottom <= 20) {
+                        setHasEverScrolledUp(true);
+                    } else {
                         // Increased reset threshold to 20px
                         /* console.log("Setting userHasScrolled to false due to distance:", distanceFromBottom); */
                         setUserHasScrolled(false);
@@ -366,7 +365,7 @@ export default function Messages({
 
     // Initial scroll - handle both cases
     useEffect(() => {
-        if (!loading && !hasDoneInitialScroll && firstUnreadIndexCalculated) {
+        if (!loading && !hasDoneInitialScroll) {
             if (firstUnreadIndex !== null) {
                 // Has unread messages
                 if (imageCount === 0) {
@@ -486,16 +485,7 @@ export default function Messages({
                 }
             }
         }
-    }, [
-        loading,
-        imageCount,
-        hasDoneInitialScroll,
-        firstUnreadIndexCalculated,
-        firstUnreadIndex,
-        messages,
-        scrollToBottom,
-        containerRef,
-    ]);
+    }, [loading, imageCount, hasDoneInitialScroll, firstUnreadIndex, messages, scrollToBottom, containerRef]);
 
     // Scroll on new messages
     useEffect(() => {
@@ -539,7 +529,6 @@ export default function Messages({
         setUserHasScrolled(false);
         setInitialLoad(true);
         setHasDoneInitialScroll(false);
-        setFirstUnreadIndexCalculated(false);
 
         let isMounted = true;
 
@@ -763,6 +752,10 @@ export default function Messages({
                 },
             ];
         });
+        if (msg.sender?.id === currentProfileId) {
+            setFirstUnreadIndex(null);
+            markMessagesAsRead(conversationId, currentProfileId);
+        }
         if (!userHasScrolledRef.current) {
             setHasNewMessage(false);
         }
@@ -845,7 +838,6 @@ export default function Messages({
                 onNewMessage={handleNewMessage}
                 replyTo={replyTo ?? null}
                 setReplyTo={setReplyTo}
-                setFirstUnreadIndex={setFirstUnreadIndex}
                 scrollToBottom={scrollToBottom}
             />
         </div>

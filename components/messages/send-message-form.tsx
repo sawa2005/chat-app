@@ -22,7 +22,6 @@ type SendMessageFormProps = {
     sendMessage: typeof sendMessage;
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
-    setFirstUnreadIndex: Dispatch<SetStateAction<number | null>>;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
     onNewMessage: (message: {
         id: bigint;
@@ -71,7 +70,6 @@ export default function SendMessageForm({
     onNewMessage,
     replyTo,
     setReplyTo,
-    setFirstUnreadIndex,
     scrollToBottom,
 }: SendMessageFormProps) {
     const [isPending, setIsPending] = useState(false);
@@ -241,7 +239,6 @@ export default function SendMessageForm({
         setImgPreview(null);
         setFile(null);
         setReplyTo(null);
-        setFirstUnreadIndex(null);
         setImageHeight(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setIsPending(false);
@@ -283,7 +280,7 @@ export default function SendMessageForm({
                             name="content"
                             type="text"
                             placeholder="Type your message..."
-                            className="px-4 py-6 pr-18 w-full"
+                            className="px-4 py-6 pr-[106px] w-full"
                             disabled={isPending}
                             value={content}
                             onChange={handleInputChange}
@@ -295,6 +292,7 @@ export default function SendMessageForm({
                             ref={fileInputRef}
                             onChange={handleFileChange}
                             className="hidden"
+                            title="Attach File"
                         />
 
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
