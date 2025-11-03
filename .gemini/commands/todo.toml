@@ -6,10 +6,8 @@ Distinguish the file name and line number from the actual TODO text clearly by c
 
 Follow these commands when performing the TODO search:
 
-FindFiles '**/*.{ts,tsx}'
-
-ReadManyFiles on all found files
-
-Look for TODO on all read files
-
+1. Find all relevant files: Use the glob tool to find all files with the extensions (.ts, .tsx).
+2. Read all found files: Use the read_many_files tool to get the complete content of
+   all the files found in the previous step.
+3. Find all occurences of TODO: in the read_many_files result and list them according to the previous instructions.
 """
