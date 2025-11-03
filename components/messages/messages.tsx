@@ -82,6 +82,21 @@ export default function Messages({
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
     const [hasNewMessage, setHasNewMessage] = useState(false);
+    const [hasEverScrolledUp, setHasEverScrolledUp] = useState(false);
+    const [isScrollable, setIsScrollable] = useState(false);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (container) {
+            const checkScrollable = () => {
+                setIsScrollable(container.scrollHeight > container.clientHeight);
+            };
+            checkScrollable();
+            const resizeObserver = new ResizeObserver(checkScrollable);
+            resizeObserver.observe(container);
+            return () => resizeObserver.disconnect();
+        }
+    }, [messages, containerRef]);
 
     const [userHasScrolled, setUserHasScrolled] = useState(false);
     const userHasScrolledRef = useRef(userHasScrolled);
@@ -210,6 +225,7 @@ export default function Messages({
                         // Increased threshold to 100px
                         /* console.log("Setting userHasScrolled to true due to distance:", distanceFromBottom); */
                         setUserHasScrolled(true);
+                        if (userHasScrolled) setHasEverScrolledUp(true);
                     } else if (distanceFromBottom <= 20) {
                         // Increased reset threshold to 20px
                         /* console.log("Setting userHasScrolled to false due to distance:", distanceFromBottom); */
@@ -493,7 +509,8 @@ export default function Messages({
     }, [messages, scrollToBottom, hasDoneInitialScroll]);
 
     useEffect(() => {
-        if (!userHasScrolled && hasDoneInitialScroll && allImagesLoaded) {
+        const canMarkAsRead = hasEverScrolledUp || !isScrollable;
+        if (!userHasScrolled && hasDoneInitialScroll && allImagesLoaded && canMarkAsRead) {
             markMessagesAsRead(conversationId, currentProfileId);
             setUnreadCount(0);
 
@@ -505,7 +522,15 @@ export default function Messages({
                 }))
             );
         }
-    }, [userHasScrolled, conversationId, currentProfileId, hasDoneInitialScroll, allImagesLoaded]);
+    }, [
+        userHasScrolled,
+        hasDoneInitialScroll,
+        allImagesLoaded,
+        hasEverScrolledUp,
+        isScrollable,
+        conversationId,
+        currentProfileId,
+    ]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
@@ -567,7 +592,10 @@ export default function Messages({
                 } else {
                     setIsLoadingMore(true);
                     const messageIds = messagesRef.current.map((m) => m.id);
-                    const lastMessageId = messagesRef.current.length > 0 ? messagesRef.current[messagesRef.current.length - 1].id : BigInt(0);
+                    const lastMessageId =
+                        messagesRef.current.length > 0
+                            ? messagesRef.current[messagesRef.current.length - 1].id
+                            : BigInt(0);
                     const newMessages = await refetchMessages(conversationId, messageIds, lastMessageId);
 
                     if (newMessages) {
@@ -594,9 +622,9 @@ export default function Messages({
                     }
                     // This should be called regardless of whether new messages were found
                     setIsLoadingMore(false);
+                }
             }
-    }
-};
+        };
         window.addEventListener("visibilitychange", handleVisibilityChange);
 
         const channel = supabase
