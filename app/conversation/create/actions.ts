@@ -110,16 +110,17 @@ export async function loadInitMessages(conversationId: string, unreadCount?: num
                 image_url: true,
                 type: true,
                 deleted: true,
+                parent_id: true,
                 sender: { select: { id: true, username: true, avatar: true } },
                 messages: {
                     select: {
                         id: true,
                         content: true,
                         image_url: true,
-                        sender: { select: { id: true, username: true } },
+                        sender: { select: { id: true, username: true, avatar: true } },
                     },
                 },
-                message_reactions: { select: { emoji: true, profile_id: true } },
+                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
                 message_reads: { select: { profile_id: true } },
             },
         });
@@ -127,7 +128,8 @@ export async function loadInitMessages(conversationId: string, unreadCount?: num
         if (prismaMessages) {
             const messages = prismaMessages.reverse().map((msg) => ({
                 ...msg,
-                // convert IDs to bigint
+                content: msg.content ?? "",
+                deleted: msg.deleted ?? false,
                 id: BigInt(msg.id),
                 sender: msg.sender
                     ? { id: BigInt(msg.sender.id), username: msg.sender.username, avatar: msg.sender.avatar }
@@ -160,16 +162,17 @@ export async function loadMoreMessages(conversationId: string, beforeMessageId: 
                 image_url: true,
                 type: true,
                 deleted: true,
+                parent_id: true,
                 sender: { select: { id: true, username: true, avatar: true } },
                 messages: {
                     select: {
                         id: true,
                         content: true,
                         image_url: true,
-                        sender: { select: { id: true, username: true } },
+                        sender: { select: { id: true, username: true, avatar: true } },
                     },
                 },
-                message_reactions: { select: { emoji: true, profile_id: true } },
+                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
                 message_reads: { select: { profile_id: true } },
             },
         });
@@ -177,7 +180,8 @@ export async function loadMoreMessages(conversationId: string, beforeMessageId: 
         if (prismaMessages) {
             const messages = prismaMessages.reverse().map((msg) => ({
                 ...msg,
-                // convert IDs to bigint
+                content: msg.content ?? "",
+                deleted: msg.deleted ?? false,
                 id: BigInt(msg.id),
                 sender: msg.sender
                     ? { id: BigInt(msg.sender.id), username: msg.sender.username, avatar: msg.sender.avatar }
@@ -533,4 +537,84 @@ export async function getUserConversations(profileId: bigint) {
     });
 
     return conversations;
+}
+
+export async function refetchMessages(conversationId: string, messageIds: bigint[], lastMessageId: bigint) {
+    try {
+        const existingMessagesPromise = prisma.messages.findMany({
+            where: { id: { in: messageIds } },
+            select: {
+                id: true,
+                conversation_id: true,
+                content: true,
+                created_at: true,
+                edited_at: true,
+                image_url: true,
+                type: true,
+                deleted: true,
+                parent_id: true,
+                sender: { select: { id: true, username: true, avatar: true } },
+                messages: {
+                    select: {
+                        id: true,
+                        content: true,
+                        image_url: true,
+                        sender: { select: { id: true, username: true, avatar: true } },
+                    },
+                },
+                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
+                message_reads: { select: { profile_id: true } },
+            },
+        });
+
+        const newMessagesPromise = prisma.messages.findMany({
+            where: {
+                conversation_id: conversationId,
+                id: { gt: lastMessageId },
+            },
+            select: {
+                id: true,
+                conversation_id: true,
+                content: true,
+                created_at: true,
+                edited_at: true,
+                image_url: true,
+                type: true,
+                deleted: true,
+                parent_id: true,
+                sender: { select: { id: true, username: true, avatar: true } },
+                messages: {
+                    select: {
+                        id: true,
+                        content: true,
+                        image_url: true,
+                        sender: { select: { id: true, username: true, avatar: true } },
+                    },
+                },
+                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
+                message_reads: { select: { profile_id: true } },
+            },
+        });
+
+        const [existingMessages, newMessages] = await Promise.all([existingMessagesPromise, newMessagesPromise]);
+
+        const allMessages = [...existingMessages, ...newMessages];
+
+        if (allMessages) {
+            const messages = allMessages.map((msg) => ({
+                ...msg,
+                content: msg.content ?? "",
+                deleted: msg.deleted ?? false,
+                id: BigInt(msg.id),
+                sender: msg.sender
+                    ? { id: BigInt(msg.sender.id), username: msg.sender.username, avatar: msg.sender.avatar }
+                    : null,
+                created_at: msg.created_at.toISOString(),
+            }));
+
+            return messages;
+        }
+    } catch (err) {
+        console.error("Error refetching messages:", err);
+    }
 }

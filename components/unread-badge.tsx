@@ -34,7 +34,7 @@ export function UnreadBadge({
     }, [currentProfileId, conversationId]);
 
     return unreadCount > 0 ? (
-        <div className="flex items-center bg-red-500 text-white rounded-full px-2 py-0.5 mb-1 text-xs font-semibold">
+        <div className="flex items-center bg-accent text-accent-foreground border rounded-full px-2 py-0.5 mb-1 text-xs font-semibold">
             {unreadCount}
         </div>
     ) : (

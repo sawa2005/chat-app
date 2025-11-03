@@ -1,0 +1,15 @@
+description="Lists current TODO's and sorts from most to least important"
+prompt = """
+Please list all current TODO's and sort them from most to least important.
+The list should be a bullet list with emoji and/or markdown coordination for each section (most importance, medium importance, least importance).
+Distinguish the file name and line number from the actual TODO text clearly by coloring the first part. Keep all the text in english.
+
+Follow these commands when performing the TODO search:
+
+FindFiles '**/*.{ts,tsx}'
+
+ReadManyFiles on all found files
+
+Look for TODO on all read files
+
+"""

@@ -9,6 +9,7 @@ import {
     loadInitMessages,
     loadMoreMessages,
     getMessageIds,
+    refetchMessages,
 } from "@/app/conversation/create/actions";
 import SendMessageForm from "./send-message-form";
 import { useChatScroll, useIsScrollOnTop } from "@/hooks/use-chat-scroll";
@@ -31,7 +32,6 @@ export function isEmojiOnly(message: string) {
     return matched !== null && matched.join("") === stripped;
 }
 
-// TODO: re-fetch messages when user re-focuses browser.
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
@@ -65,17 +65,38 @@ export default function Messages({
     const { containerRef, scrollToBottom } = useChatScroll();
     const [initialLoad, setInitialLoad] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
+    const messagesRef = useRef(messages);
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [firstUnreadIndexCalculated, setFirstUnreadIndexCalculated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
     const [imageCount, setImageCount] = useState(0);
+    const [allImagesLoaded, setAllImagesLoaded] = useState(false);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
+    const [hasNewMessage, setHasNewMessage] = useState(false);
+    const [hasEverScrolledUp, setHasEverScrolledUp] = useState(false);
+    const [isScrollable, setIsScrollable] = useState(false);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (container) {
+            const checkScrollable = () => {
+                setIsScrollable(container.scrollHeight > container.clientHeight);
+            };
+            checkScrollable();
+            const resizeObserver = new ResizeObserver(checkScrollable);
+            resizeObserver.observe(container);
+            return () => resizeObserver.disconnect();
+        }
+    }, [messages, containerRef]);
 
     const [userHasScrolled, setUserHasScrolled] = useState(false);
     const userHasScrolledRef = useRef(userHasScrolled);
@@ -95,6 +116,7 @@ export default function Messages({
 
     // Handle image loading completion
     const handleImageLoad = () => {
+        setImageCount((prev) => prev - 1);
         /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
         if (!userHasScrolled && firstUnreadIndex === null) {
@@ -120,6 +142,12 @@ export default function Messages({
             });
         }
     };
+
+    useEffect(() => {
+        if (imageCount === 0) {
+            setAllImagesLoaded(true);
+        }
+    }, [imageCount]);
 
     useEffect(() => {
         if (unreadCount > 0) {
@@ -197,6 +225,7 @@ export default function Messages({
                         // Increased threshold to 100px
                         /* console.log("Setting userHasScrolled to true due to distance:", distanceFromBottom); */
                         setUserHasScrolled(true);
+                        if (userHasScrolled) setHasEverScrolledUp(true);
                     } else if (distanceFromBottom <= 20) {
                         // Increased reset threshold to 20px
                         /* console.log("Setting userHasScrolled to false due to distance:", distanceFromBottom); */
@@ -256,40 +285,8 @@ export default function Messages({
                         return;
                     }
 
-                    const formatted = (
-                        newMessages as {
-                            id: bigint;
-                            conversation_id: string;
-                            content: string | null;
-                            created_at: string;
-                            edited_at: string | null;
-                            image_url: string | null;
-                            type: string;
-                            deleted: boolean;
-                            sender:
-                                | { id: bigint; username: string; avatar: string | null }[]
-                                | { id: bigint; username: string; avatar: string | null };
-                            parent_id: bigint | null;
-                            messages: {
-                                id: bigint;
-                                content: string | null;
-                                image_url: string | null;
-                                sender: { id: bigint; username: string; avatar: string } | null;
-                            } | null;
-                            message_reactions:
-                                | {
-                                      id: bigint;
-                                      emoji: string;
-                                      created_at: Date;
-                                      profile_id: bigint;
-                                      message_id: bigint;
-                                  }[]
-                                | null;
-                            message_reads: { profile_id: bigint }[];
-                        }[]
-                    ).map((msg) => ({
+                    const formatted = newMessages.map((msg) => ({
                         ...msg,
-                        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
                         created_at: new Date(msg.created_at),
                     })) as Message[];
 
@@ -324,7 +321,7 @@ export default function Messages({
     // Restore scroll position after more loaded messages
     useEffect(() => {
         const container = containerRef.current;
-        if (!container || !scrollStateRef.current.scrollHeight || !isLoadingMore) return;
+        if (!container || !scrollStateRef.current.scrollHeight || isLoadingMore) return;
 
         const { scrollPos, scrollHeight } = scrollStateRef.current;
         const newScrollHeight = container.scrollHeight;
@@ -348,7 +345,7 @@ export default function Messages({
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+            if (e.key === "Escape" && allImagesLoaded) {
                 setFirstUnreadIndex(null);
                 setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId);
@@ -377,7 +374,6 @@ export default function Messages({
                     const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
                     if (unreadElement) {
                         unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
-                        setUserHasScrolled(true);
                     }
                     setHasDoneInitialScroll(true);
                 } else {
@@ -513,7 +509,8 @@ export default function Messages({
     }, [messages, scrollToBottom, hasDoneInitialScroll]);
 
     useEffect(() => {
-        if (!userHasScrolled && !initialLoad) {
+        const canMarkAsRead = hasEverScrolledUp || !isScrollable;
+        if (!userHasScrolled && hasDoneInitialScroll && allImagesLoaded && canMarkAsRead) {
             markMessagesAsRead(conversationId, currentProfileId);
             setUnreadCount(0);
 
@@ -525,7 +522,15 @@ export default function Messages({
                 }))
             );
         }
-    }, [userHasScrolled, conversationId, currentProfileId, initialLoad]);
+    }, [
+        userHasScrolled,
+        hasDoneInitialScroll,
+        allImagesLoaded,
+        hasEverScrolledUp,
+        isScrollable,
+        conversationId,
+        currentProfileId,
+    ]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
@@ -543,43 +548,11 @@ export default function Messages({
                 const messages = await loadInitMessages(conversationId, initialUnreadCount ?? undefined);
                 console.log("loading inital messages:", messages);
 
-                if (!isMounted) return;
+                if (!isMounted || !messages) return;
 
                 setMessages(
-                    (
-                        messages as {
-                            id: bigint;
-                            conversation_id: string;
-                            content: string | null;
-                            created_at: string;
-                            edited_at: string | null;
-                            image_url: string | null;
-                            type: string;
-                            deleted: boolean;
-                            sender:
-                                | { id: bigint; username: string; avatar: string | null }[]
-                                | { id: bigint; username: string; avatar: string | null };
-                            parent_id: bigint | null;
-                            messages: {
-                                id: bigint;
-                                content: string | null;
-                                image_url: string | null;
-                                sender: { id: bigint; username: string; avatar: string } | null;
-                            } | null;
-                            message_reactions:
-                                | {
-                                      id: bigint;
-                                      emoji: string;
-                                      created_at: Date;
-                                      profile_id: bigint;
-                                      message_id: bigint;
-                                  }[]
-                                | null;
-                            message_reads: { profile_id: bigint }[];
-                        }[]
-                    ).map((msg) => ({
+                    messages.map((msg) => ({
                         ...msg,
-                        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
                         created_at: new Date(msg.created_at),
                     })) as Message[]
                 );
@@ -591,9 +564,11 @@ export default function Messages({
                     messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
                 if (imageMessages.length === 0) {
                     setImageLoading(false);
+                    setAllImagesLoaded(true);
                 } else {
                     setImageCount(imageMessages.length);
                     setImageLoading(true);
+                    setAllImagesLoaded(false);
                 }
             } catch (err) {
                 console.error(err);
@@ -601,18 +576,53 @@ export default function Messages({
         };
         init();
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible" && !userHasScrolledRef.current) {
-                setUnreadCount(0);
-                markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState === "visible") {
+                if (!userHasScrolledRef.current && allImagesLoaded) {
+                    setUnreadCount(0);
+                    markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
 
-                // Optimistically update the messages state
-                setMessages((prevMessages) =>
-                    prevMessages.map((message) => ({
-                        ...message,
-                        message_reads: [...message.message_reads, { profile_id: currentProfileId }],
-                    }))
-                );
+                    // Optimistically update the messages state
+                    setMessages((prevMessages) =>
+                        prevMessages.map((message) => ({
+                            ...message,
+                            message_reads: [...message.message_reads, { profile_id: currentProfileId }],
+                        }))
+                    );
+                } else {
+                    setIsLoadingMore(true);
+                    const messageIds = messagesRef.current.map((m) => m.id);
+                    const lastMessageId =
+                        messagesRef.current.length > 0
+                            ? messagesRef.current[messagesRef.current.length - 1].id
+                            : BigInt(0);
+                    const newMessages = await refetchMessages(conversationId, messageIds, lastMessageId);
+
+                    if (newMessages) {
+                        setMessages((prevMessages) => {
+                            const messageMap = new Map<string, Message>();
+
+                            // Populate map with existing messages
+                            prevMessages.forEach((msg) => messageMap.set(msg.id.toString(), msg));
+
+                            // Merge in new/updated messages
+                            newMessages.forEach((msg) => {
+                                const messageWithDate = {
+                                    ...msg,
+                                    created_at: new Date(msg.created_at),
+                                } as Message;
+                                messageMap.set(msg.id.toString(), messageWithDate);
+                            });
+
+                            // Return sorted array
+                            return Array.from(messageMap.values()).sort(
+                                (a, b) => a.created_at.getTime() - b.created_at.getTime()
+                            );
+                        });
+                    }
+                    // This should be called regardless of whether new messages were found
+                    setIsLoadingMore(false);
+                }
             }
         };
         window.addEventListener("visibilitychange", handleVisibilityChange);
@@ -655,6 +665,9 @@ export default function Messages({
                     message_reads: payload.message_reads ?? [],
                 };
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
+                if (userHasScrolledRef.current || document.visibilityState !== "visible") {
+                    setHasNewMessage(true);
+                }
                 setUnreadCount((prev) => prev + 1);
                 console.log("Received new message:", message);
             })
@@ -750,6 +763,9 @@ export default function Messages({
                 },
             ];
         });
+        if (!userHasScrolledRef.current) {
+            setHasNewMessage(false);
+        }
     }
 
     function handleDelete(messageId: bigint) {
@@ -760,6 +776,19 @@ export default function Messages({
             .catch((err) => console.error("Delete failed:", err));
     }
 
+    function handleScrollToBottom() {
+        setHasNewMessage(false);
+        if (unreadCount > 0 && firstUnreadIndex !== null) {
+            const unreadElement = document.getElementById(`message-item-${messages[firstUnreadIndex].id}`);
+            if (unreadElement) {
+                unreadElement.scrollIntoView({ behavior: "auto", block: "center" });
+                setUserHasScrolled(true);
+            }
+        } else {
+            scrollToBottom(true, true);
+        }
+    }
+
     return (
         <div className="relative flex flex-col flex-1 min-h-0 gap-5">
             {loading ? (
@@ -768,7 +797,7 @@ export default function Messages({
                 <>
                     {userHasScrolled && (
                         <div className="absolute top-0 z-10 w-full">
-                            <BackToBottom onClick={() => scrollToBottom(true, true)} />
+                            <BackToBottom onClick={() => handleScrollToBottom()} hasNewMessage={hasNewMessage} />
                         </div>
                     )}
                     <div
