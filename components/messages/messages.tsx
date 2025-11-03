@@ -38,6 +38,7 @@ export function isEmojiOnly(message: string) {
 // TODO: keep hover state of message if reaction component is open.
 // TODO: add timeout and animation to message hover state.
 // TODO: no country flags in emoji picker.
+// TODO: shift+enter for line break instead of submitting form.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;

@@ -73,11 +73,7 @@ export function ReactionBar({
                             onMouseEnter={() => handleHover(r.emoji, r.profile_ids)}
                             className={`cursor-pointer flex items-center gap-1 rounded-lg pl-0.5 pr-1.5 text-xl
                             border transition
-                            ${
-                                r.reacted
-                                    ? "bg-accent border-accent-foreground font-bold"
-                                    : "bg-background border-muted-foreground"
-                            }`}
+                            ${r.reacted ? "border-accent-foreground font-bold" : "bg-muted"}`}
                         >
                             <span>{r.emoji}</span>
                             <span className="text-xs">{r.count}</span>
