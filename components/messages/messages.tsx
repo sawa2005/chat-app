@@ -35,7 +35,6 @@ export function isEmojiOnly(message: string) {
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
-// TODO: don't clear newmessageindicator or mark messages as read until images have loaded.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -66,12 +65,17 @@ export default function Messages({
     const { containerRef, scrollToBottom } = useChatScroll();
     const [initialLoad, setInitialLoad] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
+    const messagesRef = useRef(messages);
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [firstUnreadIndexCalculated, setFirstUnreadIndexCalculated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
     const [imageCount, setImageCount] = useState(0);
+    const [allImagesLoaded, setAllImagesLoaded] = useState(false);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
@@ -97,6 +101,7 @@ export default function Messages({
 
     // Handle image loading completion
     const handleImageLoad = () => {
+        setImageCount((prev) => prev - 1);
         /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
         if (!userHasScrolled && firstUnreadIndex === null) {
@@ -122,6 +127,12 @@ export default function Messages({
             });
         }
     };
+
+    useEffect(() => {
+        if (imageCount === 0) {
+            setAllImagesLoaded(true);
+        }
+    }, [imageCount]);
 
     useEffect(() => {
         if (unreadCount > 0) {
@@ -318,7 +329,7 @@ export default function Messages({
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+            if (e.key === "Escape" && allImagesLoaded) {
                 setFirstUnreadIndex(null);
                 setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId);
@@ -482,7 +493,7 @@ export default function Messages({
     }, [messages, scrollToBottom, hasDoneInitialScroll]);
 
     useEffect(() => {
-        if (!userHasScrolled && !initialLoad) {
+        if (!userHasScrolled && hasDoneInitialScroll && allImagesLoaded) {
             markMessagesAsRead(conversationId, currentProfileId);
             setUnreadCount(0);
 
@@ -494,7 +505,7 @@ export default function Messages({
                 }))
             );
         }
-    }, [userHasScrolled, conversationId, currentProfileId, initialLoad]);
+    }, [userHasScrolled, conversationId, currentProfileId, hasDoneInitialScroll, allImagesLoaded]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
@@ -528,9 +539,11 @@ export default function Messages({
                     messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
                 if (imageMessages.length === 0) {
                     setImageLoading(false);
+                    setAllImagesLoaded(true);
                 } else {
                     setImageCount(imageMessages.length);
                     setImageLoading(true);
+                    setAllImagesLoaded(false);
                 }
             } catch (err) {
                 console.error(err);
@@ -540,7 +553,7 @@ export default function Messages({
 
         const handleVisibilityChange = async () => {
             if (document.visibilityState === "visible") {
-                if (!userHasScrolledRef.current) {
+                if (!userHasScrolledRef.current && allImagesLoaded) {
                     setUnreadCount(0);
                     markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
 
@@ -553,30 +566,37 @@ export default function Messages({
                     );
                 } else {
                     setIsLoadingMore(true);
-                    const messageIds = messages.map((m) => m.id);
-                    const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : BigInt(0);
+                    const messageIds = messagesRef.current.map((m) => m.id);
+                    const lastMessageId = messagesRef.current.length > 0 ? messagesRef.current[messagesRef.current.length - 1].id : BigInt(0);
                     const newMessages = await refetchMessages(conversationId, messageIds, lastMessageId);
 
                     if (newMessages) {
-                        const newMessagesMap = new Map(newMessages.map((m) => [m.id.toString(), m]));
                         setMessages((prevMessages) => {
-                            const updatedMessages = prevMessages.map((pm) => {
-                                const newMsg = newMessagesMap.get(pm.id.toString());
-                                return newMsg ? { ...pm, ...newMsg, created_at: new Date(newMsg.created_at) } : pm;
+                            const messageMap = new Map<string, Message>();
+
+                            // Populate map with existing messages
+                            prevMessages.forEach((msg) => messageMap.set(msg.id.toString(), msg));
+
+                            // Merge in new/updated messages
+                            newMessages.forEach((msg) => {
+                                const messageWithDate = {
+                                    ...msg,
+                                    created_at: new Date(msg.created_at),
+                                } as Message;
+                                messageMap.set(msg.id.toString(), messageWithDate);
                             });
-                            const existingIds = new Set(updatedMessages.map((m) => m.id.toString()));
-                            const newerMessages = newMessages.filter((nm) => !existingIds.has(nm.id.toString()));
-                            return [
-                                ...updatedMessages,
-                                ...newerMessages.map((nm) => ({ ...nm, created_at: new Date(nm.created_at) })),
-                            ];
+
+                            // Return sorted array
+                            return Array.from(messageMap.values()).sort(
+                                (a, b) => a.created_at.getTime() - b.created_at.getTime()
+                            );
                         });
-                    } else {
-                        setIsLoadingMore(false);
                     }
-                }
+                    // This should be called regardless of whether new messages were found
+                    setIsLoadingMore(false);
             }
-        };
+    }
+};
         window.addEventListener("visibilitychange", handleVisibilityChange);
 
         const channel = supabase
