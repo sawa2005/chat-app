@@ -28,7 +28,7 @@ export function MessageActions({
         return (
             <button
                 onClick={onCancelEdit}
-                className="mr-2 text-muted-foreground hover:text-red-800 cursor-pointer"
+                className="text-muted-foreground hover:text-red-800 cursor-pointer"
                 title="Cancel Edit"
             >
                 <X size={20} />

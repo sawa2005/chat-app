@@ -5,6 +5,8 @@ import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
 
+// TODO: move these functions to lib or utils folder
+
 function linkifyMessage(text: string) {
     // Regex to match URLs (simple version)
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -89,27 +91,28 @@ export function MessageBubble({
 }) {
     const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
 
+    // TODO: change isEditing structure so ChatImage doesn't have to rerender on every editing state change
+
     if (isEditing) {
         return (
-            <>
-                {/* Edit message bubble */}
-                <div
-                    className={`relative ${
-                        !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
-                    } rounded-xl mb-4 shadow-lg/8 shadow-accent-foreground w-fit max-w-[80%]`}
-                >
-                    <form onSubmit={onSubmitEdit}>
-                        <input
-                            type="text"
-                            value={editContent}
-                            onChange={(e) => setEditContent(e.target.value)}
-                            autoFocus
-                            onKeyDown={(e) => e.key === "Escape" && setEditingMessageId(null)}
-                            className="py-2 px-4"
-                        />
-                    </form>
-                </div>
-            </>
+            // Edit message bubble
+            <div
+                className={`relative ${
+                    !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
+                } rounded-xl overflow-hidden border-2 border-muted mb-4 shadow-lg/8 shadow-accent-foreground w-fit max-w-[80%]`}
+            >
+                <form onSubmit={onSubmitEdit}>
+                    <input
+                        type="text"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        autoFocus
+                        onKeyDown={(e) => e.key === "Escape" && setEditingMessageId(null)}
+                        className="py-2 px-4 focus-visible:outline-none"
+                    />
+                </form>
+                {message.image_url && <ChatImage src={message.image_url} alt="Message attachment" />}
+            </div>
         );
     }
 
