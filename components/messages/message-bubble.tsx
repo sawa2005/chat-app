@@ -94,7 +94,7 @@ export function MessageBubble({
             <>
                 {/* Edit message bubble */}
                 <div
-                    className={`group relative ${
+                    className={`relative ${
                         !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
                     } rounded-xl mb-4 shadow-lg/8 shadow-accent-foreground w-fit max-w-[80%]`}
                 >
@@ -140,7 +140,7 @@ export function MessageBubble({
 
             {/* Main text message bubble */}
             <div
-                className={`group relative rounded-xl mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted
+                className={`relative rounded-xl mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted
                 ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
                 ${emojiOnly && (isOwner ? "-mr-4" : "-mr-4")} 
                 ${!emojiOnly && !isOwner && "bg-accent"} 
