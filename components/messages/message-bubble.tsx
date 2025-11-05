@@ -150,7 +150,9 @@ export function MessageBubble({
                 ${!isOwner ? "rounded-tl-none" : "rounded-tr-none ml-auto"}`}
             >
                 {message.content && (
-                    <p className="py-2 px-4 message-content">{renderMessageContent(message.content)}</p>
+                    <p className="py-2 px-4 message-content whitespace-pre-wrap">
+                        {renderMessageContent(message.content)}
+                    </p>
                 )}
                 {message.image_url && (
                     <ChatImage

@@ -273,12 +273,8 @@ export default function SendMessageForm({
                 </div>
             )}
 
-            <form
-                onSubmit={handleSubmit}
-                autoComplete="off"
-                className="flex w-full gap-1 overflow-hidden min-h-[54px] items-end"
-            >
-                <div className="flex grow items-end">
+            <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full gap-1 min-h-[54px] items-end">
+                <div className="flex grow items-center gap-1">
                     <div className="relative flex grow gap-1">
                         <Textarea
                             ref={inputRef}
@@ -349,7 +345,7 @@ export default function SendMessageForm({
                     </div>
 
                     {imgPreview && (
-                        <div className="max-w-[50px] max-h-[50px] overflow-hidden flex items-center rounded-md">
+                        <div className="w-[54px] h-[54px] overflow-hidden flex items-center rounded-md">
                             <Image
                                 width={50}
                                 height={30}
