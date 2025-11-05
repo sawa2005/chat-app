@@ -1,23 +1,33 @@
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { EmojiPicker, EmojiPickerContent, EmojiPickerFooter, EmojiPickerSearch } from "./ui/emoji-picker";
 import { SmilePlus } from "lucide-react";
-import * as React from "react";
+import { useState } from "react";
 
-export function ReactionButton({ onEmojiSelect }: { onEmojiSelect: (emoji: string) => void }) {
-    const [isOpen, setIsOpen] = React.useState(false);
+export function ReactionButton({
+    onEmojiSelect,
+    onOpenChange,
+}: {
+    onEmojiSelect: (emoji: string) => void;
+    onOpenChange?: (open: boolean) => void;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
 
     const handleSelect = (emojiObj: { emoji: string }) => {
         onEmojiSelect(emojiObj.emoji);
         setIsOpen(false);
     };
 
+    const handleOpenChange = (open: boolean) => {
+        setIsOpen(open);
+        if (onOpenChange) {
+            onOpenChange(open);
+        }
+    };
+
     return (
-        <Popover onOpenChange={setIsOpen} open={isOpen}>
+        <Popover onOpenChange={handleOpenChange} open={isOpen}>
             <PopoverTrigger asChild>
-                <button
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary cursor-pointer"
-                    title="React"
-                >
+                <button className="text-muted-foreground hover:text-primary cursor-pointer" title="React">
                     <SmilePlus size={15} />
                 </button>
             </PopoverTrigger>

@@ -1,5 +1,5 @@
 import { Message } from "@/lib/types";
-import { RefObject, Dispatch, SetStateAction } from "react";
+import { RefObject, Dispatch, SetStateAction, useState } from "react";
 import { isConsecutiveMessage } from "./messages";
 import { MessageActions } from "./message-buttons";
 import { MessageBubble } from "./message-bubble";
@@ -41,26 +41,41 @@ export function MessageItem({
     containerRef: RefObject<HTMLDivElement | null>;
     onImageLoad?: () => void;
 }) {
+    const [isHovered, setIsHovered] = useState(false);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
     if (!message.sender) return;
 
     const isOwner = message.sender.username === currentUsername;
     const isEditing = editingMessageId === message.id.toString();
     const isConsecutive = isConsecutiveMessage(prevMessage, message);
 
+    const showActions = isHovered || isPopoverOpen;
+
+    // TODO: rewrite header classes for better readability (probably turn it into a function/component)
+    // Define header classes based on message ownership and consecutiveness
     const headerClasses = !isConsecutive
-        ? `${isOwner ? "text-right" : "flex-row-reverse"} justify-end text-xs mb-1 flex items-center gap-2`
-        : `${
-              isOwner ? "text-right" : "flex-row-reverse justify-end"
-          } mt-5 mb-1 text-xs hidden group-hover:flex justify-end items-center gap-2`;
+        ? // Message is not consecutive
+          `${isOwner ? "text-right" : "flex-row-reverse"} justify-end text-xs mb-1 flex items-center gap-2`
+        : // Message is consecutive
+          `${isOwner ? "text-right" : "flex-row-reverse justify-end"} ${
+              showActions ? "flex" : "hidden"
+          } mt-5 mb-1 text-xs justify-end items-center gap-2`;
 
     const hasReacted = (emoji: string) => {
         return message.message_reactions?.some((r) => r.emoji === emoji && r.profile_id === currentProfileId);
     };
 
     return (
-        <li className={`relative group max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}>
-            <div className={headerClasses}>
+        <li
+            className={`relative max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <div className={`${headerClasses}`}>
                 <MessageActions
+                    isHovered={isHovered}
+                    isPopoverOpen={isPopoverOpen}
                     isOwner={message.sender?.id === currentProfileId}
                     isEditing={isEditing}
                     onDelete={() => handleDelete(message.id)}
@@ -73,6 +88,7 @@ export function MessageItem({
                     onReactionSelect={async (emoji: string) =>
                         await addReaction(conversationId, message.id, currentProfileId, emoji)
                     }
+                    onPopoverOpenChange={setIsPopoverOpen}
                 />
                 {message.edited_at && "(edited)"}
                 {!isConsecutive && (
