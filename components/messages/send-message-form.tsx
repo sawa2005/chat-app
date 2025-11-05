@@ -243,11 +243,14 @@ export default function SendMessageForm({
         setImageHeight(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setIsPending(false);
-        requestAnimationFrame(() => {
-            if (inputRef.current) inputRef.current.focus();
-            scrollToBottom(true, true, !!uploadedImageUrl, imageHeight ?? undefined);
-        });
+        scrollToBottom(true, true, !!uploadedImageUrl, imageHeight ?? undefined);
     }
+
+    useEffect(() => {
+        if (!isPending) {
+            inputRef.current?.focus();
+        }
+    }, [isPending]);
 
     function handleUploadCancel() {
         setIsPending(false);
