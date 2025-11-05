@@ -35,10 +35,8 @@ export function isEmojiOnly(message: string) {
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
-// TODO: keep hover state of message if reaction component is open.
 // TODO: add timeout and animation to message hover state.
 // TODO: no country flags in emoji picker.
-// TODO: shift+enter for line break instead of submitting form.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;

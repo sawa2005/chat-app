@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/client";
 import { useState, useEffect, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import EmojiComponent from "../emoji-component";
@@ -81,7 +82,7 @@ export default function SendMessageForm({
     const [imageHeight, setImageHeight] = useState<number | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
     let typingTimeout: NodeJS.Timeout | null = null;
@@ -275,15 +276,22 @@ export default function SendMessageForm({
             <form onSubmit={handleSubmit} autoComplete="off">
                 <div className="flex gap-1">
                     <div className="relative flex gap-1 w-full">
-                        <Input
+                        <Textarea
                             ref={inputRef}
                             name="content"
-                            type="text"
                             placeholder="Type your message..."
-                            className="px-4 py-6 pr-[106px] w-full"
+                            className="px-4 py-2 pr-[106px] w-full resize-none"
                             disabled={isPending}
                             value={content}
-                            onChange={handleInputChange}
+                            onChange={(e) => handleInputChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit(e);
+                                } else if (e.key === "Enter" && e.shiftKey) {
+                                    // Allow default behavior for Shift + Enter (newline)
+                                }
+                            }}
                             autoComplete="none"
                         />
                         <Input
