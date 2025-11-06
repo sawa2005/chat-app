@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
     sendMessage,
     deleteMessage,
@@ -77,8 +77,6 @@ export default function Messages({
     const [imageLoading, setImageLoading] = useState(true);
     const [imageCount, setImageCount] = useState(0);
     const [allImagesLoaded, setAllImagesLoaded] = useState(false);
-    const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-    const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
@@ -116,7 +114,7 @@ export default function Messages({
     const isAtTop = useIsScrollOnTop(containerRef, loading || isLoadingMore);
 
     // Handle image loading completion
-    const handleImageLoad = () => {
+    const handleImageLoad = useCallback(() => {
         setImageCount((prev) => prev - 1);
         /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
@@ -142,7 +140,7 @@ export default function Messages({
                 });
             });
         }
-    };
+    }, [userHasScrolled, firstUnreadIndex, hasDoneInitialScroll, scrollToBottom, setHasDoneInitialScroll]);
 
     useEffect(() => {
         if (imageCount === 0) {
@@ -741,13 +739,13 @@ export default function Messages({
         }
     }
 
-    function handleDelete(messageId: bigint) {
+    const handleDelete = useCallback((messageId: bigint) => {
         deleteMessage(messageId)
             .then(() => {
                 setMessages((prev) => prev.filter((m) => m.id !== messageId));
             })
             .catch((err) => console.error("Delete failed:", err));
-    }
+    }, []);
 
     function handleScrollToBottom() {
         setHasNewMessage(false);
@@ -788,10 +786,6 @@ export default function Messages({
                             messages={messages}
                             currentUsername={currentUsername}
                             currentProfileId={currentProfileId}
-                            editingMessageId={editingMessageId}
-                            editContent={editContent}
-                            setEditContent={setEditContent}
-                            setEditingMessageId={setEditingMessageId}
                             handleDelete={handleDelete}
                             setReplyTo={setReplyTo}
                             containerRef={containerRef}
