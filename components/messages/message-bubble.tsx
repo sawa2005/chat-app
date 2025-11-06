@@ -94,7 +94,7 @@ export function MessageBubble({
     const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
     const editFormRef = useRef<HTMLFormElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
-    const sizerRef = useRef<HTMLParagraphElement>(null);
+    const bubbleRef = useRef<HTMLParagraphElement>(null);
 
     const onImageLoadCallback = useCallback(
         (img: HTMLImageElement) => {
@@ -120,18 +120,18 @@ export function MessageBubble({
         }
     }, [isEditing]);
 
-    // Get sizer dimensions and apply to edit mode textarea
+    // Adjust edit textarea height & width based on bubble size
     useLayoutEffect(() => {
-        if (isEditing && sizerRef.current && textAreaRef.current) {
-            const { width: sizerWidth, height: sizerHeight } = sizerRef.current.getBoundingClientRect();
-            const ts = textAreaRef.current.style;
-            const ws = window.getComputedStyle(textAreaRef.current);
-            const lineHeight = parseFloat(ws.lineHeight);
+        if (isEditing && bubbleRef.current && textAreaRef.current) {
+            if (CSS.supports("field-sizing", "content")) return;
 
-            ts.width = `${sizerWidth}px`;
-            ts.height = `${sizerHeight - lineHeight}px`;
+            const size = bubbleRef.current.getBoundingClientRect();
+            const ts = textAreaRef.current.style;
+
+            ts.width = `${size.width}px`;
+            ts.height = `${size.height}px`;
         }
-    }, [editContent, isEditing]);
+    });
 
     return (
         <>
@@ -174,9 +174,9 @@ export function MessageBubble({
             >
                 {isEditing ? (
                     <form ref={editFormRef} onSubmit={onSubmitEdit} className="relative">
-                        {/* Sizer <p>: invisible and absolute, but sets the size */}
+                        {/* Hidden Textarea to auto-resize */}
                         <p
-                            ref={sizerRef}
+                            ref={bubbleRef}
                             className="py-2 px-4 whitespace-pre-wrap invisible absolute top-0 left-0 z-[-1] message-content leading-normal"
                         >
                             {renderMessageContent(editContent)}
@@ -185,7 +185,7 @@ export function MessageBubble({
                         {/* Visible Textarea */}
                         <Textarea
                             ref={textAreaRef}
-                            className="min-w-0 block w-full py-2 px-4 whitespace-pre-wrap bg-transparent resize-none overflow-hidden border-0 focus-visible:ring-0 focus-visible:outline-none message-content"
+                            className="text-sm min-w-0 block w-full py-2 px-4 whitespace-pre-wrap bg-transparent resize-none overflow-hidden border-0 focus-visible:ring-0 focus-visible:outline-none"
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             onKeyDown={(e) => {
