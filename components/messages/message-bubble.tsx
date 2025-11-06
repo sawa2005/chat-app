@@ -120,12 +120,16 @@ export function MessageBubble({
         }
     }, [isEditing]);
 
-    // Synchronize textarea size with the sizer
+    // Get sizer dimensions and apply to edit mode textarea
     useLayoutEffect(() => {
         if (isEditing && sizerRef.current && textAreaRef.current) {
-            const sizerRect = sizerRef.current.getBoundingClientRect();
-            textAreaRef.current.style.width = `${sizerRect.width}px`;
-            textAreaRef.current.style.height = `${sizerRect.height}px`;
+            const { width: sizerWidth, height: sizerHeight } = sizerRef.current.getBoundingClientRect();
+            const ts = textAreaRef.current.style;
+            const ws = window.getComputedStyle(textAreaRef.current);
+            const lineHeight = parseFloat(ws.lineHeight);
+
+            ts.width = `${sizerWidth}px`;
+            ts.height = `${sizerHeight - lineHeight}px`;
         }
     }, [editContent, isEditing]);
 
@@ -173,9 +177,9 @@ export function MessageBubble({
                         {/* Sizer <p>: invisible and absolute, but sets the size */}
                         <p
                             ref={sizerRef}
-                            className="py-2 px-4 whitespace-pre-wrap invisible absolute top-0 left-0 z-[-1] message-content"
+                            className="py-2 px-4 whitespace-pre-wrap invisible absolute top-0 left-0 z-[-1] message-content leading-normal"
                         >
-                            {renderMessageContent(editContent + " ")}
+                            {renderMessageContent(editContent)}
                         </p>
 
                         {/* Visible Textarea */}
