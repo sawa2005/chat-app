@@ -91,6 +91,17 @@ export default function SendMessageForm({
         inputRef.current?.focus();
     }, [replyTo, imgPreview]);
 
+    useEffect(() => {
+        const textarea = inputRef.current;
+        if (textarea) {
+            textarea.style.height = "auto";
+            const style = window.getComputedStyle(textarea);
+            const borderTop = parseFloat(style.borderTopWidth);
+            const borderBottom = parseFloat(style.borderBottomWidth);
+            textarea.style.height = `${textarea.scrollHeight + borderTop + borderBottom}px`;
+        }
+    }, [content]);
+
     function showAlert(message: React.ReactNode) {
         setAlert(message);
 
@@ -283,7 +294,7 @@ export default function SendMessageForm({
                             ref={inputRef}
                             name="content"
                             placeholder="Type your message..."
-                            className="px-4 py-4 pr-[106px] grow wrap-normal min-h-9 max-h-[25vh] overflow-y-auto resize-none"
+                            className="px-4 py-4 pr-[106px] grow wrap-normal h-fit leading-2.5 min-h-[54px] max-h-[25vh] overflow-y-auto resize-none"
                             disabled={isPending}
                             value={content}
                             onChange={(e) => handleInputChange(e.target.value)}

@@ -1,5 +1,5 @@
 import { isEmojiOnly } from "./messages";
-import { Dispatch, SetStateAction, ReactNode, RefObject, useRef, useCallback, useEffect } from "react";
+import { Dispatch, SetStateAction, ReactNode, RefObject, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
@@ -94,6 +94,7 @@ export function MessageBubble({
     const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
     const editFormRef = useRef<HTMLFormElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const sizerRef = useRef<HTMLParagraphElement>(null);
 
     const onImageLoadCallback = useCallback(
         (img: HTMLImageElement) => {
@@ -118,6 +119,15 @@ export function MessageBubble({
             t.setSelectionRange(t.value.length, t.value.length);
         }
     }, [isEditing]);
+
+    // Synchronize textarea size with the sizer
+    useLayoutEffect(() => {
+        if (isEditing && sizerRef.current && textAreaRef.current) {
+            const sizerRect = sizerRef.current.getBoundingClientRect();
+            textAreaRef.current.style.width = `${sizerRect.width}px`;
+            textAreaRef.current.style.height = `${sizerRect.height}px`;
+        }
+    }, [editContent, isEditing]);
 
     return (
         <>
@@ -159,17 +169,27 @@ export function MessageBubble({
                 )}
             >
                 {isEditing ? (
-                    <form ref={editFormRef} onSubmit={onSubmitEdit}>
+                    <form ref={editFormRef} onSubmit={onSubmitEdit} className="relative">
+                        {/* Sizer <p>: invisible and absolute, but sets the size */}
+                        <p
+                            ref={sizerRef}
+                            className="py-2 px-4 whitespace-pre-wrap invisible absolute top-0 left-0 z-[-1] message-content"
+                        >
+                            {renderMessageContent(editContent + " ")}
+                        </p>
+
+                        {/* Visible Textarea */}
                         <Textarea
                             ref={textAreaRef}
-                            className="px-4 grow break-words h-min min-h-0 max-h-[25vh] overflow-y-auto overflow-x-hidden resize-none focus-visible:outline-none focus-visible:ring-0 border-0 rounded-none"
+                            className="min-w-0 block w-full py-2 px-4 whitespace-pre-wrap bg-transparent resize-none overflow-hidden border-0 focus-visible:ring-0 focus-visible:outline-none message-content"
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === "Escape") {
                                     e.preventDefault();
                                     setEditingMessageId(null);
-                                } else if (e.key === "Enter" && !e.shiftKey) {
+                                }
+                                if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
                                     editFormRef.current?.requestSubmit();
                                 }
