@@ -1,9 +1,11 @@
 import { isEmojiOnly } from "./messages";
-import { Dispatch, SetStateAction, ReactNode, RefObject } from "react";
+import { Dispatch, SetStateAction, ReactNode, RefObject, useRef, useCallback } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
+import { Textarea } from "../ui/textarea";
+import { cn } from "@/lib/utils";
 
 // TODO: move these functions to lib or utils folder
 
@@ -90,31 +92,22 @@ export function MessageBubble({
     onImageLoad?: () => void;
 }) {
     const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
+    const editFormRef = useRef<HTMLFormElement>(null);
 
-    // TODO: change isEditing structure so ChatImage doesn't have to rerender on every editing state change
-
-    if (isEditing) {
-        return (
-            // Edit message bubble
-            <div
-                className={`relative ${
-                    !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
-                } rounded-xl overflow-hidden border-2 border-muted mb-4 shadow-lg/8 shadow-accent-foreground w-fit max-w-[80%]`}
-            >
-                <form onSubmit={onSubmitEdit}>
-                    <input
-                        type="text"
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        autoFocus
-                        onKeyDown={(e) => e.key === "Escape" && setEditingMessageId(null)}
-                        className="py-2 px-4 focus-visible:outline-none"
-                    />
-                </form>
-                {message.image_url && <ChatImage src={message.image_url} alt="Message attachment" />}
-            </div>
-        );
-    }
+    const onImageLoadCallback = useCallback(
+        (img: HTMLImageElement) => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    console.log("Loaded image..");
+                    onImageLoad?.();
+                    if (!initialLoad) {
+                        scrollToBottom(true, false, true, img.naturalHeight);
+                    }
+                });
+            });
+        },
+        [initialLoad, onImageLoad, scrollToBottom]
+    );
 
     return (
         <>
@@ -141,37 +134,53 @@ export function MessageBubble({
                 </div>
             )}
 
-            {/* Main text message bubble */}
+            {/* Unified message bubble */}
             <div
-                className={`relative rounded-xl mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted
-                ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
-                ${emojiOnly && (isOwner ? "-mr-4" : "-mr-4")} 
-                ${!emojiOnly && !isOwner && "bg-accent"} 
-                ${!isOwner ? "rounded-tl-none" : "rounded-tr-none ml-auto"}`}
-            >
-                {message.content && (
-                    <p className="py-2 px-4 message-content whitespace-pre-wrap">
-                        {renderMessageContent(message.content)}
-                    </p>
+                className={cn(
+                    "relative rounded-xl overflow-hidden mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
+                    isOwner ? "ml-auto rounded-tr-none" : "rounded-tl-none",
+                    isEditing
+                        ? "bg-accent border-2 border-muted shadow-lg/8"
+                        : emojiOnly
+                        ? "text-5xl"
+                        : "text-sm shadow-lg/5 inset-shadow-sm",
+                    emojiOnly && !isEditing && (isOwner ? "-mr-4" : "-mr-4"),
+                    !emojiOnly && !isOwner && !isEditing && "bg-accent"
                 )}
+            >
+                {isEditing ? (
+                    <form ref={editFormRef} onSubmit={onSubmitEdit}>
+                        <Textarea
+                            className="px-4 grow break-words h-min min-h-0 max-h-[25vh] overflow-y-auto overflow-x-hidden resize-none focus-visible:outline-none focus-visible:ring-0 border-0 rounded-none"
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    setEditingMessageId(null);
+                                } else if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    editFormRef.current?.requestSubmit();
+                                }
+                            }}
+                            autoFocus
+                            autoComplete="none"
+                        />
+                    </form>
+                ) : (
+                    message.content && (
+                        <p className="py-2 px-4 message-content whitespace-pre-wrap">
+                            {renderMessageContent(message.content)}
+                        </p>
+                    )
+                )}
+
                 {message.image_url && (
                     <ChatImage
                         src={message.image_url}
                         alt="Message attachment"
-                        onLoadingComplete={(img: HTMLImageElement) => {
-                            requestAnimationFrame(() => {
-                                requestAnimationFrame(() => {
-                                    console.log("Loaded image..");
-                                    // Always call the parent's image load handler for continuous scrolling
-                                    onImageLoad?.();
-
-                                    // Also handle individual scroll for non-initial loads
-                                    if (!initialLoad) {
-                                        scrollToBottom(true, false, true, img.naturalHeight);
-                                    }
-                                });
-                            });
-                        }}
+                        onLoadingComplete={onImageLoadCallback}
+                        editing={isEditing}
                     />
                 )}
             </div>
