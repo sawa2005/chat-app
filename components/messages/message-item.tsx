@@ -105,13 +105,16 @@ export function MessageItem({
                         <Avatar size={15} avatarUrl={message.sender?.avatar} username={message.sender?.username} />
                     </div>
                 )}
-                {isConsecutive &&
-                    (msgOld(message.created_at)
-                        ? new Date(message.created_at).toISOString().slice(0, 10)
-                        : message.created_at.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                          }))}
+                {isConsecutive && (
+                    <div>
+                        {msgOld(message.created_at)
+                            ? new Date(message.created_at).toISOString().slice(0, 10)
+                            : message.created_at.toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                              })}
+                    </div>
+                )}
             </div>
 
             <MessageBubble

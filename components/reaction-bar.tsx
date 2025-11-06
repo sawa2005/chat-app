@@ -6,7 +6,7 @@ import { getUsernameList } from "@/app/conversation/create/actions";
 function aggregateReactions(reactions: Reaction[], currentProfileId: bigint) {
     const reactionMap: { [emoji: string]: { count: number; reacted: boolean; profile_ids: bigint[] } } = {};
     reactions.forEach((r) => {
-        console.log("reaction:", r);
+        // console.log("reaction:", r);
 
         if (!reactionMap[r.emoji]) reactionMap[r.emoji] = { count: 0, reacted: false, profile_ids: [] };
 
@@ -17,7 +17,7 @@ function aggregateReactions(reactions: Reaction[], currentProfileId: bigint) {
 
     const result = Object.entries(reactionMap).map(([emoji, data]) => ({ emoji, ...data }));
 
-    console.log("aggregated reactions:", result);
+    // console.log("aggregated reactions:", result);
     return result;
 }
 
@@ -58,7 +58,7 @@ export function ReactionBar({
         }));
         setLoading((prev) => ({ ...prev, [emoji]: false }));
 
-        console.log("Hovered reaction usernames:", fetched);
+        // console.log("Hovered reaction usernames:", fetched);
     }
 
     if (reactions.length === 0) return null;

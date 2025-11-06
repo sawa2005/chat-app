@@ -1,5 +1,5 @@
 import { isEmojiOnly } from "./messages";
-import { Dispatch, SetStateAction, ReactNode, RefObject, useRef, useCallback } from "react";
+import { Dispatch, SetStateAction, ReactNode, RefObject, useRef, useCallback, useEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
@@ -93,6 +93,7 @@ export function MessageBubble({
 }) {
     const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
     const editFormRef = useRef<HTMLFormElement>(null);
+    const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
     const onImageLoadCallback = useCallback(
         (img: HTMLImageElement) => {
@@ -108,6 +109,15 @@ export function MessageBubble({
         },
         [initialLoad, onImageLoad, scrollToBottom]
     );
+
+    // Focus textarea and move cursor to end when entering edit mode
+    useEffect(() => {
+        if (isEditing && textAreaRef.current) {
+            const t = textAreaRef.current;
+            t.focus();
+            t.setSelectionRange(t.value.length, t.value.length);
+        }
+    }, [isEditing]);
 
     return (
         <>
@@ -140,7 +150,7 @@ export function MessageBubble({
                     "relative rounded-xl overflow-hidden mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
                     isOwner ? "ml-auto rounded-tr-none" : "rounded-tl-none",
                     isEditing
-                        ? "bg-accent border-2 border-muted shadow-lg/8"
+                        ? "bg-accent shadow-lg/8"
                         : emojiOnly
                         ? "text-5xl"
                         : "text-sm shadow-lg/5 inset-shadow-sm",
@@ -151,6 +161,7 @@ export function MessageBubble({
                 {isEditing ? (
                     <form ref={editFormRef} onSubmit={onSubmitEdit}>
                         <Textarea
+                            ref={textAreaRef}
                             className="px-4 grow break-words h-min min-h-0 max-h-[25vh] overflow-y-auto overflow-x-hidden resize-none focus-visible:outline-none focus-visible:ring-0 border-0 rounded-none"
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
@@ -163,7 +174,6 @@ export function MessageBubble({
                                     editFormRef.current?.requestSubmit();
                                 }
                             }}
-                            autoFocus
                             autoComplete="none"
                         />
                     </form>
