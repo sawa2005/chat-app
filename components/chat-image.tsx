@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Skeleton } from "./ui/skeleton";
 
 interface ChatImageProps {
@@ -11,7 +11,7 @@ interface ChatImageProps {
     editing?: boolean;
 }
 
-export default function ChatImage({ src, alt, onLoadingComplete, editing }: ChatImageProps) {
+const ChatImage = memo(function ChatImage({ src, alt, onLoadingComplete, editing }: ChatImageProps) {
     const [width, setWidth] = useState<number>();
     const [height, setHeight] = useState<number>();
     const [loaded, setLoaded] = useState(false);
@@ -34,14 +34,6 @@ export default function ChatImage({ src, alt, onLoadingComplete, editing }: Chat
                     unoptimized
                     onLoad={(e) => {
                         const target = e.currentTarget as HTMLImageElement;
-                        console.log(
-                            "ChatImage onLoad triggered for:",
-                            src,
-                            "naturalWidth:",
-                            target.naturalWidth,
-                            "naturalHeight:",
-                            target.naturalHeight
-                        );
                         setWidth(target.naturalWidth);
                         setHeight(target.naturalHeight);
                         setLoaded(true);
@@ -54,4 +46,6 @@ export default function ChatImage({ src, alt, onLoadingComplete, editing }: Chat
             </div>
         </a>
     );
-}
+});
+
+export default ChatImage;
