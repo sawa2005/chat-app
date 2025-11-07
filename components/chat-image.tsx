@@ -1,16 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Skeleton } from "./ui/skeleton";
 
 interface ChatImageProps {
     src: string;
     alt: string;
     onLoadingComplete?: (e: HTMLImageElement) => void;
+    editing?: boolean;
 }
 
-export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProps) {
+// TODO: fix placeholders so they are the same size as the actual image to prevent layout shift
+
+const ChatImage = memo(function ChatImage({ src, alt, onLoadingComplete, editing }: ChatImageProps) {
     const [width, setWidth] = useState<number>();
     const [height, setHeight] = useState<number>();
     const [loaded, setLoaded] = useState(false);
@@ -19,27 +22,20 @@ export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProp
 
     return (
         <a href={src} target="_blank" className="cursor-pointer block">
-            <div style={{ aspectRatio: ratio ?? "1 / 1" }} className="relative w-full overflow-hidden rounded-xl">
+            <div
+                style={{ aspectRatio: ratio ?? "1 / 1" }}
+                className={`${editing ? "rounded-b-xl" : "rounded-xl"} relative w-full overflow-hidden`}
+            >
                 {!loaded && <Skeleton className="absolute inset-0 w-full h-full" />}
                 <Image
                     src={src}
                     alt={alt}
                     width={width || 1}
                     height={height || 1}
-                    className={`${
-                        loaded ? "opacity-100" : "opacity-0"
-                    } rounded-xl object-cover transition-opacity duration-300`}
+                    className={`${loaded ? "opacity-100" : "opacity-0"} object-cover transition-opacity duration-300`}
                     unoptimized
                     onLoad={(e) => {
                         const target = e.currentTarget as HTMLImageElement;
-                        console.log(
-                            "ChatImage onLoad triggered for:",
-                            src,
-                            "naturalWidth:",
-                            target.naturalWidth,
-                            "naturalHeight:",
-                            target.naturalHeight
-                        );
                         setWidth(target.naturalWidth);
                         setHeight(target.naturalHeight);
                         setLoaded(true);
@@ -52,4 +48,6 @@ export default function ChatImage({ src, alt, onLoadingComplete }: ChatImageProp
             </div>
         </a>
     );
-}
+});
+
+export default ChatImage;

@@ -1,9 +1,11 @@
 import { isEmojiOnly } from "./messages";
-import { Dispatch, SetStateAction, ReactNode, RefObject } from "react";
+import { Dispatch, SetStateAction, ReactNode, RefObject, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
+import { Textarea } from "../ui/textarea";
+import { cn } from "@/lib/utils";
 
 // TODO: move these functions to lib or utils folder
 
@@ -90,31 +92,46 @@ export function MessageBubble({
     onImageLoad?: () => void;
 }) {
     const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
+    const editFormRef = useRef<HTMLFormElement>(null);
+    const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const bubbleRef = useRef<HTMLParagraphElement>(null);
 
-    // TODO: change isEditing structure so ChatImage doesn't have to rerender on every editing state change
+    const onImageLoadCallback = useCallback(
+        (img: HTMLImageElement) => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    console.log("Loaded image..");
+                    onImageLoad?.();
+                    if (!initialLoad) {
+                        scrollToBottom(true, false, true, img.naturalHeight);
+                    }
+                });
+            });
+        },
+        [initialLoad, onImageLoad, scrollToBottom]
+    );
 
-    if (isEditing) {
-        return (
-            // Edit message bubble
-            <div
-                className={`relative ${
-                    !isOwner ? "bg-accent rounded-tl-none" : "rounded-tr-none ml-auto"
-                } rounded-xl overflow-hidden border-2 border-muted mb-4 shadow-lg/8 shadow-accent-foreground w-fit max-w-[80%]`}
-            >
-                <form onSubmit={onSubmitEdit}>
-                    <input
-                        type="text"
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        autoFocus
-                        onKeyDown={(e) => e.key === "Escape" && setEditingMessageId(null)}
-                        className="py-2 px-4 focus-visible:outline-none"
-                    />
-                </form>
-                {message.image_url && <ChatImage src={message.image_url} alt="Message attachment" />}
-            </div>
-        );
-    }
+    // Focus textarea and move cursor to end when entering edit mode
+    useEffect(() => {
+        if (isEditing && textAreaRef.current) {
+            const t = textAreaRef.current;
+            t.focus();
+            t.setSelectionRange(t.value.length, t.value.length);
+        }
+    }, [isEditing]);
+
+    // Adjust edit textarea height & width based on bubble size
+    useLayoutEffect(() => {
+        if (isEditing && bubbleRef.current && textAreaRef.current) {
+            if (CSS.supports("field-sizing", "content")) return;
+
+            const size = bubbleRef.current.getBoundingClientRect();
+            const ts = textAreaRef.current.style;
+
+            ts.width = `${size.width}px`;
+            ts.height = `${size.height}px`;
+        }
+    });
 
     return (
         <>
@@ -141,35 +158,64 @@ export function MessageBubble({
                 </div>
             )}
 
-            {/* Main text message bubble */}
+            {/* Unified message bubble */}
             <div
-                className={`relative rounded-xl mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted
-                ${emojiOnly ? "text-5xl" : "text-sm shadow-lg/5 inset-shadow-sm "} 
-                ${emojiOnly && (isOwner ? "-mr-4" : "-mr-4")} 
-                ${!emojiOnly && !isOwner && "bg-accent"} 
-                ${!isOwner ? "rounded-tl-none" : "rounded-tr-none ml-auto"}`}
-            >
-                {message.content && (
-                    <p className="py-2 px-4 message-content">{renderMessageContent(message.content)}</p>
+                className={cn(
+                    "relative rounded-xl overflow-hidden mb-2 w-fit break-words max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
+                    isOwner ? "ml-auto rounded-tr-none" : "rounded-tl-none",
+                    isEditing ? "bg-accent shadow-lg/8" : !emojiOnly && "shadow-lg/5 inset-shadow-sm",
+                    emojiOnly && !isEditing && (isOwner ? "-mr-4" : "-mr-4"),
+                    !emojiOnly && !isOwner && !isEditing && "bg-accent"
                 )}
+            >
+                {isEditing && (
+                    <form ref={editFormRef} onSubmit={onSubmitEdit} className="relative">
+                        {/* Visible Textarea */}
+                        <Textarea
+                            ref={textAreaRef}
+                            className={cn(
+                                !CSS.supports("field-sizing", "content")
+                                    ? "absolute top-0 left-0 z-10 leading-snug py-3"
+                                    : "py-2",
+                                "min-w-0 w-full px-4 field-sizing-content whitespace-pre-wrap bg-transparent resize-none border-0 focus-visible:ring-0 focus-visible:outline-none"
+                            )}
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    setEditingMessageId(null);
+                                }
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    editFormRef.current?.requestSubmit();
+                                }
+                            }}
+                            autoComplete="none"
+                        />
+                    </form>
+                )}
+                {message.content && (
+                    // Message content (used as a fallback for sizing the textarea when editing)
+                    <p
+                        ref={bubbleRef}
+                        className={cn(
+                            isEditing && !CSS.supports("field-sizing", "content") ? "invisible py-3" : "py-2",
+                            isEditing && CSS.supports("field-sizing", "content") && "hidden",
+                            emojiOnly && !isEditing ? "text-5xl" : "text-sm",
+                            "box-border px-4 whitespace-pre-wrap"
+                        )}
+                    >
+                        {isEditing ? renderMessageContent(editContent) : renderMessageContent(message.content)}
+                    </p>
+                )}
+
                 {message.image_url && (
                     <ChatImage
                         src={message.image_url}
                         alt="Message attachment"
-                        onLoadingComplete={(img: HTMLImageElement) => {
-                            requestAnimationFrame(() => {
-                                requestAnimationFrame(() => {
-                                    console.log("Loaded image..");
-                                    // Always call the parent's image load handler for continuous scrolling
-                                    onImageLoad?.();
-
-                                    // Also handle individual scroll for non-initial loads
-                                    if (!initialLoad) {
-                                        scrollToBottom(true, false, true, img.naturalHeight);
-                                    }
-                                });
-                            });
-                        }}
+                        onLoadingComplete={onImageLoadCallback}
+                        editing={isEditing}
                     />
                 )}
             </div>

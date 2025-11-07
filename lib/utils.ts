@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+// TODO: clarify between /lib, /utils and utils.ts files so that it's easier to find functions
+
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }

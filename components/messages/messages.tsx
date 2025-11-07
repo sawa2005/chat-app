@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
     sendMessage,
     deleteMessage,
@@ -35,10 +35,8 @@ export function isEmojiOnly(message: string) {
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
-// TODO: keep hover state of message if reaction component is open.
 // TODO: add timeout and animation to message hover state.
 // TODO: no country flags in emoji picker.
-// TODO: shift+enter for line break instead of submitting form.
 
 export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
     if (!prev) return false;
@@ -79,8 +77,6 @@ export default function Messages({
     const [imageLoading, setImageLoading] = useState(true);
     const [imageCount, setImageCount] = useState(0);
     const [allImagesLoaded, setAllImagesLoaded] = useState(false);
-    const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-    const [editContent, setEditContent] = useState("");
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
@@ -118,7 +114,7 @@ export default function Messages({
     const isAtTop = useIsScrollOnTop(containerRef, loading || isLoadingMore);
 
     // Handle image loading completion
-    const handleImageLoad = () => {
+    const handleImageLoad = useCallback(() => {
         setImageCount((prev) => prev - 1);
         /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
@@ -144,7 +140,7 @@ export default function Messages({
                 });
             });
         }
-    };
+    }, [userHasScrolled, firstUnreadIndex, hasDoneInitialScroll, scrollToBottom, setHasDoneInitialScroll]);
 
     useEffect(() => {
         if (imageCount === 0) {
@@ -247,101 +243,82 @@ export default function Messages({
     });
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad && !hasTriggeredLoadRef.current) {
-            /* console.log(
-                "Loading more messages - isAtTop:",
-                isAtTop,
-                "isLoadingMore:",
-                isLoadingMore,
-                "allMessagesLoaded:",
-                allMessagesLoaded,
-                "initialLoad:",
-                initialLoad
-            ); */
-
-            // Set the flag to prevent multiple loads
+        const getMoreMessages = async () => {
+            setIsLoadingMore(true);
             hasTriggeredLoadRef.current = true;
 
-            const getMoreMessages = async () => {
-                setIsLoadingMore(true);
-
-                try {
-                    const firstMessageId = messages[0]?.id;
-                    if (!firstMessageId) {
-                        setIsLoadingMore(false);
-                        hasTriggeredLoadRef.current = false;
-                        return;
-                    }
-
-                    const newMessages = await loadMoreMessages(conversationId, firstMessageId);
-
-                    if (!newMessages || newMessages.length === 0) {
-                        console.log("No more messages to load");
-                        setAllMessagesLoaded(true);
-                        setIsLoadingMore(false);
-                        return;
-                    }
-
-                    const formatted = newMessages.map((msg) => ({
-                        ...msg,
-                        created_at: new Date(msg.created_at),
-                    })) as Message[];
-
-                    console.log("loading more messages:", newMessages);
-
-                    setMessages((prevMessages) => {
-                        const updatedMessages = [...formatted, ...prevMessages];
-
-                        // Count images and set loading state for the updated messages
-                        const imageMessages = updatedMessages.filter(
-                            (message) => message.image_url !== null && message.deleted !== true
-                        );
-                        if (imageMessages.length === 0) {
-                            setImageLoading(false);
-                        } else {
-                            setImageCount(imageMessages.length);
-                            setImageLoading(true);
-                        }
-
-                        return updatedMessages;
-                    });
-                } catch (error) {
-                    console.error("Error loading more messages:", error);
+            try {
+                const firstMessageId = messages[0]?.id;
+                if (!firstMessageId) {
                     setIsLoadingMore(false);
                     hasTriggeredLoadRef.current = false;
+                    return;
                 }
-            };
+
+                const newMessages = await loadMoreMessages(conversationId, firstMessageId);
+
+                if (!newMessages || newMessages.length === 0) {
+                    console.log("No more messages to load");
+                    setAllMessagesLoaded(true);
+                    setIsLoadingMore(false);
+                    return;
+                }
+
+                const formatted = newMessages.map((msg) => ({
+                    ...msg,
+                    created_at: new Date(msg.created_at),
+                })) as Message[];
+
+                console.log("loading more messages:", newMessages);
+
+                setMessages((prevMessages) => {
+                    const updatedMessages = [...formatted, ...prevMessages];
+
+                    // Count images and set loading state for the updated messages
+                    const imageMessages = updatedMessages.filter(
+                        (message) => message.image_url !== null && message.deleted !== true
+                    );
+                    if (imageMessages.length === 0) {
+                        setImageLoading(false);
+                    } else {
+                        setImageCount(imageMessages.length);
+                        setImageLoading(true);
+                    }
+
+                    return updatedMessages;
+                });
+
+                requestAnimationFrame(() => {
+                    const container = containerRef.current;
+                    if (container) {
+                        const { scrollPos, scrollHeight } = scrollStateRef.current;
+                        const newScrollHeight = container.scrollHeight;
+                        const heightDifference = newScrollHeight - scrollHeight;
+
+                        container.scrollTop = scrollPos + heightDifference;
+                        setIsLoadingMore(false);
+                        hasTriggeredLoadRef.current = false;
+                    }
+                });
+
+                const messageIds = await getMessageIds(conversationId);
+                console.log(messageIds);
+
+                // Check if all messages have loaded using current messages state
+                if (firstMessageId && messageIds[0] && firstMessageId === messageIds[0]) {
+                    setAllMessagesLoaded(true);
+                }
+            } catch (error) {
+                console.error("Error loading more messages:", error);
+                setIsLoadingMore(false);
+                hasTriggeredLoadRef.current = false;
+            }
+        };
+
+        if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad && !hasTriggeredLoadRef.current) {
             getMoreMessages();
         }
-    }, [isAtTop, conversationId, isLoadingMore, allMessagesLoaded, initialLoad]);
-
-    // Restore scroll position after more loaded messages
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container || !scrollStateRef.current.scrollHeight || isLoadingMore) return;
-
-        const { scrollPos, scrollHeight } = scrollStateRef.current;
-        const newScrollHeight = container.scrollHeight;
-        const heightDifference = newScrollHeight - scrollHeight;
-
-        container.scrollTop = scrollPos + heightDifference;
-        setIsLoadingMore(false);
-        hasTriggeredLoadRef.current = false;
-
-        (async () => {
-            const messageIds = await getMessageIds(conversationId);
-            console.log(messageIds);
-
-            // Check if all messages have loaded using current messages state
-            const firstMessageId = messages[0]?.id;
-            if (firstMessageId && messageIds[0] && firstMessageId === messageIds[0]) {
-                setAllMessagesLoaded(true);
-            }
-        })();
-    }, [messages]);
+    }, [isAtTop, conversationId, isLoadingMore, allMessagesLoaded, initialLoad, messages]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -762,13 +739,13 @@ export default function Messages({
         }
     }
 
-    function handleDelete(messageId: bigint) {
+    const handleDelete = useCallback((messageId: bigint) => {
         deleteMessage(messageId)
             .then(() => {
                 setMessages((prev) => prev.filter((m) => m.id !== messageId));
             })
             .catch((err) => console.error("Delete failed:", err));
-    }
+    }, []);
 
     function handleScrollToBottom() {
         setHasNewMessage(false);
@@ -809,10 +786,6 @@ export default function Messages({
                             messages={messages}
                             currentUsername={currentUsername}
                             currentProfileId={currentProfileId}
-                            editingMessageId={editingMessageId}
-                            editContent={editContent}
-                            setEditContent={setEditContent}
-                            setEditingMessageId={setEditingMessageId}
                             handleDelete={handleDelete}
                             setReplyTo={setReplyTo}
                             containerRef={containerRef}

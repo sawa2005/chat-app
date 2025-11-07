@@ -13,10 +13,6 @@ export function MessageItem({
     prevMessage,
     currentUsername,
     currentProfileId,
-    editingMessageId,
-    editContent,
-    setEditContent,
-    setEditingMessageId,
     handleDelete,
     setReplyTo,
     scrollToBottom,
@@ -29,10 +25,6 @@ export function MessageItem({
     prevMessage: Message;
     currentUsername: string;
     currentProfileId: bigint;
-    editingMessageId: string | null;
-    setEditingMessageId: Dispatch<SetStateAction<string | null>>;
-    editContent: string;
-    setEditContent: Dispatch<SetStateAction<string>>;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     conversationId: string;
     handleDelete: (messageId: bigint) => void;
@@ -43,11 +35,12 @@ export function MessageItem({
 }) {
     const [isHovered, setIsHovered] = useState(false);
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editContent, setEditContent] = useState(message.content ?? "");
 
     if (!message.sender) return;
 
     const isOwner = message.sender.username === currentUsername;
-    const isEditing = editingMessageId === message.id.toString();
     const isConsecutive = isConsecutiveMessage(prevMessage, message);
 
     const showActions = isHovered || isPopoverOpen;
@@ -80,10 +73,10 @@ export function MessageItem({
                     isEditing={isEditing}
                     onDelete={() => handleDelete(message.id)}
                     onEdit={() => {
-                        setEditingMessageId(message.id.toString());
+                        setIsEditing(true);
                         setEditContent(message.content ?? "");
                     }}
-                    onCancelEdit={() => setEditingMessageId(null)}
+                    onCancelEdit={() => setIsEditing(false)}
                     onReply={() => setReplyTo(message.id)}
                     onReactionSelect={async (emoji: string) =>
                         await addReaction(conversationId, message.id, currentProfileId, emoji)
@@ -105,13 +98,16 @@ export function MessageItem({
                         <Avatar size={15} avatarUrl={message.sender?.avatar} username={message.sender?.username} />
                     </div>
                 )}
-                {isConsecutive &&
-                    (msgOld(message.created_at)
-                        ? new Date(message.created_at).toISOString().slice(0, 10)
-                        : message.created_at.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                          }))}
+                {isConsecutive && (
+                    <div>
+                        {msgOld(message.created_at)
+                            ? new Date(message.created_at).toISOString().slice(0, 10)
+                            : message.created_at.toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                              })}
+                    </div>
+                )}
             </div>
 
             <MessageBubble
@@ -123,13 +119,13 @@ export function MessageItem({
                 onSubmitEdit={async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
                     e?.preventDefault();
                     await editMessage(message.id, editContent);
-                    setEditingMessageId(null);
+                    setIsEditing(false);
                 }}
                 isConsecutive={isConsecutive}
                 scrollToBottom={scrollToBottom}
                 initialLoad={initialLoad}
                 containerRef={containerRef}
-                setEditingMessageId={setEditingMessageId}
+                setEditingMessageId={() => setIsEditing(false)}
                 onImageLoad={onImageLoad}
             />
 

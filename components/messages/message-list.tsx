@@ -5,10 +5,6 @@ interface MessageListProps {
     messages: Message[];
     currentUsername: string;
     currentProfileId: bigint;
-    editingMessageId: string | null;
-    editContent: string;
-    setEditContent: Dispatch<SetStateAction<string>>;
-    setEditingMessageId: Dispatch<SetStateAction<string | null>>;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     conversationId: string;
     handleDelete: (id: bigint) => void;

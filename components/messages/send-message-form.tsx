@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/client";
 import { useState, useEffect, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import EmojiComponent from "../emoji-component";
@@ -81,7 +82,7 @@ export default function SendMessageForm({
     const [imageHeight, setImageHeight] = useState<number | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
     let typingTimeout: NodeJS.Timeout | null = null;
@@ -89,6 +90,17 @@ export default function SendMessageForm({
     useEffect(() => {
         inputRef.current?.focus();
     }, [replyTo, imgPreview]);
+
+    useEffect(() => {
+        const textarea = inputRef.current;
+        if (textarea) {
+            textarea.style.height = "auto";
+            const style = window.getComputedStyle(textarea);
+            const borderTop = parseFloat(style.borderTopWidth);
+            const borderBottom = parseFloat(style.borderBottomWidth);
+            textarea.style.height = `${textarea.scrollHeight + borderTop + borderBottom}px`;
+        }
+    }, [content]);
 
     function showAlert(message: React.ReactNode) {
         setAlert(message);
@@ -242,11 +254,14 @@ export default function SendMessageForm({
         setImageHeight(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setIsPending(false);
-        requestAnimationFrame(() => {
-            if (inputRef.current) inputRef.current.focus();
-            scrollToBottom(true, true, !!uploadedImageUrl, imageHeight ?? undefined);
-        });
+        scrollToBottom(true, true, !!uploadedImageUrl, imageHeight ?? undefined);
     }
+
+    useEffect(() => {
+        if (!isPending) {
+            inputRef.current?.focus();
+        }
+    }, [isPending]);
 
     function handleUploadCancel() {
         setIsPending(false);
@@ -272,18 +287,25 @@ export default function SendMessageForm({
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} autoComplete="off">
-                <div className="flex gap-1">
-                    <div className="relative flex gap-1 w-full">
-                        <Input
+            <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full gap-1 min-h-[54px] items-end">
+                <div className="flex grow items-center gap-1">
+                    <div className="relative flex grow gap-1">
+                        <Textarea
                             ref={inputRef}
                             name="content"
-                            type="text"
                             placeholder="Type your message..."
-                            className="px-4 py-6 pr-[106px] w-full"
+                            className="px-4 py-4 pr-[106px] grow wrap-normal h-fit leading-2.5 min-h-[54px] max-h-[25vh] overflow-y-auto resize-none"
                             disabled={isPending}
                             value={content}
-                            onChange={handleInputChange}
+                            onChange={(e) => handleInputChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit(e);
+                                } else if (e.key === "Enter" && e.shiftKey) {
+                                    // Allow default behavior for Shift + Enter (newline)
+                                }
+                            }}
                             autoComplete="none"
                         />
                         <Input
@@ -295,7 +317,7 @@ export default function SendMessageForm({
                             title="Attach File"
                         />
 
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="absolute right-3 bottom-3.5">
                             <div className="flex gap-3 items-center">
                                 {/* Emoji picker that stays open if Shift is held */}
                                 <EmojiComponent
@@ -337,7 +359,7 @@ export default function SendMessageForm({
                     </div>
 
                     {imgPreview && (
-                        <div className="max-w-[50px] max-h-[50px] overflow-hidden flex items-center rounded-md">
+                        <div className="w-[54px] h-[54px] overflow-hidden flex items-center rounded-md">
                             <Image
                                 width={50}
                                 height={30}
@@ -347,11 +369,15 @@ export default function SendMessageForm({
                             />
                         </div>
                     )}
-
-                    <Button type="submit" className="cursor-pointer py-6" disabled={isPending || uploading}>
-                        {isPending ? "Sending..." : uploading ? "Uploading..." : "Send"}
-                    </Button>
                 </div>
+                <Button
+                    type="submit"
+                    className="cursor-pointer h-[54px]"
+                    size={"default"}
+                    disabled={isPending || uploading}
+                >
+                    {isPending ? "Sending..." : uploading ? "Uploading..." : "Send"}
+                </Button>
             </form>
         </>
     );
