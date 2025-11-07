@@ -161,7 +161,7 @@ export function MessageBubble({
             {/* Unified message bubble */}
             <div
                 className={cn(
-                    "relative rounded-xl overflow-hidden mb-2 w-fit wrap-break-word max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
+                    "relative rounded-xl overflow-hidden mb-2 w-fit break-words max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
                     isOwner ? "ml-auto rounded-tr-none" : "rounded-tl-none",
                     isEditing
                         ? "bg-accent shadow-lg/8"
@@ -172,20 +172,17 @@ export function MessageBubble({
                     !emojiOnly && !isOwner && !isEditing && "bg-accent"
                 )}
             >
-                {isEditing ? (
+                {isEditing && (
                     <form ref={editFormRef} onSubmit={onSubmitEdit} className="relative">
-                        {/* Hidden Textarea to auto-resize */}
-                        <p
-                            ref={bubbleRef}
-                            className="py-2 px-4 whitespace-pre-wrap invisible absolute top-0 left-0 z-[-1] message-content leading-normal"
-                        >
-                            {renderMessageContent(editContent)}
-                        </p>
-
                         {/* Visible Textarea */}
                         <Textarea
                             ref={textAreaRef}
-                            className="text-sm min-w-0 block w-full py-2 px-4 whitespace-pre-wrap bg-transparent resize-none overflow-hidden border-0 focus-visible:ring-0 focus-visible:outline-none"
+                            className={cn(
+                                !CSS.supports("field-sizing", "content")
+                                    ? "absolute top-0 left-0 z-10 leading-snug py-3"
+                                    : "py-2",
+                                "min-w-0 w-full px-4 field-sizing-content whitespace-pre-wrap bg-transparent resize-none border-0 focus-visible:ring-0 focus-visible:outline-none"
+                            )}
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             onKeyDown={(e) => {
@@ -201,12 +198,18 @@ export function MessageBubble({
                             autoComplete="none"
                         />
                     </form>
-                ) : (
-                    message.content && (
-                        <p className="py-2 px-4 message-content whitespace-pre-wrap">
-                            {renderMessageContent(message.content)}
-                        </p>
-                    )
+                )}
+                {message.content && (
+                    <p
+                        ref={bubbleRef}
+                        className={cn(
+                            isEditing && !CSS.supports("field-sizing", "content") ? "invisible py-3" : "py-2",
+                            isEditing && CSS.supports("field-sizing", "content") && "hidden",
+                            "box-border text-sm px-4 whitespace-pre-wrap"
+                        )}
+                    >
+                        {isEditing ? renderMessageContent(editContent) : renderMessageContent(message.content)}
+                    </p>
                 )}
 
                 {message.image_url && (
