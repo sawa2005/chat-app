@@ -4,7 +4,7 @@ export type Reaction = Prisma.message_reactionsGetPayload<{
     select: { id: true; created_at: true; emoji: true; message_id: true; profile_id: true };
 }>;
 
-// TODO: replace explicit message type usage with this Prisma generated type
+// TODO: replace explicit message type & query usage with prisma generated types
 export type PrismaMessage = Prisma.messagesGetPayload<{
     include: { sender: true; messages: true; message_reactions: true; message_reads: true };
 }>;
