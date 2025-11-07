@@ -611,6 +611,8 @@ export default function Messages({
                           }
                         : null,
                     image_url: payload.image_url ?? null,
+                    image_height: payload.image_height ?? null,
+                    image_width: payload.image_width ?? null,
                     type: payload.type ?? "message",
                     deleted: payload.deleted ?? false,
                     parent_id: payload.parent_id ? BigInt(payload.parent_id) : null,

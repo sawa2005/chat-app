@@ -36,6 +36,8 @@ type SendMessageFormProps = {
             avatar: string | null;
         };
         image_url: string | null;
+        image_height: number | null;
+        image_width: number | null;
         type: string;
         deleted: boolean;
         parent_id: bigint | null;
@@ -80,6 +82,7 @@ export default function SendMessageForm({
     const [uploading, setUploading] = useState(false);
     const [alert, setAlert] = useState<React.ReactNode | null>(null);
     const [imageHeight, setImageHeight] = useState<number | null>(null);
+    const [imageWidth, setImageWidth] = useState<number | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -156,6 +159,7 @@ export default function SendMessageForm({
         const img = new window.Image();
         img.onload = () => {
             setImageHeight(img.naturalHeight);
+            setImageWidth(img.naturalWidth);
         };
         img.src = objectUrl;
         setImgPreview(objectUrl);
@@ -199,7 +203,9 @@ export default function SendMessageForm({
             currentUsername,
             currentUserAvatar,
             content,
-            uploadedImageUrl,
+            uploadedImageUrl && imageHeight && imageWidth
+                ? { url: uploadedImageUrl, height: imageHeight, width: imageWidth }
+                : null,
             replyTo ?? null
         );
 
@@ -214,7 +220,17 @@ export default function SendMessageForm({
                 username: currentUsername,
                 avatar: newMessage.sender.avatar,
             },
-            ...(uploadedImageUrl ? { image_url: uploadedImageUrl } : { image_url: null }),
+            ...(uploadedImageUrl
+                ? {
+                      image_url: uploadedImageUrl,
+                      image_height: imageHeight,
+                      image_width: imageWidth,
+                  }
+                : {
+                      image_url: null,
+                      image_height: null,
+                      image_width: null,
+                  }),
             type: newMessage.type ?? "message",
             deleted: false,
             parent_id: replyTo,
@@ -236,22 +252,19 @@ export default function SendMessageForm({
             message_reads: [],
         });
 
-        await broadcastMessage(
-            conversationId,
-            {
-                ...newMessage,
-                sender_id: newMessage.sender.id,
-                sender_username: newMessage.sender.username,
-                sender_avatar: newMessage.sender.avatar,
-            },
-            uploadedImageUrl
-        );
+        await broadcastMessage(conversationId, {
+            ...newMessage,
+            sender_id: newMessage.sender.id,
+            sender_username: newMessage.sender.username,
+            sender_avatar: newMessage.sender.avatar,
+        });
 
         setContent("");
         setImgPreview(null);
         setFile(null);
         setReplyTo(null);
         setImageHeight(null);
+        setImageWidth(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setIsPending(false);
         scrollToBottom(true, true, !!uploadedImageUrl, imageHeight ?? undefined);
@@ -269,6 +282,7 @@ export default function SendMessageForm({
         setFile(null);
         setUploading(false);
         setImageHeight(null);
+        setImageWidth(null);
     }
 
     return (
@@ -345,7 +359,12 @@ export default function SendMessageForm({
                                     closeOnSelect={true}
                                 />
 
-                                <GifComponent imgPreview={imgPreview} setImgPreview={setImgPreview} />
+                                <GifComponent
+                                    imgPreview={imgPreview}
+                                    setImgPreview={setImgPreview}
+                                    setImageHeight={setImageHeight}
+                                    setImageWidth={setImageWidth}
+                                />
 
                                 <button
                                     type="button"

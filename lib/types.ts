@@ -11,6 +11,8 @@ export type Message = {
     created_at: Date;
     edited_at: Date | null;
     image_url: string | null;
+    image_width: number | null;
+    image_height: number | null;
     type: string;
     deleted: boolean;
     parent_id: bigint | null;
@@ -19,6 +21,7 @@ export type Message = {
         username: string;
         avatar: string | null;
     } | null;
+    // TODO: map sub-messages as replies so it's easier to understand queries
     messages: {
         id: bigint;
         content: string | null;

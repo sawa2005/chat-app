@@ -46,6 +46,7 @@ export function MessageItem({
     const showActions = isHovered || isPopoverOpen;
 
     // TODO: rewrite header classes for better readability (probably turn it into a function/component)
+
     // Define header classes based on message ownership and consecutiveness
     const headerClasses = !isConsecutive
         ? // Message is not consecutive

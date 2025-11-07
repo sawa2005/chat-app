@@ -18,9 +18,11 @@ import { useTheme } from "next-themes";
 interface GifComponentProps {
     imgPreview: string | null;
     setImgPreview: Dispatch<SetStateAction<string | null>>;
+    setImageHeight: Dispatch<SetStateAction<number | null>>;
+    setImageWidth: Dispatch<SetStateAction<number | null>>;
 }
 
-export default function GifComponent({ imgPreview, setImgPreview }: GifComponentProps) {
+export default function GifComponent({ imgPreview, setImgPreview, setImageHeight, setImageWidth }: GifComponentProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const { theme, systemTheme } = useTheme();
@@ -48,6 +50,8 @@ export default function GifComponent({ imgPreview, setImgPreview }: GifComponent
                             const url = gif.url;
                             console.log("TenorImage:", gif);
                             setImgPreview(url);
+                            setImageHeight(gif.height);
+                            setImageWidth(gif.width);
                         }}
                         tenorApiKey={process.env.NEXT_PUBLIC_TENOR_API_KEY ?? ""}
                     />
