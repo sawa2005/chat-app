@@ -13,8 +13,6 @@ interface ChatImageProps {
     editing?: boolean;
 }
 
-// TODO: fix placeholders so they are the same size as the actual image to prevent layout shift
-
 const ChatImage = memo(function ChatImage({ src, width, height, alt, onLoadingComplete, editing }: ChatImageProps) {
     // TODO: wipe database and remove fallback sizing logic
     const [fallbackWidth, setFallbackWidth] = useState<number>();
