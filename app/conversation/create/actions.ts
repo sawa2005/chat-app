@@ -108,6 +108,8 @@ export async function loadInitMessages(conversationId: string, unreadCount?: num
                 created_at: true,
                 edited_at: true,
                 image_url: true,
+                image_height: true,
+                image_width: true,
                 type: true,
                 deleted: true,
                 parent_id: true,
@@ -120,7 +122,9 @@ export async function loadInitMessages(conversationId: string, unreadCount?: num
                         sender: { select: { id: true, username: true, avatar: true } },
                     },
                 },
-                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
+                message_reactions: {
+                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
+                },
                 message_reads: { select: { profile_id: true } },
             },
         });
@@ -160,6 +164,8 @@ export async function loadMoreMessages(conversationId: string, beforeMessageId: 
                 created_at: true,
                 edited_at: true,
                 image_url: true,
+                image_height: true,
+                image_width: true,
                 type: true,
                 deleted: true,
                 parent_id: true,
@@ -172,7 +178,9 @@ export async function loadMoreMessages(conversationId: string, beforeMessageId: 
                         sender: { select: { id: true, username: true, avatar: true } },
                     },
                 },
-                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
+                message_reactions: {
+                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
+                },
                 message_reads: { select: { profile_id: true } },
             },
         });
@@ -490,7 +498,7 @@ export async function sendMessage(
     senderUsername: string,
     senderAvatar: string | null,
     content: string,
-    imageUrl: string | null,
+    image: { url: string; height: number; width: number } | null,
     parentId: bigint | null
 ) {
     const message = await prisma.messages.create({
@@ -498,7 +506,9 @@ export async function sendMessage(
             conversation_id: conversationId,
             sender_id: senderId,
             content,
-            image_url: imageUrl,
+            image_url: image?.url ?? null,
+            image_height: image?.height ?? null,
+            image_width: image?.width ?? null,
             parent_id: parentId ?? null,
         },
         include: {
@@ -550,6 +560,8 @@ export async function refetchMessages(conversationId: string, messageIds: bigint
                 created_at: true,
                 edited_at: true,
                 image_url: true,
+                image_height: true,
+                image_width: true,
                 type: true,
                 deleted: true,
                 parent_id: true,
@@ -562,7 +574,9 @@ export async function refetchMessages(conversationId: string, messageIds: bigint
                         sender: { select: { id: true, username: true, avatar: true } },
                     },
                 },
-                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
+                message_reactions: {
+                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
+                },
                 message_reads: { select: { profile_id: true } },
             },
         });
@@ -579,6 +593,8 @@ export async function refetchMessages(conversationId: string, messageIds: bigint
                 created_at: true,
                 edited_at: true,
                 image_url: true,
+                image_height: true,
+                image_width: true,
                 type: true,
                 deleted: true,
                 parent_id: true,
@@ -591,7 +607,9 @@ export async function refetchMessages(conversationId: string, messageIds: bigint
                         sender: { select: { id: true, username: true, avatar: true } },
                     },
                 },
-                message_reactions: { select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true } },
+                message_reactions: {
+                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
+                },
                 message_reads: { select: { profile_id: true } },
             },
         });

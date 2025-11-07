@@ -15,6 +15,8 @@ type BroadcastPayload = {
         avatar: string | null;
     } | null;
     image_url: string | null;
+    image_height: number | null;
+    image_width: number | null;
     type: string;
     parent_id: string | null;
     messages: {
@@ -36,6 +38,8 @@ export async function broadcastMessage(
         sender_username?: string; // fallback removed
         sender_avatar: string | null;
         image_url?: string | null;
+        image_height?: number | null;
+        image_width?: number | null;
         type?: string | null;
         parent_id: bigint | null;
         messages: {
@@ -44,8 +48,7 @@ export async function broadcastMessage(
             image_url: string | null;
             sender: { id: bigint; username: string; avatar: string | null } | null;
         } | null;
-    },
-    uploadedImageUrl?: string | null
+    }
 ) {
     const payload: BroadcastPayload = {
         id: newMessage.id.toString(),
@@ -60,7 +63,9 @@ export async function broadcastMessage(
                       username: newMessage.sender_username ?? "",
                       avatar: newMessage.sender_avatar ?? null,
                   },
-        image_url: uploadedImageUrl ?? newMessage.image_url ?? null,
+        image_url: newMessage.image_url ?? null,
+        image_height: newMessage.image_height ?? null,
+        image_width: newMessage.image_width ?? null,
         type: newMessage.type ?? "message",
         parent_id: newMessage.parent_id ? newMessage.parent_id.toString() : null,
         messages: newMessage.messages

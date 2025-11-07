@@ -213,6 +213,8 @@ export function MessageBubble({
                 {message.image_url && (
                     <ChatImage
                         src={message.image_url}
+                        width={message.image_width}
+                        height={message.image_height}
                         alt="Message attachment"
                         onLoadingComplete={onImageLoadCallback}
                         editing={isEditing}

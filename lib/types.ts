@@ -4,6 +4,11 @@ export type Reaction = Prisma.message_reactionsGetPayload<{
     select: { id: true; created_at: true; emoji: true; message_id: true; profile_id: true };
 }>;
 
+// TODO: replace explicit message type & query usage with prisma generated types
+export type PrismaMessage = Prisma.messagesGetPayload<{
+    include: { sender: true; messages: true; message_reactions: true; message_reads: true };
+}>;
+
 export type Message = {
     id: bigint;
     conversation_id: string;
@@ -11,6 +16,8 @@ export type Message = {
     created_at: Date;
     edited_at: Date | null;
     image_url: string | null;
+    image_width: number | null;
+    image_height: number | null;
     type: string;
     deleted: boolean;
     parent_id: bigint | null;
@@ -19,6 +26,7 @@ export type Message = {
         username: string;
         avatar: string | null;
     } | null;
+    // TODO: map sub-messages as replies so it's easier to understand queries
     messages: {
         id: bigint;
         content: string | null;

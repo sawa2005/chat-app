@@ -1,24 +1,32 @@
 "use client";
 
 import Image from "next/image";
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
 import { Skeleton } from "./ui/skeleton";
 
 interface ChatImageProps {
     src: string;
     alt: string;
+    width: number | null;
+    height: number | null;
     onLoadingComplete?: (e: HTMLImageElement) => void;
     editing?: boolean;
 }
 
-// TODO: fix placeholders so they are the same size as the actual image to prevent layout shift
-
-const ChatImage = memo(function ChatImage({ src, alt, onLoadingComplete, editing }: ChatImageProps) {
-    const [width, setWidth] = useState<number>();
-    const [height, setHeight] = useState<number>();
+const ChatImage = memo(function ChatImage({ src, width, height, alt, onLoadingComplete, editing }: ChatImageProps) {
+    // TODO: wipe database and remove fallback sizing logic
+    const [fallbackWidth, setFallbackWidth] = useState<number>();
+    const [fallbackHeight, setFallbackHeight] = useState<number>();
+    const [ratio, setRatio] = useState<number | null>(null);
     const [loaded, setLoaded] = useState(false);
 
-    const ratio = width && height ? width / height : undefined;
+    useEffect(() => {
+        if (width && height) {
+            setRatio(width / height);
+        } else if (fallbackWidth && fallbackHeight) {
+            setRatio(fallbackWidth / fallbackHeight);
+        }
+    }, [width, height, fallbackWidth, fallbackHeight]);
 
     return (
         <a href={src} target="_blank" className="cursor-pointer block">
@@ -30,14 +38,14 @@ const ChatImage = memo(function ChatImage({ src, alt, onLoadingComplete, editing
                 <Image
                     src={src}
                     alt={alt}
-                    width={width || 1}
-                    height={height || 1}
+                    width={width || fallbackWidth || 250}
+                    height={height || fallbackHeight || 250}
                     className={`${loaded ? "opacity-100" : "opacity-0"} object-cover transition-opacity duration-300`}
                     unoptimized
                     onLoad={(e) => {
                         const target = e.currentTarget as HTMLImageElement;
-                        setWidth(target.naturalWidth);
-                        setHeight(target.naturalHeight);
+                        setFallbackWidth(target.naturalWidth);
+                        setFallbackHeight(target.naturalHeight);
                         setLoaded(true);
 
                         if (onLoadingComplete) {
