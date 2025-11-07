@@ -163,11 +163,7 @@ export function MessageBubble({
                 className={cn(
                     "relative rounded-xl overflow-hidden mb-2 w-fit break-words max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
                     isOwner ? "ml-auto rounded-tr-none" : "rounded-tl-none",
-                    isEditing
-                        ? "bg-accent shadow-lg/8"
-                        : emojiOnly
-                        ? "text-5xl"
-                        : "text-sm shadow-lg/5 inset-shadow-sm",
+                    isEditing ? "bg-accent shadow-lg/8" : !emojiOnly && "shadow-lg/5 inset-shadow-sm",
                     emojiOnly && !isEditing && (isOwner ? "-mr-4" : "-mr-4"),
                     !emojiOnly && !isOwner && !isEditing && "bg-accent"
                 )}
@@ -200,12 +196,14 @@ export function MessageBubble({
                     </form>
                 )}
                 {message.content && (
+                    // Message content (used as a fallback for sizing the textarea when editing)
                     <p
                         ref={bubbleRef}
                         className={cn(
                             isEditing && !CSS.supports("field-sizing", "content") ? "invisible py-3" : "py-2",
                             isEditing && CSS.supports("field-sizing", "content") && "hidden",
-                            "box-border text-sm px-4 whitespace-pre-wrap"
+                            emojiOnly && !isEditing ? "text-5xl" : "text-sm",
+                            "box-border px-4 whitespace-pre-wrap"
                         )}
                     >
                         {isEditing ? renderMessageContent(editContent) : renderMessageContent(message.content)}
