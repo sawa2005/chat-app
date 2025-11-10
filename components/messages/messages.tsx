@@ -18,7 +18,6 @@ import TypingIndicator from "../typing-indicator";
 import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
 import { BackToBottom } from "./back-to-bottom";
-import emojiRegex from "emoji-regex";
 import type {
     Message,
     BroadcastPayload,
@@ -30,30 +29,11 @@ import { Spinner } from "../ui/spinner";
 
 const supabase = createClient();
 
-// Returns true if the string contains only emojis
-export function isEmojiOnly(message: string) {
-    const regex = emojiRegex();
-    const stripped = message.replace(/\s/g, "");
-    const matched = stripped.match(regex);
-    return matched !== null && matched.join("") === stripped;
-}
-
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: consider switching message hover text to on click instead.
 // TODO: add timeout and animation to message hover state.
 // TODO: no country flags in emoji picker.
-
-export function isConsecutiveMessage(prev: Message | undefined, current: Message, cutoffMinutes = 5) {
-    if (!prev) return false;
-    if (prev.type === "info" || current.type === "info") return false;
-    if (!prev.sender) return false;
-    if (prev.sender.id !== current.sender?.id) return false;
-    if (prev.messages?.id !== current.messages?.id) return false;
-
-    const diffMs = current.created_at.getTime() - prev.created_at.getTime();
-    return diffMs < cutoffMinutes * 60 * 1000;
-}
 
 export default function Messages({
     conversationId,

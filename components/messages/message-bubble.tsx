@@ -1,4 +1,4 @@
-import { isEmojiOnly } from "./messages";
+import { isEmojiOnly } from "@/utils/messages";
 import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";

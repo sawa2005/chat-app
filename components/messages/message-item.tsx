@@ -1,6 +1,6 @@
 import { Message } from "@/lib/types";
 import { RefObject, Dispatch, SetStateAction, useState } from "react";
-import { isConsecutiveMessage } from "./messages";
+import { isConsecutiveMessage } from "@/utils/messages";
 import { MessageActions } from "./message-buttons";
 import { MessageBubble } from "./message-bubble";
 import { editMessage, addReaction, removeReaction } from "@/app/conversation/create/actions";
