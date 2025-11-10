@@ -74,7 +74,6 @@ export default function Messages({
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [imageLoading, setImageLoading] = useState(true);
     const [imageCount, setImageCount] = useState(0);
     const [allImagesLoaded, setAllImagesLoaded] = useState(false);
     const [typers, setTypers] = useState<string[]>([]);
@@ -116,14 +115,12 @@ export default function Messages({
     // Handle image loading completion
     const handleImageLoad = useCallback(() => {
         setImageCount((prev) => prev - 1);
-        /* console.log("Image loaded, hasDoneInitialScroll:", hasDoneInitialScroll, "userHasScrolled:", userHasScrolled); */
         // Scroll with same parameters as initial load if user hasn't scrolled
         if (!userHasScrolled && firstUnreadIndex === null) {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     // Use force=true for initial scroll, smooth=false for subsequent images
                     const isInitialScroll = !hasDoneInitialScroll;
-                    /* console.log("Scrolling due to image load, isInitialScroll:", isInitialScroll); */
                     scrollToBottom(
                         !isInitialScroll, // smooth: false for initial, true for subsequent
                         true, // force: always true for images
@@ -165,27 +162,6 @@ export default function Messages({
         setFirstUnreadIndex(index !== -1 ? index : null);
     }, [messages, currentProfileId]);
 
-    /* useEffect(() => {
-        console.log("imageLoading:", imageLoading);
-    }, [imageLoading]);
-
-    useEffect(() => {
-        console.log("imageCount:", imageCount);
-    }, [imageCount]);
-
-    useEffect(() => {
-        console.log(
-            "isAtTop:",
-            isAtTop,
-            "isLoadingMore:",
-            isLoadingMore,
-            "allMessagesLoaded:",
-            allMessagesLoaded,
-            "initialLoad:",
-            initialLoad
-        );
-    }, [isAtTop, isLoadingMore, allMessagesLoaded, initialLoad]); */
-
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
@@ -195,15 +171,6 @@ export default function Messages({
                 scrollPos: container.scrollTop,
                 scrollHeight: container.scrollHeight,
             };
-
-            /* console.log(
-                "Scroll event - isProgrammaticScroll:",
-                isProgrammaticScroll.current,
-                "distanceFromBottom:",
-                distanceFromBottom,
-                "userHasScrolled:",
-                userHasScrolled
-            ); */
 
             // Only track user scrolling, not programmatic scrolling
             if (!isProgrammaticScroll.current) {
@@ -219,17 +186,13 @@ export default function Messages({
                     const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
                     if (distanceFromBottom > 100) {
                         // Increased threshold to 100px
-                        /* console.log("Setting userHasScrolled to true due to distance:", distanceFromBottom); */
                         setUserHasScrolled(true);
                         setHasEverScrolledUp(true);
                     } else {
                         // Increased reset threshold to 20px
-                        /* console.log("Setting userHasScrolled to false due to distance:", distanceFromBottom); */
                         setUserHasScrolled(false);
                     }
                 }, 150); // 150ms debounce
-            } else {
-                /* console.log("Ignoring scroll event - programmatic scroll detected"); */
             }
         };
 
@@ -278,11 +241,9 @@ export default function Messages({
                     const imageMessages = updatedMessages.filter(
                         (message) => message.image_url !== null && message.deleted !== true
                     );
-                    if (imageMessages.length === 0) {
-                        setImageLoading(false);
-                    } else {
+
+                    if (imageMessages.length > 0) {
                         setImageCount(imageMessages.length);
-                        setImageLoading(true);
                     }
 
                     return updatedMessages;
@@ -318,7 +279,7 @@ export default function Messages({
         if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad && !hasTriggeredLoadRef.current) {
             getMoreMessages();
         }
-    }, [isAtTop, conversationId, isLoadingMore, allMessagesLoaded, initialLoad, messages]);
+    }, [isAtTop, conversationId, isLoadingMore, allMessagesLoaded, initialLoad, messages, containerRef]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -339,7 +300,7 @@ export default function Messages({
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    });
+    }, [allImagesLoaded, conversationId, currentProfileId]);
 
     // Initial scroll - handle both cases
     useEffect(() => {
@@ -530,11 +491,9 @@ export default function Messages({
                 const imageMessages =
                     messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
                 if (imageMessages.length === 0) {
-                    setImageLoading(false);
                     setAllImagesLoaded(true);
                 } else {
                     setImageCount(imageMessages.length);
-                    setImageLoading(true);
                     setAllImagesLoaded(false);
                 }
             } catch (err) {
@@ -605,7 +564,7 @@ export default function Messages({
                     edited_at: payload.edited_at ? new Date(payload.edited_at) : null,
                     sender: payload.sender
                         ? {
-                              id: payload.sender.id ? BigInt(payload.sender.id) : null,
+                              id: payload.sender.id && BigInt(payload.sender.id),
                               username: payload.sender.username ?? "",
                               avatar: payload.sender.avatar ?? null,
                           }
@@ -717,7 +676,7 @@ export default function Messages({
             window.removeEventListener("visibilitychange", handleVisibilityChange);
             supabase.removeChannel(channel);
         };
-    }, [conversationId, currentProfileId, currentUsername]);
+    }, [conversationId, currentProfileId, currentUsername, allImagesLoaded, initialUnreadCount]);
 
     function handleNewMessage(msg: Message) {
         setMessages((prev) => {
@@ -796,7 +755,6 @@ export default function Messages({
                             firstUnreadIndex={firstUnreadIndex}
                             initialLoad={initialLoad}
                             imageCount={imageCount}
-                            setImageLoading={setImageLoading}
                             onImageLoad={handleImageLoad}
                         />
                     </div>

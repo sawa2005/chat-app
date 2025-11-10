@@ -1,0 +1,19 @@
+description = "Compares the current branch to master and generates a pull request description."
+prompt = """
+Compare my current branch to the master branch and write a pull request description detailing the changes which were made. The description should follow this format as an example:
+
+**TLDR**: Implemented image dimension storage and usage for better placeholders, refactored image-related components, and added documentation for reusable Prisma query shapes to improve type safety and maintainability when it's implemented.
+
+-   Added `image_width` and `image_height` fields to the `messages` model in `prisma/schema.prisma`.
+-   Updated `app/conversation/create/actions.ts` to store these dimensions when sending messages and to fetch them in `loadInitMessages`, `loadMoreMessages`, and `refetchMessages`.
+-   Modified `lib/broadcast.ts` to include image dimensions in the broadcast payload.
+-   Updated the `Message` type in `lib/types.ts` to include `image_width` and `image_height`.
+-   The `components/chat-image.tsx` component now directly accepts `width` and `height` props, reducing reliance on internal state for dimensions and improving initial rendering.
+-   Implemented fallback logic for image dimensions to prevent layout shifts.
+-   `components/gif-component.tsx` now passes `imageHeight` and `setImageWidth` setters to capture dimensions of selected GIFs.
+-   `components/messages/send-message-form.tsx` was updated to capture and pass image dimensions when sending messages, including for uploaded images and GIFs.
+-   Added `docs/prisma-query-shapes.md` which details the recommended pattern for defining reusable Prisma query argument shapes to improve type safety and reduce maintenance overhead.
+-   Removed the `policy_backup` model from `prisma/schema.prisma`.
+-   Added new `oauth` related enums to `prisma/schema.prisma`.
+-   Introduced a `PrismaMessage` type in `lib/types.ts` as a step towards leveraging Prisma's generated types more effectively.
+"""

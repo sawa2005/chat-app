@@ -1,7 +1,7 @@
 "use server";
 
 import { getCurrentProfileId } from "@/app/login/actions";
-import { prisma } from "@/lib/prisma";
+import { messagePayload, prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { broadcastMember, broadcastMessage, broadcastNameChange, broadcastReaction } from "@/lib/broadcast";
 import { createClient } from "@/lib/server";
@@ -101,32 +101,7 @@ export async function loadInitMessages(conversationId: string, unreadCount?: num
             where: { conversation_id: conversationId },
             orderBy: { created_at: "desc" },
             take: takeCount,
-            select: {
-                id: true,
-                conversation_id: true,
-                content: true,
-                created_at: true,
-                edited_at: true,
-                image_url: true,
-                image_height: true,
-                image_width: true,
-                type: true,
-                deleted: true,
-                parent_id: true,
-                sender: { select: { id: true, username: true, avatar: true } },
-                messages: {
-                    select: {
-                        id: true,
-                        content: true,
-                        image_url: true,
-                        sender: { select: { id: true, username: true, avatar: true } },
-                    },
-                },
-                message_reactions: {
-                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
-                },
-                message_reads: { select: { profile_id: true } },
-            },
+            ...messagePayload,
         });
 
         if (prismaMessages) {
@@ -157,32 +132,7 @@ export async function loadMoreMessages(conversationId: string, beforeMessageId: 
             },
             orderBy: { created_at: "desc" },
             take: 20,
-            select: {
-                id: true,
-                conversation_id: true,
-                content: true,
-                created_at: true,
-                edited_at: true,
-                image_url: true,
-                image_height: true,
-                image_width: true,
-                type: true,
-                deleted: true,
-                parent_id: true,
-                sender: { select: { id: true, username: true, avatar: true } },
-                messages: {
-                    select: {
-                        id: true,
-                        content: true,
-                        image_url: true,
-                        sender: { select: { id: true, username: true, avatar: true } },
-                    },
-                },
-                message_reactions: {
-                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
-                },
-                message_reads: { select: { profile_id: true } },
-            },
+            ...messagePayload,
         });
 
         if (prismaMessages) {
@@ -511,18 +461,7 @@ export async function sendMessage(
             image_width: image?.width ?? null,
             parent_id: parentId ?? null,
         },
-        include: {
-            sender: { select: { id: true, username: true, avatar: true } },
-            messages: {
-                // include parent message info if it exists
-                select: {
-                    id: true,
-                    content: true,
-                    image_url: true,
-                    sender: { select: { id: true, username: true, avatar: true } },
-                },
-            },
-        },
+        ...messagePayload,
     });
 
     return {
@@ -553,32 +492,7 @@ export async function refetchMessages(conversationId: string, messageIds: bigint
     try {
         const existingMessagesPromise = prisma.messages.findMany({
             where: { id: { in: messageIds } },
-            select: {
-                id: true,
-                conversation_id: true,
-                content: true,
-                created_at: true,
-                edited_at: true,
-                image_url: true,
-                image_height: true,
-                image_width: true,
-                type: true,
-                deleted: true,
-                parent_id: true,
-                sender: { select: { id: true, username: true, avatar: true } },
-                messages: {
-                    select: {
-                        id: true,
-                        content: true,
-                        image_url: true,
-                        sender: { select: { id: true, username: true, avatar: true } },
-                    },
-                },
-                message_reactions: {
-                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
-                },
-                message_reads: { select: { profile_id: true } },
-            },
+            ...messagePayload,
         });
 
         const newMessagesPromise = prisma.messages.findMany({
@@ -586,32 +500,7 @@ export async function refetchMessages(conversationId: string, messageIds: bigint
                 conversation_id: conversationId,
                 id: { gt: lastMessageId },
             },
-            select: {
-                id: true,
-                conversation_id: true,
-                content: true,
-                created_at: true,
-                edited_at: true,
-                image_url: true,
-                image_height: true,
-                image_width: true,
-                type: true,
-                deleted: true,
-                parent_id: true,
-                sender: { select: { id: true, username: true, avatar: true } },
-                messages: {
-                    select: {
-                        id: true,
-                        content: true,
-                        image_url: true,
-                        sender: { select: { id: true, username: true, avatar: true } },
-                    },
-                },
-                message_reactions: {
-                    select: { id: true, created_at: true, emoji: true, message_id: true, profile_id: true },
-                },
-                message_reads: { select: { profile_id: true } },
-            },
+            ...messagePayload,
         });
 
         const [existingMessages, newMessages] = await Promise.all([existingMessagesPromise, newMessagesPromise]);
