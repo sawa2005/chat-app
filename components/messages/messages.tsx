@@ -19,7 +19,13 @@ import SkeletonList from "./skeleton-list";
 import { MessageList } from "./message-list";
 import { BackToBottom } from "./back-to-bottom";
 import emojiRegex from "emoji-regex";
-import type { Message } from "@/lib/types";
+import type {
+    Message,
+    BroadcastPayload,
+    BroadcastReactionPayload,
+    BroadcastMessageEditedPayload,
+    BroadcastMessageDeletedPayload,
+} from "@/lib/types";
 import { Spinner } from "../ui/spinner";
 
 const supabase = createClient();
@@ -555,42 +561,36 @@ export default function Messages({
 
         const channel = supabase
             .channel(`conversation-${conversationId}`)
-            .on("broadcast", { event: "message" }, ({ payload }) => {
+            .on("broadcast", { event: "message" }, ({ payload }: { payload: BroadcastPayload }) => {
                 const message: Message = {
+                    ...payload,
                     id: BigInt(payload.id),
-                    conversation_id: payload.conversation_id,
-                    content: payload.content ?? "",
                     created_at: new Date(payload.created_at),
-                    edited_at: payload.edited_at ? new Date(payload.edited_at) : null,
-                    sender: payload.sender
-                        ? {
-                              id: payload.sender.id && BigInt(payload.sender.id),
-                              username: payload.sender.username ?? "",
-                              avatar: payload.sender.avatar ?? null,
-                          }
-                        : null,
-                    image_url: payload.image_url ?? null,
-                    image_height: payload.image_height ?? null,
-                    image_width: payload.image_width ?? null,
-                    type: payload.type ?? "message",
-                    deleted: payload.deleted ?? false,
+                    sender:
+                        payload.sender && payload.sender.id
+                            ? {
+                                  ...payload.sender,
+                                  id: BigInt(payload.sender.id),
+                              }
+                            : null,
                     parent_id: payload.parent_id ? BigInt(payload.parent_id) : null,
                     messages: payload.messages
                         ? {
+                              ...payload.messages,
                               id: BigInt(payload.messages.id),
-                              content: payload.messages.content,
-                              image_url: payload.messages.image_url,
                               sender: payload.messages.sender
                                   ? {
+                                        ...payload.messages.sender,
                                         id: BigInt(payload.messages.sender.id),
-                                        username: payload.messages.sender.username,
-                                        avatar: payload.messages.sender.avatar,
                                     }
                                   : null,
                           }
                         : null,
-                    message_reactions: payload.message_reactions ?? null,
-                    message_reads: payload.message_reads ?? [],
+                    // These are statically set as they are always the same for new messages
+                    edited_at: null,
+                    deleted: false,
+                    message_reactions: [],
+                    message_reads: [],
                 };
                 setMessages((prev) => (prev.find((m) => m.id === message.id) ? prev : [...prev, message]));
                 if (userHasScrolledRef.current || document.visibilityState !== "visible") {
@@ -599,7 +599,7 @@ export default function Messages({
                 setUnreadCount((prev) => prev + 1);
                 console.log("Received new message:", message);
             })
-            .on("broadcast", { event: "message_edited" }, ({ payload }) => {
+            .on("broadcast", { event: "message_edited" }, ({ payload }: { payload: BroadcastMessageEditedPayload }) => {
                 console.log("Message edited:", payload);
 
                 setMessages((prev) =>
@@ -614,12 +614,16 @@ export default function Messages({
                     )
                 );
             })
-            .on("broadcast", { event: "message_deleted" }, ({ payload }) => {
-                console.log("Message deleted:", payload);
+            .on(
+                "broadcast",
+                { event: "message_deleted" },
+                ({ payload }: { payload: BroadcastMessageDeletedPayload }) => {
+                    console.log("Message deleted:", payload);
 
-                setMessages((prev) => prev.map((m) => (m.id === BigInt(payload.id) ? { ...m, deleted: true } : m)));
-            })
-            .on("broadcast", { event: "user_typing" }, ({ payload }) => {
+                    setMessages((prev) => prev.map((m) => (m.id === BigInt(payload.id) ? { ...m, deleted: true } : m)));
+                }
+            )
+            .on("broadcast", { event: "user_typing" }, ({ payload }: { payload: { username: string } }) => {
                 console.log("User typing broadcast received:", payload);
 
                 const name = payload.username as string;
@@ -633,7 +637,7 @@ export default function Messages({
                     return [...prev, name];
                 });
             })
-            .on("broadcast", { event: "reaction_added" }, ({ payload }) => {
+            .on("broadcast", { event: "reaction_added" }, ({ payload }: { payload: BroadcastReactionPayload }) => {
                 console.log("Reaction added broadcast received:", payload);
                 setMessages((prev) =>
                     prev.map((m) =>
@@ -654,7 +658,7 @@ export default function Messages({
                     )
                 );
             })
-            .on("broadcast", { event: "reaction_removed" }, ({ payload }) => {
+            .on("broadcast", { event: "reaction_removed" }, ({ payload }: { payload: BroadcastReactionPayload }) => {
                 console.log("Reaction removed broadcast received:", payload);
                 setMessages((prev) =>
                     prev.map((m) =>
