@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
 import { Image as ImageIcon } from "lucide-react";
-import { msgOld } from "@/lib/utils";
+import { isOldMsg } from "@/utils";
 
 const supabase = createClient();
 
@@ -30,7 +30,7 @@ export default function LastMessage({
             .on("broadcast", { event: "message" }, ({ payload }) => {
                 setLastMessage({
                     content: payload.content ?? "",
-                    created_at: msgOld(new Date(payload.created_at))
+                    created_at: isOldMsg(new Date(payload.created_at))
                         ? payload.created_at
                         : new Date(payload.created_at).toLocaleTimeString([], {
                               hour: "2-digit",

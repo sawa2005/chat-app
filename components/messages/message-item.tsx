@@ -6,7 +6,7 @@ import { MessageBubble } from "./message-bubble";
 import { editMessage, addReaction, removeReaction } from "@/app/conversation/create/actions";
 import Avatar from "../avatar";
 import { ReactionBar } from "../reaction-bar";
-import { msgOld } from "@/lib/utils";
+import { isOldMsg } from "@/utils";
 
 export function MessageItem({
     message,
@@ -88,7 +88,7 @@ export function MessageItem({
                 {!isConsecutive && (
                     <div className={`flex gap-2 items-center ${!isOwner && "flex-row-reverse"}`}>
                         <div>
-                            {msgOld(message.created_at)
+                            {isOldMsg(message.created_at)
                                 ? new Date(message.created_at).toISOString().slice(0, 10)
                                 : message.created_at.toLocaleTimeString([], {
                                       hour: "2-digit",
@@ -101,7 +101,7 @@ export function MessageItem({
                 )}
                 {isConsecutive && (
                     <div>
-                        {msgOld(message.created_at)
+                        {isOldMsg(message.created_at)
                             ? new Date(message.created_at).toISOString().slice(0, 10)
                             : message.created_at.toLocaleTimeString([], {
                                   hour: "2-digit",
