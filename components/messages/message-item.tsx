@@ -1,12 +1,11 @@
 import { Message } from "@/lib/types";
 import { RefObject, Dispatch, SetStateAction, useState } from "react";
-import { isConsecutiveMessage } from "./messages";
+import { getMessageHeaderClasses, isConsecutiveMessage, isOldMessage } from "@/utils/messages";
 import { MessageActions } from "./message-buttons";
 import { MessageBubble } from "./message-bubble";
 import { editMessage, addReaction, removeReaction } from "@/app/conversation/create/actions";
 import Avatar from "../avatar";
 import { ReactionBar } from "../reaction-bar";
-import { msgOld } from "@/lib/utils";
 
 export function MessageItem({
     message,
@@ -45,16 +44,8 @@ export function MessageItem({
 
     const showActions = isHovered || isPopoverOpen;
 
-    // TODO: rewrite header classes for better readability (probably turn it into a function/component)
-
     // Define header classes based on message ownership and consecutiveness
-    const headerClasses = !isConsecutive
-        ? // Message is not consecutive
-          `${isOwner ? "text-right" : "flex-row-reverse"} justify-end text-xs mb-1 flex items-center gap-2`
-        : // Message is consecutive
-          `${isOwner ? "text-right" : "flex-row-reverse justify-end"} ${
-              showActions ? "flex" : "hidden"
-          } mt-5 mb-1 text-xs justify-end items-center gap-2`;
+    const headerClasses = getMessageHeaderClasses(isOwner, isConsecutive, showActions);
 
     const hasReacted = (emoji: string) => {
         return message.message_reactions?.some((r) => r.emoji === emoji && r.profile_id === currentProfileId);
@@ -88,7 +79,7 @@ export function MessageItem({
                 {!isConsecutive && (
                     <div className={`flex gap-2 items-center ${!isOwner && "flex-row-reverse"}`}>
                         <div>
-                            {msgOld(message.created_at)
+                            {isOldMessage(message.created_at)
                                 ? new Date(message.created_at).toISOString().slice(0, 10)
                                 : message.created_at.toLocaleTimeString([], {
                                       hour: "2-digit",
@@ -101,7 +92,7 @@ export function MessageItem({
                 )}
                 {isConsecutive && (
                     <div>
-                        {msgOld(message.created_at)
+                        {isOldMessage(message.created_at)
                             ? new Date(message.created_at).toISOString().slice(0, 10)
                             : message.created_at.toLocaleTimeString([], {
                                   hour: "2-digit",

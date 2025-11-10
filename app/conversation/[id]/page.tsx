@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Messages from "@/components/messages/messages";
 import ConversationHeader from "@/components/conversation-header";
-import { isValidUUID } from "@/lib/utils";
+import { isValidUUID } from "@/utils";
 
 interface ConversationPageProps {
     params: Promise<{ id: string }>;

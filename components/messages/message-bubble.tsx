@@ -1,64 +1,11 @@
-import { isEmojiOnly } from "./messages";
-import { Dispatch, SetStateAction, ReactNode, RefObject, useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import { isEmojiOnly } from "@/utils/messages";
+import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
-import emojiRegex from "emoji-regex";
 import type { Message } from "@/lib/types";
 import { Textarea } from "../ui/textarea";
-import { cn } from "@/lib/utils";
-
-// TODO: move these functions to lib or utils folder
-
-function linkifyMessage(text: string) {
-    // Regex to match URLs (simple version)
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-
-    const parts = text.split(urlRegex);
-
-    return parts.map((part, idx) => {
-        if (urlRegex.test(part)) {
-            return (
-                <a key={idx} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                    {part}
-                </a>
-            );
-        } else {
-            return part;
-        }
-    });
-}
-
-export function renderMessageContent(text: string) {
-    const regex = emojiRegex();
-    const result: ReactNode[] = [];
-    let lastIndex = 0;
-
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-        // Push text before the emoji
-        if (match.index > lastIndex) {
-            result.push(<span key={lastIndex}>{text.slice(lastIndex, match.index)}</span>);
-        }
-
-        const emoji = match[0];
-
-        // Wrap the emoji in a span with emoji-specific font
-        result.push(
-            <span key={match.index} className="emoji">
-                {emoji}
-            </span>
-        );
-
-        lastIndex = regex.lastIndex;
-    }
-
-    // Push remaining text
-    if (lastIndex < text.length) {
-        result.push(<span key={lastIndex}>{linkifyMessage(text.slice(lastIndex))}</span>);
-    }
-
-    return result;
-}
+import { cn } from "@/utils";
+import { renderMessageContent } from "@/utils/render-helpers";
 
 export function MessageBubble({
     message,

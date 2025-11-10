@@ -5,7 +5,7 @@ import Cropper, { Area } from "react-easy-crop";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "./ui/button";
-import { getCroppedImg } from "@/utils/crop-image";
+import { getCroppedImg } from "@/utils/image/crop";
 import AvatarPreview from "./avatar-preview";
 import { Check, X } from "lucide-react";
 

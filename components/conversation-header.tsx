@@ -22,8 +22,6 @@ import { createClient } from "@/lib/client";
 
 import type { Member } from "@/lib/types";
 
-// TODO: refactor expand logic for less code repetition.
-
 type ConversationWithRelations = PrismaClient.conversationsGetPayload<{
     include: {
         conversation_members: {
@@ -87,75 +85,38 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
         };
     }, [conversation.id, supabase, setMembers]);
 
-    if (isExpanded === false) {
-        return (
-            <div>
-                <div className="flex justify-between w-full flex-1 min-h-0 h-min overflow-y-auto">
-                    <ConversationTitle
-                        id={conversation.id}
-                        name={name}
-                        setName={setName}
-                        initialName={conversation.name}
-                    />
-                    <DropdownMenu modal={false}>
-                        <DropdownMenuTrigger asChild>
-                            <button className="text-muted-foreground hover:text-primary cursor-pointer mb-auto">
-                                <Ellipsis size={20} />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="max-w-56 w-fit font-sans">
-                            <DropdownMenuItem asChild className="cursor-pointer">
-                                <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
-                            </DropdownMenuItem>
-
-                            <LeaveButton
-                                conversationId={conversation.id}
-                                profileId={currentProfileId}
-                                memberCount={members.length}
-                            />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-                <button
-                    className="flex gap-1 items-center text-xs font-mono text-muted-foreground cursor-pointer hover:text-primary"
-                    onClick={() => setIsExpanded((prev) => !prev)}
-                >
-                    expand <ChevronDown size={15} />
-                </button>
-            </div>
-        );
-    } else {
-        return (
-            <div>
-                <div className="flex justify-between w-full">
-                    <ConversationTitle
-                        id={conversation.id}
-                        name={name}
-                        setName={setName}
-                        initialName={conversation.name}
-                    />
-                    <DropdownMenu modal={false}>
-                        <DropdownMenuTrigger asChild>
-                            <button className="text-muted-foreground hover:text-primary cursor-pointer mb-auto">
-                                <Ellipsis size={20} />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="max-w-56 w-fit font-sans">
+    return (
+        <div>
+            <div className={`flex justify-between w-full ${!isExpanded ? "flex-1 min-h-0 h-min overflow-y-auto" : ""}`}>
+                <ConversationTitle id={conversation.id} name={name} setName={setName} initialName={conversation.name} />
+                <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                        <button className="text-muted-foreground hover:text-primary cursor-pointer mb-auto">
+                            <Ellipsis size={20} />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="max-w-56 w-fit font-sans">
+                        <DropdownMenuItem asChild className="cursor-pointer">
                             <AddUserButton conversationId={conversation.id} addedByProfileId={currentProfileId} />
-                            <LeaveButton
-                                conversationId={conversation.id}
-                                profileId={currentProfileId}
-                                memberCount={members.length}
-                            />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-                <button
-                    className="flex gap-1 items-center text-xs font-mono text-muted-foreground cursor-pointer hover:text-primary mb-3"
-                    onClick={() => setIsExpanded((prev) => !prev)}
-                >
-                    collapse <ChevronUp size={15} />
-                </button>
+                        </DropdownMenuItem>
+
+                        <LeaveButton
+                            conversationId={conversation.id}
+                            profileId={currentProfileId}
+                            memberCount={members.length}
+                        />
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+            <button
+                className={`flex gap-1 items-center text-xs font-mono text-muted-foreground cursor-pointer hover:text-primary ${
+                    isExpanded ? "mb-3" : ""
+                }`}
+                onClick={() => setIsExpanded((prev) => !prev)}
+            >
+                {isExpanded ? "collapse" : "expand"} {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            </button>
+            {isExpanded && (
                 <div>
                     <h2 className="text-lg font-semibold">Members</h2>
                     <p className="text-xs font-mono text-muted-foreground">
@@ -176,7 +137,7 @@ export default function ConversationHeader({ conversation, currentProfileId }: C
                     </div>
                     <h2 className="text-lg font-semibold mt-4">Messages</h2>
                 </div>
-            </div>
-        );
-    }
+            )}
+        </div>
+    );
 }

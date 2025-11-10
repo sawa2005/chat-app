@@ -13,7 +13,6 @@ interface MessageListProps {
     firstUnreadIndex: number | null;
     containerRef: RefObject<HTMLDivElement | null>;
     imageCount: number;
-    setImageLoading: Dispatch<SetStateAction<boolean>>;
     onImageLoad?: () => void;
 }
 

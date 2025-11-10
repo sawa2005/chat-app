@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { UnreadBadge } from "@/components/unread-badge";
 import LastMessage from "@/components/last-message";
-import { msgOld } from "@/lib/utils";
+import { isOldMsg } from "@/utils";
 
 export default async function ConversationsPage() {
     const supabase = await createClient();
@@ -61,7 +61,7 @@ export default async function ConversationsPage() {
                     if (lastMsg) {
                         formattedLastMsg = {
                             ...lastMsg,
-                            created_at: msgOld(new Date(lastMsg.created_at))
+                            created_at: isOldMsg(new Date(lastMsg.created_at))
                                 ? lastMsg.created_at.toLocaleDateString()
                                 : new Date(lastMsg.created_at).toLocaleTimeString([], {
                                       hour: "2-digit",

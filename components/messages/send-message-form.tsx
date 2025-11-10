@@ -12,6 +12,7 @@ import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
 import { Image as ImageIcon, X, AlertCircleIcon } from "lucide-react";
 import GifComponent from "../gif-component";
+import { Message } from "@/lib/types";
 
 const supabase = createClient();
 
@@ -24,44 +25,7 @@ type SendMessageFormProps = {
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
     scrollToBottom: (smooth?: boolean, force?: boolean, isImage?: boolean, imageHeight?: number) => void;
-    onNewMessage: (message: {
-        id: bigint;
-        conversation_id: string;
-        content: string;
-        created_at: Date;
-        edited_at: Date | null;
-        sender: {
-            id: bigint | null;
-            username: string;
-            avatar: string | null;
-        };
-        image_url: string | null;
-        image_height: number | null;
-        image_width: number | null;
-        type: string;
-        deleted: boolean;
-        parent_id: bigint | null;
-        messages: {
-            id: bigint;
-            content: string | null;
-            image_url: string | null;
-            sender: {
-                id: bigint;
-                username: string;
-                avatar: string | null;
-            } | null;
-        } | null;
-        message_reactions:
-            | {
-                  id: bigint;
-                  emoji: string;
-                  created_at: Date;
-                  profile_id: bigint;
-                  message_id: bigint;
-              }[]
-            | null;
-        message_reads: { profile_id: bigint }[];
-    }) => void;
+    onNewMessage: (message: Message) => void;
 };
 
 export default function SendMessageForm({
@@ -210,46 +174,9 @@ export default function SendMessageForm({
         );
 
         onNewMessage({
-            id: newMessage.id,
-            conversation_id: newMessage.conversation_id,
-            content: newMessage.content ?? "",
+            ...newMessage,
             created_at: new Date(newMessage.created_at),
-            edited_at: null,
-            sender: {
-                id: newMessage.sender_id,
-                username: currentUsername,
-                avatar: newMessage.sender.avatar,
-            },
-            ...(uploadedImageUrl
-                ? {
-                      image_url: uploadedImageUrl,
-                      image_height: imageHeight,
-                      image_width: imageWidth,
-                  }
-                : {
-                      image_url: null,
-                      image_height: null,
-                      image_width: null,
-                  }),
-            type: newMessage.type ?? "message",
-            deleted: false,
-            parent_id: replyTo,
-            messages: newMessage.messages
-                ? {
-                      id: newMessage.messages.id,
-                      content: newMessage.messages.content,
-                      image_url: newMessage.messages.image_url,
-                      sender: newMessage.messages.sender
-                          ? {
-                                id: newMessage.messages.sender.id,
-                                username: newMessage.messages.sender.username,
-                                avatar: newMessage.messages.sender.avatar,
-                            }
-                          : null,
-                  }
-                : null,
-            message_reactions: null,
-            message_reads: [],
+            edited_at: newMessage.edited_at ? new Date(newMessage.edited_at) : null,
         });
 
         await broadcastMessage(conversationId, {
