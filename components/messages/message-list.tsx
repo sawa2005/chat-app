@@ -53,9 +53,9 @@ export function MessageList({ messages, firstUnreadIndex, ...rest }: MessageList
                     return (
                         <React.Fragment key={m.id}>
                             {i === firstUnreadIndex && newMessageIndicator}
-                            <div id={`message-item-${m.id}`}>
+                            <li id={`message-item-${m.id}`}>
                                 <MessageItem message={m} prevMessage={messages[i - 1]} {...rest} />
-                            </div>
+                            </li>
                         </React.Fragment>
                     );
                 }

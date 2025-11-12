@@ -52,7 +52,7 @@ export function MessageItem({
     };
 
     return (
-        <li
+        <div
             className={`relative max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -136,6 +136,6 @@ export function MessageItem({
                     currentProfileId={currentProfileId}
                 />
             )}
-        </li>
+        </div>
     );
 }
