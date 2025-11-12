@@ -103,7 +103,7 @@ export default function LoginPage() {
                         <CardHeader>
                             <CardTitle>Log In</CardTitle>
                             {error ? (
-                                <div className="text-red-500 font-mono text-xs">{error}</div>
+                                <div className="text-destructive font-mono text-xs">{error}</div>
                             ) : (
                                 <CardDescription className="font-mono text-xs">
                                     Log in to your existing account here. If you don&apos;t have an account, click on
@@ -147,7 +147,7 @@ export default function LoginPage() {
                         <CardHeader>
                             <CardTitle>Sign Up</CardTitle>
                             {error ? (
-                                <div className="text-red-500 font-mono text-xs">{error}</div>
+                                <div className="text-destructive font-mono text-xs">{error}</div>
                             ) : (
                                 <CardDescription className="font-mono text-xs">
                                     Create an account to start chatting! If you already have an account, click on

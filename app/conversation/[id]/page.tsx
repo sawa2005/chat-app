@@ -33,7 +33,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
     }
 
     if (!isValidUUID(id)) {
-        return <div className="p-6 text-red-500 font-sans text-center">Invalid conversation id.</div>;
+        return <div className="p-6 text-destructive font-sans text-center">Invalid conversation id.</div>;
     }
 
     const conversation = await prisma.conversations.findUnique({
@@ -50,7 +50,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
     });
 
     if (!conversation) {
-        return <div className="p-6 text-red-500 font-sans text-center">Conversation not found.</div>;
+        return <div className="p-6 text-destructive font-sans text-center">Conversation not found.</div>;
     }
 
     // Get current user's avatar from Prisma

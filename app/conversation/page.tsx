@@ -12,7 +12,7 @@ export default async function ConversationsPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-        return <div className="p-6 text-red-500">You must be signed in to see your conversations.</div>;
+        return <div className="p-6 text-destructive">You must be signed in to see your conversations.</div>;
     }
 
     const profile = await prisma.profiles.findUnique({
@@ -20,7 +20,7 @@ export default async function ConversationsPage() {
     });
 
     if (!profile) {
-        return <div className="p-6 text-red-500">Profile not found.</div>;
+        return <div className="p-6 text-destructive">Profile not found.</div>;
     }
 
     const conversations = await prisma.conversations.findMany({

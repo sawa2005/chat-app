@@ -49,7 +49,7 @@ export default function LeaveButton({ conversationId, profileId, memberCount }: 
                 <AlertDialogTrigger asChild>
                     <Button
                         variant="ghost"
-                        className="w-full text-red-700 justify-start cursor-pointer hover:border-none px-4"
+                        className="w-full text-destructive justify-start cursor-pointer hover:border-none px-4"
                     >
                         Leave Conversation
                     </Button>

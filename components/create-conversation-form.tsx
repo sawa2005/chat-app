@@ -38,12 +38,12 @@ export function CreateConversationForm({
                     / for a group, seperate usernames with a comma - (,).
                 </p>
                 {duplicates.length > 0 && (
-                    <div className="text-xs font-mono text-red-600 mb-1">
+                    <div className="text-xs font-mono text-destructive mb-1">
                         Duplicate usernames: {duplicates.join(", ")}
                     </div>
                 )}
                 {errorKey === "missing_usernames" && (
-                    <div className="text-xs font-mono text-red-600 mb-1">
+                    <div className="text-xs font-mono text-destructive mb-1">
                         The following usernames were not found: {missingUsers.join(", ")}
                     </div>
                 )}

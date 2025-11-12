@@ -59,7 +59,10 @@ export default function ConversationTitle({
                     <button onClick={handleSave} className="text-muted-foreground hover:text-green-700 cursor-pointer">
                         <Check size={25} />
                     </button>
-                    <button onClick={cancelEditing} className="text-muted-foreground hover:text-red-700 cursor-pointer">
+                    <button
+                        onClick={cancelEditing}
+                        className="text-muted-foreground hover:text-destructive cursor-pointer"
+                    >
                         <X size={25} />
                     </button>
                 </>

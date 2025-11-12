@@ -191,7 +191,7 @@ export default function EditProfileForm({ profile, userEmail, userId, oldUsernam
                     {messagesVisible && (
                         <>
                             {checking && <p className="text-sm text-blue-500">Checking availability...</p>}
-                            {!checking && error && <p className="text-sm text-red-500">{error}</p>}
+                            {!checking && error && <p className="text-sm text-destructive">{error}</p>}
                             {!checking && isAvailable && !error && (
                                 <p className="text-sm text-green-500">Username is available!</p>
                             )}

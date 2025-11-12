@@ -34,10 +34,10 @@ export function isOldMessage(msgDate: Date) {
     }
 }
 
-export function getMessageHeaderClasses(isOwner: boolean, isConsecutive: boolean, showActions: boolean) {
+export function getMessageHeaderClasses(isOwner: boolean, isConsecutive: boolean) {
     const baseClasses = "justify-end text-xs mb-1 flex items-center gap-2";
     const ownerClasses = isOwner ? "text-right" : "flex-row-reverse";
-    const consecutiveClasses = isConsecutive ? (showActions ? "flex" : "hidden") : "mt-5";
+    const consecutiveClasses = isConsecutive ? "mt-0" : "mt-5";
 
     return cn(baseClasses, ownerClasses, consecutiveClasses);
 }

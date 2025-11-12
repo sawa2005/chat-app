@@ -64,7 +64,7 @@ export function AddUserButton({
                         <Input name="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                     </div>
                     {error ? (
-                        <div className="text-red-500 font-sans text-sm text-center">
+                        <div className="text-destructive font-sans text-sm text-center">
                             {"User could not be added, you sure that's the right username?"}
                         </div>
                     ) : null}
