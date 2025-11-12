@@ -56,8 +56,13 @@ export function MessageHeader({
     }
 
     return (
-        <div className={`${headerClasses}`}>
-            <div className={`${showActions ? "flex" : "hidden"} gap-1`}>
+        <div className={cn(headerClasses, "overflow-hidden")}>
+            <div
+                className={cn(
+                    "flex gap-1 transition-all duration-300",
+                    showActions ? "max-h-10 opacity-100" : "max-h-0 opacity-0"
+                )}
+            >
                 {isOwner && (
                     <>
                         <button
@@ -85,26 +90,16 @@ export function MessageHeader({
                     <Reply size={15} />
                 </button>
             </div>
-            {showInfo && (
-                <div
-                    className={`${cn(isOwner ? "text-right" : "flex-row-reverse", showInfo ? "flex gap-1" : "hidden")}`}
-                >
-                    {editedAt && "(edited)"}
-                    {!isConsecutive && (
-                        <div className={`flex gap-2 items-center ${!isOwner && "flex-row-reverse"}`}>
-                            <div>
-                                {isOldMessage(createdAt)
-                                    ? createdAt.toISOString().slice(0, 10)
-                                    : createdAt.toLocaleTimeString([], {
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                      })}
-                            </div>
-                            <div>{isOwner ? "You" : username}</div>
-                            <Avatar size={15} avatarUrl={avatar} username={username} />
-                        </div>
-                    )}
-                    {isConsecutive && (
+            <div
+                className={cn(
+                    isOwner ? "text-right" : "flex-row-reverse",
+                    "flex gap-1 transition-all duration-300",
+                    showInfo ? "max-h-10 opacity-100" : "max-h-0 opacity-0"
+                )}
+            >
+                {editedAt && "(edited)"}
+                {!isConsecutive && (
+                    <div className={`flex gap-2 items-center ${!isOwner && "flex-row-reverse"}`}>
                         <div>
                             {isOldMessage(createdAt)
                                 ? createdAt.toISOString().slice(0, 10)
@@ -113,9 +108,21 @@ export function MessageHeader({
                                       minute: "2-digit",
                                   })}
                         </div>
-                    )}
-                </div>
-            )}
+                        <div>{isOwner ? "You" : username}</div>
+                        <Avatar size={15} avatarUrl={avatar} username={username} />
+                    </div>
+                )}
+                {isConsecutive && (
+                    <div>
+                        {isOldMessage(createdAt)
+                            ? createdAt.toISOString().slice(0, 10)
+                            : createdAt.toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                              })}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

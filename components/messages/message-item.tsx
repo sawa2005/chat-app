@@ -1,5 +1,5 @@
 import { Message } from "@/lib/types";
-import { RefObject, Dispatch, SetStateAction, useState } from "react";
+import { RefObject, Dispatch, SetStateAction, useState, useRef, useEffect } from "react";
 import { isConsecutiveMessage } from "@/utils/messages";
 import { MessageHeader } from "./message-header";
 import { MessageBubble } from "./message-bubble";
@@ -35,6 +35,15 @@ export function MessageItem({
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(message.content ?? "");
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+            }
+        };
+    }, []);
 
     if (!message.sender) return;
 
@@ -45,11 +54,25 @@ export function MessageItem({
         return message.message_reactions?.some((r) => r.emoji === emoji && r.profile_id === currentProfileId);
     };
 
+    const handleMouseEnter = () => {
+        if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = () => {
+        hoverTimeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 300);
+    };
+
     return (
         <div
             className={`relative max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
             <MessageHeader
                 createdAt={message.created_at}
