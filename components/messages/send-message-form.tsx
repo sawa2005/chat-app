@@ -28,6 +28,8 @@ type SendMessageFormProps = {
     onNewMessage: (message: Message) => void;
 };
 
+// TODO: bug, auto line-break not working
+
 export default function SendMessageForm({
     conversationId,
     currentProfileId,
