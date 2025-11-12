@@ -28,8 +28,6 @@ type SendMessageFormProps = {
     onNewMessage: (message: Message) => void;
 };
 
-// TODO: bug, auto line-break not working
-
 export default function SendMessageForm({
     conversationId,
     currentProfileId,
@@ -237,7 +235,7 @@ export default function SendMessageForm({
                             ref={inputRef}
                             name="content"
                             placeholder="Type your message..."
-                            className="px-4 py-4 pr-[106px] grow wrap-normal h-fit leading-2.5 min-h-[54px] max-h-[25vh] overflow-y-auto resize-none"
+                            className="px-4 py-4 pr-[106px] grow whitespace-normal h-fit leading-2.5 min-h-[54px] max-h-[25vh] overflow-y-auto resize-none"
                             disabled={isPending}
                             value={content}
                             onChange={(e) => handleInputChange(e.target.value)}
