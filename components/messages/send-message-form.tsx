@@ -58,14 +58,39 @@ export default function SendMessageForm({
         inputRef.current?.focus();
     }, [replyTo, imgPreview]);
 
+    // TODO: once done move this to a seperate file/function.
+    // TODO: one and two lines works well but textarea doesn't auto scale above that.
+
     useEffect(() => {
         const textarea = inputRef.current;
         if (textarea) {
-            textarea.style.height = "auto";
+            textarea.style.height = "auto"; // Reset height to recalculate scrollHeight
             const style = window.getComputedStyle(textarea);
             const borderTop = parseFloat(style.borderTopWidth);
             const borderBottom = parseFloat(style.borderBottomWidth);
-            textarea.style.height = `${textarea.scrollHeight + borderTop + borderBottom}px`;
+            const scrollHeight = textarea.scrollHeight;
+
+            const lineHeight = parseFloat(style.lineHeight);
+            const paddingTop = parseFloat(style.paddingTop);
+            const paddingBottom = parseFloat(style.paddingBottom);
+
+            const oneLineHeight = lineHeight + paddingTop + paddingBottom;
+            const twoLineHeight = 2 * lineHeight + paddingTop + paddingBottom;
+
+            // Add a small buffer to the thresholds to account for potential sub-pixel rendering differences
+            const oneLineThreshold = oneLineHeight + lineHeight * 0.2;
+            const twoLineThreshold = twoLineHeight + lineHeight * 0.2;
+
+            if (scrollHeight <= oneLineThreshold) {
+                // It's one line (or empty)
+                textarea.style.height = "54px"; // Align with button
+            } else if (scrollHeight <= twoLineThreshold) {
+                // It's two lines
+                textarea.style.height = `${twoLineHeight + borderTop + borderBottom}px`;
+            } else {
+                // It's three or more lines, let browser auto-height take over (which is `h-fit` in CSS)
+                // We already set height to "auto" at the beginning of the effect.
+            }
         }
     }, [content]);
 
