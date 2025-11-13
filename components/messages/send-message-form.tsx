@@ -47,6 +47,7 @@ export default function SendMessageForm({
     const [alert, setAlert] = useState<React.ReactNode | null>(null);
     const [imageHeight, setImageHeight] = useState<number | null>(null);
     const [imageWidth, setImageWidth] = useState<number | null>(null);
+    const [textAreaHeight, setTextAreaHeight] = useState<number>(54);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -66,12 +67,14 @@ export default function SendMessageForm({
         const textarea = inputRef.current;
         const sizer = sizeRef.current;
         if (textarea && sizer && !CSS.supports("field-sizing", "content")) {
-            const targetHeight = content === "" ? "54px" : sizer?.clientHeight;
+            const style = window.getComputedStyle(textarea);
+            const padding = parseFloat(style.padding);
+            const targetHeight = content === "" ? 54 - padding : sizer?.clientHeight;
 
-            textarea.style.height = `${targetHeight}px`;
-            console.log("setting height to: ", targetHeight);
+            setTextAreaHeight(targetHeight + padding);
+            console.log("setting height to: ", targetHeight + padding);
         }
-    }, [content]);
+    }, [content, inputRef]);
 
     function showAlert(message: React.ReactNode) {
         setAlert(message);
@@ -240,7 +243,7 @@ export default function SendMessageForm({
                                 ref={inputRef}
                                 name="content"
                                 placeholder="Type your message..."
-                                className="px-4 py-4 pr-[106px] max-h-[25vh] grow whitespace-normal field-sizing-content overflow-y-auto resize-none"
+                                className="px-4 py-3 pr-[106px] max-h-[25vh] grow whitespace-normal field-sizing-content overflow-y-auto resize-none"
                                 disabled={isPending}
                                 value={content}
                                 onChange={(e) => handleInputChange(e.target.value)}
@@ -254,10 +257,11 @@ export default function SendMessageForm({
                                 }}
                                 autoComplete="none"
                                 wrap="hard"
+                                style={{ height: `${textAreaHeight}px` }}
                             />
                             <p
                                 ref={sizeRef}
-                                className="invisible absolute block top-0 left-0 w-full px-4 py-4 pr-[106px] min-h-[54px] max-h-[25vh] h-fit whitespace-pre-wrap bg-red-500 text-sm"
+                                className="invisible absolute block bottom-100 left-0 py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh] h-fit whitespace-pre-wrap bg-red-500 text-sm"
                             >
                                 {content + "\n"}
                             </p>
