@@ -60,8 +60,7 @@ export default function SendMessageForm({
         inputRef.current?.focus();
     }, [replyTo, imgPreview]);
 
-    // TODO: once done move this to a seperate file/function.
-    // TODO: one and two lines works well but textarea doesn't auto scale above that.
+    // TODO: convert the responsive textarea and its functions into a custom component.
 
     useEffect(() => {
         const textarea = inputRef.current;
@@ -261,7 +260,7 @@ export default function SendMessageForm({
                             />
                             <p
                                 ref={sizeRef}
-                                className="invisible absolute block bottom-100 left-0 py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh] h-fit whitespace-pre-wrap bg-red-500 text-sm"
+                                className="invisible absolute block top-0 left-0 py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh] h-fit whitespace-pre-wrap bg-red-500 text-sm"
                             >
                                 {content + "\n"}
                             </p>
