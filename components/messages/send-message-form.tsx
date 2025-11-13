@@ -50,6 +50,7 @@ export default function SendMessageForm({
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const sizeRef = useRef<HTMLParagraphElement>(null);
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
     let typingTimeout: NodeJS.Timeout | null = null;
@@ -63,34 +64,12 @@ export default function SendMessageForm({
 
     useEffect(() => {
         const textarea = inputRef.current;
-        if (textarea) {
-            textarea.style.height = "auto"; // Reset height to recalculate scrollHeight
-            const style = window.getComputedStyle(textarea);
-            const borderTop = parseFloat(style.borderTopWidth);
-            const borderBottom = parseFloat(style.borderBottomWidth);
-            const scrollHeight = textarea.scrollHeight;
+        const sizer = sizeRef.current;
+        if (textarea && sizer && !CSS.supports("field-sizing", "content")) {
+            const targetHeight = content === "" ? "54px" : sizer?.clientHeight;
 
-            const lineHeight = parseFloat(style.lineHeight);
-            const paddingTop = parseFloat(style.paddingTop);
-            const paddingBottom = parseFloat(style.paddingBottom);
-
-            const oneLineHeight = lineHeight + paddingTop + paddingBottom;
-            const twoLineHeight = 2 * lineHeight + paddingTop + paddingBottom;
-
-            // Add a small buffer to the thresholds to account for potential sub-pixel rendering differences
-            const oneLineThreshold = oneLineHeight + lineHeight * 0.2;
-            const twoLineThreshold = twoLineHeight + lineHeight * 0.2;
-
-            if (scrollHeight <= oneLineThreshold) {
-                // It's one line (or empty)
-                textarea.style.height = "54px"; // Align with button
-            } else if (scrollHeight <= twoLineThreshold) {
-                // It's two lines
-                textarea.style.height = `${twoLineHeight + borderTop + borderBottom}px`;
-            } else {
-                // It's three or more lines, let browser auto-height take over (which is `h-fit` in CSS)
-                // We already set height to "auto" at the beginning of the effect.
-            }
+            textarea.style.height = `${targetHeight}px`;
+            console.log("setting height to: ", targetHeight);
         }
     }, [content]);
 
@@ -256,24 +235,33 @@ export default function SendMessageForm({
             <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full gap-1 min-h-[54px] items-end">
                 <div className="flex grow items-center gap-1">
                     <div className="relative flex grow gap-1">
-                        <Textarea
-                            ref={inputRef}
-                            name="content"
-                            placeholder="Type your message..."
-                            className="px-4 py-4 pr-[106px] grow whitespace-normal h-fit leading-2.5 min-h-[54px] max-h-[25vh] overflow-y-auto resize-none"
-                            disabled={isPending}
-                            value={content}
-                            onChange={(e) => handleInputChange(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSubmit(e);
-                                } else if (e.key === "Enter" && e.shiftKey) {
-                                    // Allow default behavior for Shift + Enter (newline)
-                                }
-                            }}
-                            autoComplete="none"
-                        />
+                        <div className="w-full relative">
+                            <Textarea
+                                ref={inputRef}
+                                name="content"
+                                placeholder="Type your message..."
+                                className="px-4 py-4 pr-[106px] max-h-[25vh] grow whitespace-normal field-sizing-content overflow-y-auto resize-none"
+                                disabled={isPending}
+                                value={content}
+                                onChange={(e) => handleInputChange(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSubmit(e);
+                                    } else if (e.key === "Enter" && e.shiftKey) {
+                                        // Allow default behavior for Shift + Enter (newline)
+                                    }
+                                }}
+                                autoComplete="none"
+                                wrap="hard"
+                            />
+                            <p
+                                ref={sizeRef}
+                                className="invisible absolute block top-0 left-0 w-full px-4 py-4 pr-[106px] min-h-[54px] max-h-[25vh] h-fit whitespace-pre-wrap bg-red-500 text-sm"
+                            >
+                                {content + "\n"}
+                            </p>
+                        </div>
                         <Input
                             type="file"
                             accept="image/*"
