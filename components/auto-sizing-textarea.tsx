@@ -17,7 +17,7 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
         const textAreaRef = useRef<HTMLTextAreaElement>(null);
         const sizeRef = useRef<HTMLDivElement>(null);
         const [textAreaHeight, setTextAreaHeight] = useState<number | undefined>(initialHeight);
-        const [wrapWidth, setWrapWidth] = useState<number | undefined>();
+        const [textAreaWidth, setTextAreaWidth] = useState<number | undefined>();
 
         useImperativeHandle(ref, () => textAreaRef.current!);
 
@@ -34,18 +34,18 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                 const sizer = sizeRef.current;
 
                 if (textarea && sizer && !CSS.supports("field-sizing", "content")) {
-                    const style = window.getComputedStyle(textarea);
+                    const style = window.getComputedStyle(sizer);
                     const paddingY = parseFloat(style.paddingTop + style.paddingBottom);
 
                     if (initialHeight) {
                         // Send message form needs an initial height smaller than auto
-                        const targetHeight = value === "" ? initialHeight : sizer?.clientHeight;
+                        const targetHeight = value === "" ? initialHeight : sizer.scrollHeight + paddingY;
                         setTextAreaHeight(targetHeight);
-                        console.log("Setting height:", targetHeight + paddingY);
+                        console.log("Setting height:", sizer.scrollHeight + paddingY);
                     } else {
-                        // If it's left unset the initial height is auto, bubbles need dynamic width
-                        setTextAreaHeight(sizer.scrollHeight);
-                        setWrapWidth(sizer.clientWidth + 1); // +1px margin for rendering diff between divs and textareas
+                        // If it's left unset the initial height is auto, bubbles need width from the textarea to wrap text
+                        setTextAreaHeight(sizer.scrollHeight + paddingY);
+                        setTextAreaWidth(textarea.clientWidth);
                         console.log("Setting dimensions:", sizer.scrollHeight, sizer.clientWidth);
                     }
                 }
@@ -64,10 +64,7 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
         }
 
         return (
-            <div
-                style={{ width: `${wrapWidth ? `${wrapWidth}px` : undefined}` }}
-                className={cn("relative", wrapClassName)}
-            >
+            <div className={cn("relative", wrapClassName)}>
                 <Textarea
                     ref={textAreaRef}
                     className={cn("grow whitespace-pre-wrap overflow-y-auto resize-none", className)}
@@ -78,12 +75,12 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                 <div
                     ref={sizeRef}
                     className={cn(
-                        "absolute block top-0 left-0 h-fit whitespace-pre-wrap text-sm",
+                        "block pointer-events-none top-0 left-0 h-fit whitespace-pre-wrap text-sm",
                         debug ? "bg-red-500" : "invisible",
                         sizerClassName
                     )}
                     aria-hidden
-                    style={{ maxWidth: `${wrapWidth ? `${wrapWidth}px` : undefined}` }}
+                    style={{ width: `${textAreaWidth ? `${textAreaWidth}px` : undefined}` }}
                 >
                     {value + "\n"}
                 </div>
@@ -92,4 +89,4 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
     }
 );
 
-AutoSizingTextarea.displayName = "AutoSizingTextarea";
+AutoSizingTextarea.displayName = "AutoSizingTextarea"; // TODO: is this necessary?

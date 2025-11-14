@@ -228,7 +228,7 @@ export default function SendMessageForm({
                             name="content"
                             placeholder="Type your message..."
                             className="px-4 py-3 pr-[106px] max-h-[25vh]"
-                            sizerClassName="py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh]"
+                            sizerClassName="absolute py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh]"
                             wrapClassName="w-full"
                             disabled={isPending}
                             value={content}
