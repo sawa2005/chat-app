@@ -10,10 +10,15 @@ interface AutoSizingTextareaProps extends ComponentProps<"textarea"> {
     sizerClassName?: string;
     wrapClassName?: string;
     initialHeight?: number;
+    maxWidth?: number;
+    imageWidth?: number;
 }
 
 export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingTextareaProps>(
-    ({ value, className, sizerClassName, wrapClassName, initialHeight, debug, ...props }, ref) => {
+    (
+        { value, className, sizerClassName, wrapClassName, initialHeight, maxWidth, imageWidth, debug, ...props },
+        ref
+    ) => {
         const textAreaRef = useRef<HTMLTextAreaElement>(null);
         const sizeRef = useRef<HTMLDivElement>(null);
         const [textAreaHeight, setTextAreaHeight] = useState<number | undefined>(initialHeight);
@@ -23,6 +28,7 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
 
         const styles = {
             height: textAreaHeight !== undefined ? `${textAreaHeight}px` : "auto",
+            width: textAreaWidth !== undefined ? `${textAreaWidth}px` : "100%",
             ...props.style,
         };
 
@@ -36,6 +42,7 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                 if (textarea && sizer && !CSS.supports("field-sizing", "content")) {
                     const style = window.getComputedStyle(sizer);
                     const paddingY = parseFloat(style.paddingTop + style.paddingBottom);
+                    const paddingR = parseFloat(style.paddingRight);
 
                     if (initialHeight) {
                         // Send message form needs an initial height smaller than auto
@@ -45,7 +52,7 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                     } else {
                         // If it's left unset the initial height is auto, bubbles need width from the textarea to wrap text
                         setTextAreaHeight(sizer.scrollHeight + paddingY);
-                        setTextAreaWidth(textarea.clientWidth);
+                        setTextAreaWidth(sizer.clientWidth);
                         console.log("Setting dimensions:", sizer.scrollHeight, sizer.clientWidth);
                     }
                 }
@@ -75,12 +82,12 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                 <div
                     ref={sizeRef}
                     className={cn(
-                        "block pointer-events-none top-0 left-0 h-fit whitespace-pre-wrap text-sm",
+                        "top-0 left-0 pointer-events-none h-fit whitespace-pre-wrap text-sm",
                         debug ? "bg-red-500" : "invisible",
                         sizerClassName
                     )}
                     aria-hidden
-                    style={{ width: `${textAreaWidth ? `${textAreaWidth}px` : undefined}` }}
+                    style={{ maxWidth: maxWidth, width: imageWidth }}
                 >
                     {value + "\n"}
                 </div>

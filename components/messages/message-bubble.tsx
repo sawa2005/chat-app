@@ -1,5 +1,5 @@
 import { isEmojiOnly } from "@/utils/messages";
-import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect, useLayoutEffect } from "react";
+import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import type { Message } from "@/lib/types";
@@ -18,6 +18,7 @@ export function MessageBubble({
     initialLoad,
     setEditingMessageId,
     onImageLoad,
+    messageItemWidth,
 }: {
     message: Message;
     isOwner: boolean;
@@ -37,6 +38,7 @@ export function MessageBubble({
     setEditingMessageId: Dispatch<SetStateAction<string | null>>;
     containerRef: RefObject<HTMLDivElement | null>;
     onImageLoad?: () => void;
+    messageItemWidth?: number;
 }) {
     const emojiOnly = message.content ? isEmojiOnly(message.content) : false;
     const editFormRef = useRef<HTMLFormElement>(null);
@@ -109,7 +111,7 @@ export function MessageBubble({
                         <AutoSizingTextarea
                             ref={textAreaRef}
                             className="min-w-0 px-4 w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:outline-none overflow-y-auto"
-                            sizerClassName="fixed py-2 w-full px-4"
+                            sizerClassName="fixed w-fit py-2 px-4"
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             onKeyDown={(e) => {
@@ -123,6 +125,9 @@ export function MessageBubble({
                                 }
                             }}
                             autoComplete="none"
+                            maxWidth={messageItemWidth}
+                            imageWidth={message.image_width ? message.image_width : undefined}
+                            debug={true}
                         />
                     </form>
                 ) : (
