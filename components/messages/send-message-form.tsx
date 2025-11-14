@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/client";
 import { useState, useEffect, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import EmojiComponent from "../emoji-component";
@@ -13,6 +12,7 @@ import Image from "next/image";
 import { Image as ImageIcon, X, AlertCircleIcon } from "lucide-react";
 import GifComponent from "../gif-component";
 import { Message } from "@/lib/types";
+import { AutoSizingTextarea } from "../auto-sizing-textarea";
 
 const supabase = createClient();
 
@@ -47,33 +47,19 @@ export default function SendMessageForm({
     const [alert, setAlert] = useState<React.ReactNode | null>(null);
     const [imageHeight, setImageHeight] = useState<number | null>(null);
     const [imageWidth, setImageWidth] = useState<number | null>(null);
-    const [textAreaHeight, setTextAreaHeight] = useState<number>(54);
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const sizeRef = useRef<HTMLParagraphElement>(null);
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
     let typingTimeout: NodeJS.Timeout | null = null;
 
     useEffect(() => {
         inputRef.current?.focus();
+        console.log({ inputRef });
     }, [replyTo, imgPreview]);
 
     // TODO: convert the responsive textarea and its functions into a custom component.
-
-    useEffect(() => {
-        const textarea = inputRef.current;
-        const sizer = sizeRef.current;
-        if (textarea && sizer && !CSS.supports("field-sizing", "content")) {
-            const style = window.getComputedStyle(textarea);
-            const padding = parseFloat(style.padding);
-            const targetHeight = content === "" ? 54 - padding : sizer?.clientHeight;
-
-            setTextAreaHeight(targetHeight + padding);
-            console.log("setting height to: ", targetHeight + padding);
-        }
-    }, [content, inputRef]);
 
     function showAlert(message: React.ReactNode) {
         setAlert(message);
@@ -237,12 +223,35 @@ export default function SendMessageForm({
             <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full gap-1 min-h-[54px] items-end">
                 <div className="flex grow items-center gap-1">
                     <div className="relative flex grow gap-1">
-                        <div className="w-full relative">
-                            <Textarea
+                        <AutoSizingTextarea
+                            ref={inputRef}
+                            name="content"
+                            placeholder="Type your message..."
+                            className="px-4 py-3 pr-[106px] max-h-[25vh]"
+                            sizerClassName="py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh]"
+                            wrapClassName="w-full"
+                            disabled={isPending}
+                            value={content}
+                            onChange={(e) => handleInputChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmit(e);
+                                } else if (e.key === "Enter" && e.shiftKey) {
+                                    // Allow default behavior for Shift + Enter (newline)
+                                }
+                            }}
+                            autoComplete="none"
+                            wrap="hard"
+                            initialHeight={54}
+                            /* debug={true} */
+                        />
+
+                        {/* <Textarea
                                 ref={inputRef}
                                 name="content"
                                 placeholder="Type your message..."
-                                className="px-4 py-3 pr-[106px] max-h-[25vh] grow whitespace-normal field-sizing-content overflow-y-auto resize-none"
+                                className="px-4 py-3 pr-[106px] max-h-[25vh]"
                                 disabled={isPending}
                                 value={content}
                                 onChange={(e) => handleInputChange(e.target.value)}
@@ -258,13 +267,12 @@ export default function SendMessageForm({
                                 wrap="hard"
                                 style={{ height: `${textAreaHeight}px` }}
                             />
-                            <p
+                            <div
                                 ref={sizeRef}
                                 className="invisible absolute block top-0 left-0 py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh] h-fit whitespace-pre-wrap bg-red-500 text-sm"
                             >
                                 {content + "\n"}
-                            </p>
-                        </div>
+                            </div> */}
                         <Input
                             type="file"
                             accept="image/*"

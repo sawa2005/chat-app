@@ -3,9 +3,9 @@ import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect, us
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import type { Message } from "@/lib/types";
-import { Textarea } from "../ui/textarea";
 import { cn } from "@/utils";
 import { renderMessageContent } from "@/utils/render-helpers";
+import { AutoSizingTextarea } from "../auto-sizing-textarea";
 
 export function MessageBubble({
     message,
@@ -69,14 +69,14 @@ export function MessageBubble({
 
     // Fallback for browsers that don't support field-sizing: content
     // Adjust textarea height based on a hidden ghost div's scrollHeight
-    useLayoutEffect(() => {
+    /* useLayoutEffect(() => {
         if (isEditing && !CSS.supports("field-sizing", "content") && textAreaRef.current && bubbleRef.current) {
             const ghost = bubbleRef.current;
             const textarea = textAreaRef.current;
             textarea.style.height = "auto"; // Reset height to calculate scrollHeight correctly
             textarea.style.height = `${ghost.scrollHeight}px`;
         }
-    }, [isEditing, editContent]);
+    }, [isEditing, editContent]); */
 
     const bubbleClasses = cn(
         "relative rounded-xl overflow-hidden mb-2 w-fit break-words max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
@@ -118,7 +118,25 @@ export function MessageBubble({
             >
                 {isEditing ? (
                     <form ref={editFormRef} onSubmit={onSubmitEdit}>
-                        {CSS.supports("field-sizing", "content") ? (
+                        <AutoSizingTextarea
+                            ref={textAreaRef}
+                            className="py-2 min-w-0 px-4 w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:outline-none overflow-hidden"
+                            sizerClassName="py-2 w-full px-4"
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    setEditingMessageId(null);
+                                }
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    editFormRef.current?.requestSubmit();
+                                }
+                            }}
+                            autoComplete="none"
+                        />
+                        {/* {CSS.supports("field-sizing", "content") ? (
                             // Native sizing for modern browsers
                             <Textarea
                                 ref={textAreaRef}
@@ -157,17 +175,17 @@ export function MessageBubble({
                                     }}
                                     autoComplete="none"
                                 />
-                                {/* Ghost div for sizing */}
+                                // Ghost div for sizing
                                 <div
                                     ref={bubbleRef}
                                     className="absolute invisible top-0 left-0 -z-50 py-2 w-full px-4 whitespace-pre-wrap text-sm"
                                     aria-hidden
                                 >
-                                    {/* Add a newline to ensure height is calculated even when empty */}
+                                    // Add a newline to ensure height is calculated even when empty
                                     {editContent + "\n"}
                                 </div>
                             </div>
-                        )}
+                        )} */}
                     </form>
                 ) : (
                     // Default view when not editing
