@@ -80,7 +80,7 @@ export function MessageItem({
     return (
         <div
             ref={messageItemRef}
-            className={`relative max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}
+            className={`relative sm:max-w-4/6 max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >

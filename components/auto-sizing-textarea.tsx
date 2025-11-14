@@ -40,18 +40,17 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                 const sizer = sizeRef.current;
 
                 if (textarea && sizer && !CSS.supports("field-sizing", "content")) {
-                    const style = window.getComputedStyle(sizer);
-                    const paddingY = parseFloat(style.paddingTop + style.paddingBottom);
-                    const paddingR = parseFloat(style.paddingRight);
+                    const textareaStyle = window.getComputedStyle(textarea);
+                    const borderY = parseFloat(textareaStyle.borderTopWidth) + parseFloat(textareaStyle.borderTopWidth);
 
                     if (initialHeight) {
                         // Send message form needs an initial height smaller than auto
-                        const targetHeight = value === "" ? initialHeight : sizer.scrollHeight + paddingY;
+                        const targetHeight = value === "" ? initialHeight : sizer.scrollHeight + borderY;
                         setTextAreaHeight(targetHeight);
-                        console.log("Setting height:", sizer.scrollHeight + paddingY);
+                        console.log("Setting height:", sizer.scrollHeight + borderY);
                     } else {
                         // If it's left unset the initial height is auto, bubbles need width from the textarea to wrap text
-                        setTextAreaHeight(sizer.scrollHeight + paddingY);
+                        setTextAreaHeight(sizer.scrollHeight + borderY);
                         setTextAreaWidth(sizer.clientWidth);
                         console.log("Setting dimensions:", sizer.scrollHeight, sizer.clientWidth);
                     }
@@ -82,8 +81,8 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                 <div
                     ref={sizeRef}
                     className={cn(
-                        "top-0 left-0 pointer-events-none h-fit whitespace-pre-wrap text-sm",
-                        debug ? "bg-red-500" : "invisible",
+                        "top-0 left-0 pointer-events-none h-fit whitespace-pre-wrap wrap-break-word leading-normal md:text-sm",
+                        debug ? "bg-red-500 opacity-35" : "invisible",
                         sizerClassName
                     )}
                     aria-hidden

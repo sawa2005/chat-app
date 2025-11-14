@@ -1,5 +1,5 @@
 import { isEmojiOnly } from "@/utils/messages";
-import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import type { Message } from "@/lib/types";
@@ -69,7 +69,7 @@ export function MessageBubble({
     }, [isEditing]);
 
     const bubbleClasses = cn(
-        "relative rounded-xl overflow-hidden mb-2 w-fit break-words max-w-[80%] shadow-accent-foreground inset-shadow-foreground-muted",
+        "relative rounded-xl overflow-hidden mb-2 max-w-full whitespace-pre-wrap wrap-break-word shadow-accent-foreground inset-shadow-foreground-muted",
         isOwner ? "ml-auto rounded-tr-none" : "rounded-tl-none",
         isEditing ? "bg-accent shadow-lg/8" : !emojiOnly && "shadow-lg/5 inset-shadow-sm",
         emojiOnly && !isEditing && (isOwner ? "-mr-4" : "-mr-4"),
@@ -110,7 +110,7 @@ export function MessageBubble({
                     <form ref={editFormRef} onSubmit={onSubmitEdit}>
                         <AutoSizingTextarea
                             ref={textAreaRef}
-                            className="min-w-0 px-4 w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:outline-none overflow-y-auto"
+                            className="min-w-0 px-4 py-2 w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:outline-none overflow-hidden"
                             sizerClassName="fixed w-fit py-2 px-4"
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
@@ -136,7 +136,7 @@ export function MessageBubble({
                         <p
                             className={cn(
                                 emojiOnly ? "text-5xl" : "text-sm",
-                                "box-border px-4 py-2 whitespace-pre-wrap"
+                                "box-border px-4 py-2"
                             )}
                         >
                             {renderMessageContent(message.content)}
