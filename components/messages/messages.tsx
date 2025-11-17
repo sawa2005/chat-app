@@ -26,13 +26,12 @@ import type {
     BroadcastMessageDeletedPayload,
 } from "@/lib/types";
 import { Spinner } from "../ui/spinner";
+import { cn } from "@/utils";
 
 const supabase = createClient();
 
 // TODO: custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
-// TODO: consider switching message hover text to on click instead.
-// TODO: add timeout and animation to message hover state.
 // TODO: no country flags in emoji picker.
 
 export default function Messages({
@@ -718,9 +717,11 @@ export default function Messages({
                     )}
                     <div
                         ref={containerRef}
-                        className={`${
-                            userHasScrolled ? "mt-12" : "mt-5"
-                        } relative flex-1 min-h-0 pr-4 overflow-y-auto overflow-x-hidden`}
+                        className={cn(
+                            userHasScrolled ? "mt-12" : "mt-5",
+                            "relative flex-1 min-h-0 pr-4 overflow-y-auto overflow-x-hidden",
+                            "hover:scrollbar-thumb-foreground scrollbar-thin scrollbar-thumb-muted-foreground scrollbar-track-muted"
+                        )}
                     >
                         {isLoadingMore && (
                             <div className="m-auto w-fit py-5">

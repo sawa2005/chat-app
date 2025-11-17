@@ -32,7 +32,7 @@ const ChatImage = memo(function ChatImage({ src, width, height, alt, onLoadingCo
         <a href={src} target="_blank" className="cursor-pointer block">
             <div
                 style={{ aspectRatio: ratio ?? "1 / 1" }}
-                className={`${editing ? "rounded-b-xl" : "rounded-xl"} relative w-full overflow-hidden`}
+                className={`${editing ? "rounded-b-xl" : "rounded-xl"} relative overflow-hidden`}
             >
                 {!loaded && <Skeleton className="absolute inset-0 w-full h-full" />}
                 <Image

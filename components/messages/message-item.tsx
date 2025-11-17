@@ -35,7 +35,9 @@ export function MessageItem({
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(message.content ?? "");
+    const [messageItemWidth, setMessageItemWidth] = useState<number | undefined>();
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const messageItemRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         return () => {
@@ -44,6 +46,13 @@ export function MessageItem({
             }
         };
     }, []);
+
+    useEffect(() => {
+        const item = messageItemRef.current;
+        if (item) {
+            setMessageItemWidth(item.clientWidth);
+        }
+    }, [messageItemRef]);
 
     if (!message.sender) return;
 
@@ -70,7 +79,8 @@ export function MessageItem({
 
     return (
         <div
-            className={`relative max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}
+            ref={messageItemRef}
+            className={`relative sm:max-w-4/6 max-w-9/10 ${isOwner ? "ml-auto" : ""} ${isConsecutive ? "" : " mt-5"}`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
@@ -114,6 +124,7 @@ export function MessageItem({
                 containerRef={containerRef}
                 setEditingMessageId={() => setIsEditing(false)}
                 onImageLoad={onImageLoad}
+                messageItemWidth={messageItemWidth}
             />
 
             {message.message_reactions && message.message_reactions.length > 0 && (

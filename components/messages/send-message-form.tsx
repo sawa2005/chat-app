@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/client";
 import { useState, useEffect, useRef, ChangeEvent, FormEvent, Dispatch, SetStateAction } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import EmojiComponent from "../emoji-component";
@@ -13,6 +12,7 @@ import Image from "next/image";
 import { Image as ImageIcon, X, AlertCircleIcon } from "lucide-react";
 import GifComponent from "../gif-component";
 import { Message } from "@/lib/types";
+import { AutoSizingTextarea } from "../auto-sizing-textarea";
 
 const supabase = createClient();
 
@@ -56,18 +56,10 @@ export default function SendMessageForm({
 
     useEffect(() => {
         inputRef.current?.focus();
+        console.log({ inputRef });
     }, [replyTo, imgPreview]);
 
-    useEffect(() => {
-        const textarea = inputRef.current;
-        if (textarea) {
-            textarea.style.height = "auto";
-            const style = window.getComputedStyle(textarea);
-            const borderTop = parseFloat(style.borderTopWidth);
-            const borderBottom = parseFloat(style.borderBottomWidth);
-            textarea.style.height = `${textarea.scrollHeight + borderTop + borderBottom}px`;
-        }
-    }, [content]);
+    // TODO: convert the responsive textarea and its functions into a custom component.
 
     function showAlert(message: React.ReactNode) {
         setAlert(message);
@@ -231,11 +223,13 @@ export default function SendMessageForm({
             <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full gap-1 min-h-[54px] items-end">
                 <div className="flex grow items-center gap-1">
                     <div className="relative flex grow gap-1">
-                        <Textarea
+                        <AutoSizingTextarea
                             ref={inputRef}
                             name="content"
                             placeholder="Type your message..."
-                            className="px-4 py-4 pr-[106px] grow wrap-normal h-fit leading-2.5 min-h-[54px] max-h-[25vh] overflow-y-auto resize-none"
+                            className="px-4 py-3 pr-[106px] max-h-[25vh]"
+                            sizerClassName="absolute px-4 py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh]"
+                            wrapClassName="w-full"
                             disabled={isPending}
                             value={content}
                             onChange={(e) => handleInputChange(e.target.value)}
@@ -248,7 +242,11 @@ export default function SendMessageForm({
                                 }
                             }}
                             autoComplete="none"
+                            wrap="hard"
+                            initialHeight={54}
+                            debug={false}
                         />
+
                         <Input
                             type="file"
                             accept="image/*"

@@ -45,13 +45,15 @@ export function MessageHeader({
 
     if (isEditing) {
         return (
-            <button
-                onClick={onCancelEdit}
-                className="text-muted-foreground hover:text-destructive cursor-pointer"
-                title="Cancel Edit"
-            >
-                <X size={20} />
-            </button>
+            <div className={cn(headerClasses)}>
+                <button
+                    onClick={onCancelEdit}
+                    className="text-muted-foreground hover:text-destructive cursor-pointer"
+                    title="Cancel Edit"
+                >
+                    <X size={20} />
+                </button>
+            </div>
         );
     }
 
