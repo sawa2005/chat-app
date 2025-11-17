@@ -32,6 +32,7 @@ export default function ConversationTitle({
     }
 
     function startEditing() {
+        setExistingName(name);
         setName("");
         setEditing(true);
     }

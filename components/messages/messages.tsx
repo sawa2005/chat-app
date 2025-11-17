@@ -34,9 +34,6 @@ const supabase = createClient();
 // TODO: list profile pictures of users who have read a message.
 // TODO: no country flags in emoji picker.
 
-// TODO: bug: new message indicator doesn't clear on key press or messages marked as read.
-// TODO: update title in header on broadcast.
-// TODO: add users own username to placeholder conversation name.
 // TODO: consolidate mark messages as read functionality.
 
 export default function Messages({
@@ -260,7 +257,14 @@ export default function Messages({
             }
         };
 
-        if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad && !hasTriggeredLoadRef.current) {
+        if (
+            isAtTop &&
+            !isLoadingMore &&
+            !allMessagesLoaded &&
+            !initialLoad &&
+            !hasTriggeredLoadRef.current &&
+            messages.length >= 20
+        ) {
             getMoreMessages();
         }
     }, [isAtTop, conversationId, isLoadingMore, allMessagesLoaded, initialLoad, messages, containerRef]);

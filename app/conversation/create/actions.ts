@@ -363,12 +363,15 @@ export async function handleCreateConversation(formData: FormData) {
     const currentProfileId = await getCurrentProfileId();
     if (!currentProfileId) throw new Error("Not authenticated or profile missing");
 
-    const selectedProfileNames =
-        formData
+    const currentUsername = formData.get("current-username")?.toString() ?? "";
+    const selectedProfileNames = [
+        currentUsername,
+        ...(formData
             .get("selected-profile-names")
             ?.toString()
             .split(",")
-            .map((s) => s.trim()) ?? [];
+            .map((s) => s.trim()) ?? []),
+    ].filter(Boolean);
 
     const groupName = formData.get("group-name")?.toString() ?? undefined;
     const firstMessage = formData.get("first-message")?.toString() ?? "";
@@ -422,10 +425,8 @@ export async function createConversation(
         },
     });
 
-    const memberIds = [currentProfileId, ...selectedProfileIds];
-
     await prisma.conversation_members.createMany({
-        data: memberIds.map((id) => ({
+        data: selectedProfileIds.map((id) => ({
             conversation_id: conversation.id,
             profile_id: id,
         })),

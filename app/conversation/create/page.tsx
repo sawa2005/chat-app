@@ -1,5 +1,6 @@
 import PrivatePage from "@/app/private/page";
 import { CreateConversationForm } from "@/components/create-conversation-form";
+import { getCurrentUserId, getUsername } from "@/app/login/actions";
 
 export default async function CreateConversationPage({
     searchParams,
@@ -9,6 +10,8 @@ export default async function CreateConversationPage({
     await PrivatePage();
 
     const params = await searchParams;
+    const currentUserId = await getCurrentUserId();
+    const currentUsername = currentUserId ? await getUsername(currentUserId) : null;
 
     // read errors from searchParams and render a small banner in the page
     const errorKey = params.error ?? null;
@@ -17,7 +20,11 @@ export default async function CreateConversationPage({
     return (
         <div className="font-sans flex flex-col justify-center m-auto w-fit mt-20">
             <h1 className="text-2xl font-bold">Create a New Conversation</h1>
-            <CreateConversationForm errorKey={errorKey} missingUsers={missingUsers} />
+            <CreateConversationForm
+                errorKey={errorKey}
+                missingUsers={missingUsers}
+                currentUsername={currentUsername ?? ""}
+            />
         </div>
     );
 }

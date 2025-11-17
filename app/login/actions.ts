@@ -213,6 +213,16 @@ export async function getUsername(userId: string): Promise<string | null> {
     }
 }
 
+export async function getCurrentUserId(): Promise<string | null> {
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    return user ? user.id : null;
+}
+
 export async function getCurrentProfileId() {
     const supabase = await createClient();
 
