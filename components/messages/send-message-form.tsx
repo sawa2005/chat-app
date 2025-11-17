@@ -227,11 +227,7 @@ export default function SendMessageForm({
                 </div>
             )}
 
-            <form
-                onSubmit={handleSubmit}
-                autoComplete="off"
-                className="flex w-full max-w-full gap-1 min-h-[54px] items-end"
-            >
+            <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full max-w-full gap-1 items-end">
                 <div className="flex grow items-center gap-1">
                     <div className="relative flex grow gap-1">
                         <AutoSizingTextarea
@@ -327,7 +323,7 @@ export default function SendMessageForm({
                 </div>
                 <Button
                     type="submit"
-                    className="cursor-pointer h-[54px]"
+                    className="cursor-pointer h-full max-h-[54px]"
                     size={"default"}
                     disabled={isPending || uploading}
                 >

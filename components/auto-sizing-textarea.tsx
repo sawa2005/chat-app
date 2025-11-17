@@ -33,7 +33,7 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
         };
 
         useEffect(() => {
-            console.log({ textAreaRef, sizeRef, maxWidth });
+            // console.log({ textAreaRef, sizeRef });
 
             if (!CSS.supports("field-sizing", "content") && textAreaRef.current && sizeRef.current) {
                 const textarea = textAreaRef.current;
