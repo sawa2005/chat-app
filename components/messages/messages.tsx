@@ -36,6 +36,8 @@ const supabase = createClient();
 
 // TODO: bug: new message indicator doesn't clear on key press or messages marked as read.
 // TODO: update title in header on broadcast.
+// TODO: add users own username to placeholder conversation name.
+// TODO: consolidate mark messages as read functionality.
 
 export default function Messages({
     conversationId,
@@ -63,7 +65,7 @@ export default function Messages({
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageCount, setImageCount] = useState(0);
-    const [allImagesLoaded, setAllImagesLoaded] = useState(false);
+
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
@@ -126,12 +128,6 @@ export default function Messages({
             });
         }
     }, [userHasScrolled, firstUnreadIndex, hasDoneInitialScroll, scrollToBottom, setHasDoneInitialScroll]);
-
-    useEffect(() => {
-        if (imageCount === 0) {
-            setAllImagesLoaded(true);
-        }
-    }, [imageCount]);
 
     useEffect(() => {
         if (unreadCount > 0) {
@@ -271,10 +267,11 @@ export default function Messages({
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && allImagesLoaded) {
+            if (e.key === "Escape") {
                 setFirstUnreadIndex(null);
                 setUnreadCount(0);
                 markMessagesAsRead(conversationId, currentProfileId);
+                setHasNewMessage(false);
 
                 // Optimistically update the messages state
                 setMessages((prevMessages) =>
@@ -288,7 +285,7 @@ export default function Messages({
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [allImagesLoaded, conversationId, currentProfileId]);
+    }, [conversationId, currentProfileId]);
 
     // Initial scroll - handle both cases
     useEffect(() => {
@@ -427,9 +424,10 @@ export default function Messages({
 
     useEffect(() => {
         const canMarkAsRead = hasEverScrolledUp || !isScrollable;
-        if (!userHasScrolled && hasDoneInitialScroll && allImagesLoaded && canMarkAsRead) {
+        if (!userHasScrolled && hasDoneInitialScroll && canMarkAsRead) {
             markMessagesAsRead(conversationId, currentProfileId);
             setUnreadCount(0);
+            setHasNewMessage(false);
 
             // Optimistically update the messages state
             setMessages((prevMessages) =>
@@ -439,15 +437,7 @@ export default function Messages({
                 }))
             );
         }
-    }, [
-        userHasScrolled,
-        hasDoneInitialScroll,
-        allImagesLoaded,
-        hasEverScrolledUp,
-        isScrollable,
-        conversationId,
-        currentProfileId,
-    ]);
+    }, [userHasScrolled, hasDoneInitialScroll, hasEverScrolledUp, isScrollable, conversationId, currentProfileId]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
@@ -474,16 +464,6 @@ export default function Messages({
                 );
 
                 setLoading(false);
-
-                // Count images and set loading state
-                const imageMessages =
-                    messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
-                if (imageMessages.length === 0) {
-                    setAllImagesLoaded(true);
-                } else {
-                    setImageCount(imageMessages.length);
-                    setAllImagesLoaded(false);
-                }
             } catch (err) {
                 console.error(err);
             }
@@ -492,9 +472,10 @@ export default function Messages({
 
         const handleVisibilityChange = async () => {
             if (document.visibilityState === "visible") {
-                if (!userHasScrolledRef.current && allImagesLoaded) {
+                if (!userHasScrolledRef.current) {
                     setUnreadCount(0);
                     markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
+                    setHasNewMessage(false);
 
                     // Optimistically update the messages state
                     setMessages((prevMessages) =>
@@ -662,7 +643,7 @@ export default function Messages({
             window.removeEventListener("visibilitychange", handleVisibilityChange);
             supabase.removeChannel(channel);
         };
-    }, [conversationId, currentProfileId, currentUsername, allImagesLoaded, initialUnreadCount]);
+    }, [conversationId, currentProfileId, currentUsername, initialUnreadCount]);
 
     function handleNewMessage(msg: Message) {
         setMessages((prev) => {
