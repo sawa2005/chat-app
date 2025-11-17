@@ -66,8 +66,6 @@ export default function SendMessageForm({
         console.log({ inputRef });
     }, [replyTo, imgPreview]);
 
-    // TODO: convert the responsive textarea and its functions into a custom component.
-
     function showAlert(message: React.ReactNode) {
         setAlert(message);
 
