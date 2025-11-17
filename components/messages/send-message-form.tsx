@@ -247,32 +247,6 @@ export default function SendMessageForm({
                             debug={false}
                         />
 
-                        {/* <Textarea
-                                ref={inputRef}
-                                name="content"
-                                placeholder="Type your message..."
-                                className="px-4 py-3 pr-[106px] max-h-[25vh]"
-                                disabled={isPending}
-                                value={content}
-                                onChange={(e) => handleInputChange(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSubmit(e);
-                                    } else if (e.key === "Enter" && e.shiftKey) {
-                                        // Allow default behavior for Shift + Enter (newline)
-                                    }
-                                }}
-                                autoComplete="none"
-                                wrap="hard"
-                                style={{ height: `${textAreaHeight}px` }}
-                            />
-                            <div
-                                ref={sizeRef}
-                                className="invisible absolute block top-0 left-0 py-3 w-full pr-[106px] min-h-[54px] max-h-[25vh] h-fit whitespace-pre-wrap bg-red-500 text-sm"
-                            >
-                                {content + "\n"}
-                            </div> */}
                         <Input
                             type="file"
                             accept="image/*"

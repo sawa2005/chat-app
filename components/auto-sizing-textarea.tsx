@@ -95,4 +95,4 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
     }
 );
 
-AutoSizingTextarea.displayName = "AutoSizingTextarea"; // TODO: is this necessary?
+AutoSizingTextarea.displayName = "AutoSizingTextarea"; // Set's the name in React Dev Tools
