@@ -34,6 +34,9 @@ const supabase = createClient();
 // TODO: list profile pictures of users who have read a message.
 // TODO: no country flags in emoji picker.
 
+// TODO: bug: new message indicator doesn't clear on key press or messages marked as read.
+// TODO: update title in header on broadcast.
+
 export default function Messages({
     conversationId,
     conversationName,

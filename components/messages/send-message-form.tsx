@@ -47,12 +47,19 @@ export default function SendMessageForm({
     const [alert, setAlert] = useState<React.ReactNode | null>(null);
     const [imageHeight, setImageHeight] = useState<number | null>(null);
     const [imageWidth, setImageWidth] = useState<number | null>(null);
+    const [initialTextareaWidth, setInitialTextareaWidth] = useState<number | undefined>();
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const channel = useRef(supabase.channel(`conversation-${conversationId}`));
     let typingTimeout: NodeJS.Timeout | null = null;
+
+    useEffect(() => {
+        if (inputRef.current) {
+            setInitialTextareaWidth(inputRef.current.clientWidth);
+        }
+    }, []); // Run once on mount
 
     useEffect(() => {
         inputRef.current?.focus();
@@ -220,7 +227,11 @@ export default function SendMessageForm({
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full gap-1 min-h-[54px] items-end">
+            <form
+                onSubmit={handleSubmit}
+                autoComplete="off"
+                className="flex w-full max-w-full gap-1 min-h-[54px] items-end"
+            >
                 <div className="flex grow items-center gap-1">
                     <div className="relative flex grow gap-1">
                         <AutoSizingTextarea
@@ -244,7 +255,7 @@ export default function SendMessageForm({
                             autoComplete="none"
                             wrap="hard"
                             initialHeight={54}
-                            debug={false}
+                            maxWidth={initialTextareaWidth}
                         />
 
                         <Input

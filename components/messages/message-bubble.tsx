@@ -69,7 +69,7 @@ export function MessageBubble({
     }, [isEditing]);
 
     const bubbleClasses = cn(
-        "relative rounded-xl overflow-hidden mb-2 max-w-full whitespace-pre-wrap wrap-break-word shadow-accent-foreground inset-shadow-foreground-muted",
+        "relative w-fit rounded-xl overflow-hidden mb-2 max-w-full whitespace-pre-wrap wrap-break-word shadow-accent-foreground inset-shadow-accent",
         isOwner ? "ml-auto rounded-tr-none" : "rounded-tl-none",
         isEditing ? "bg-accent shadow-lg/8" : !emojiOnly && "shadow-lg/5 inset-shadow-sm",
         emojiOnly && !isEditing && (isOwner ? "-mr-4" : "-mr-4"),
@@ -127,18 +127,12 @@ export function MessageBubble({
                             autoComplete="none"
                             maxWidth={messageItemWidth}
                             imageWidth={message.image_width ? message.image_width : undefined}
-                            debug={true}
                         />
                     </form>
                 ) : (
                     // Default view when not editing
                     message.content && (
-                        <p
-                            className={cn(
-                                emojiOnly ? "text-5xl" : "text-sm",
-                                "box-border px-4 py-2"
-                            )}
-                        >
+                        <p className={cn(emojiOnly ? "text-5xl" : "text-sm", "box-border px-4 py-2")}>
                             {renderMessageContent(message.content)}
                         </p>
                     )
