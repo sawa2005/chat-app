@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import EmojiComponent from "../emoji-component";
 import type { sendMessage } from "@/app/conversation/create/actions";
-import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
 import { Image as ImageIcon, X, AlertCircleIcon } from "lucide-react";
 import GifComponent from "../gif-component";
@@ -20,7 +19,6 @@ type SendMessageFormProps = {
     conversationId: string;
     currentProfileId: bigint;
     currentUsername: string;
-    currentUserAvatar: string | null;
     sendMessage: typeof sendMessage;
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
@@ -32,7 +30,6 @@ export default function SendMessageForm({
     conversationId,
     currentProfileId,
     currentUsername,
-    currentUserAvatar,
     sendMessage,
     onNewMessage,
     replyTo,
@@ -322,3 +319,4 @@ export default function SendMessageForm({
         </>
     );
 }
+

@@ -39,7 +39,6 @@ export default function Messages({
     conversationName,
     currentUsername,
     currentProfileId,
-    currentUserAvatar,
     initialUnreadCount,
 }: {
     conversationId: string;
@@ -734,7 +733,6 @@ export default function Messages({
                 conversationId={conversationId}
                 currentProfileId={currentProfileId}
                 currentUsername={currentUsername}
-                currentUserAvatar={currentUserAvatar}
                 sendMessage={sendMessage}
                 onNewMessage={handleNewMessage}
                 replyTo={replyTo ?? null}
