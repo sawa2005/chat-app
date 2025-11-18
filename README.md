@@ -45,7 +45,7 @@ npm install
 ### 3. Set up Supabase
 
 1.  Create a new project on [Supabase](https://app.supabase.io/).
-2.  Go to the "SQL Editor" and run the SQL from `prisma/migrations/0_init_supabase/migration.sql` to create the database schema.
+2.  Go to "Project Settings" > "Database" and find your database connection string.
 3.  Go to "Project Settings" > "API" and find your Project URL and `anon` public key.
 
 ### 4. Set up environment variables
@@ -56,9 +56,17 @@ Create a `.env.local` file by copying the `.env.example` file:
 cp .env.example .env.local
 ```
 
-Then, fill in the values for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from your Supabase project.
+Then, fill in the values for `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`, and `NEXT_PUBLIC_TENOR_API_KEY` from your Supabase project and Tenor API.
 
-### 5. Run the development server
+### 5. Push Prisma schema to Supabase
+
+Once your `DATABASE_URL` is set in `.env.local`, sync your database schema:
+
+```bash
+npx prisma db push
+```
+
+### 6. Run the development server
 
 ```bash
 npm run dev
