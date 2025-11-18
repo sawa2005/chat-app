@@ -446,8 +446,6 @@ export async function createConversation(
 export async function sendMessage(
     conversationId: string,
     senderId: bigint,
-    senderUsername: string,
-    senderAvatar: string | null,
     content: string,
     image: { url: string; height: number; width: number } | null,
     parentId: bigint | null
@@ -465,12 +463,19 @@ export async function sendMessage(
         ...messagePayload,
     });
 
+    await broadcastMessage(conversationId, {
+        ...message,
+        sender_id: message.sender?.id ?? null,
+        sender_username: message.sender?.username ?? undefined,
+        sender_avatar: message.sender?.avatar ?? null,
+    });
+
     return {
         ...message,
         sender: {
             id: senderId,
-            username: senderUsername,
-            avatar: senderAvatar,
+            username: message.sender?.username ?? "",
+            avatar: message.sender?.avatar ?? null,
         },
     };
 }

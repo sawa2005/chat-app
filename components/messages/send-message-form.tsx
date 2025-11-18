@@ -161,8 +161,6 @@ export default function SendMessageForm({
         const newMessage = await sendMessage(
             conversationId,
             currentProfileId,
-            currentUsername,
-            currentUserAvatar,
             content,
             uploadedImageUrl && imageHeight && imageWidth
                 ? { url: uploadedImageUrl, height: imageHeight, width: imageWidth }
@@ -174,13 +172,6 @@ export default function SendMessageForm({
             ...newMessage,
             created_at: new Date(newMessage.created_at),
             edited_at: newMessage.edited_at ? new Date(newMessage.edited_at) : null,
-        });
-
-        await broadcastMessage(conversationId, {
-            ...newMessage,
-            sender_id: newMessage.sender.id,
-            sender_username: newMessage.sender.username,
-            sender_avatar: newMessage.sender.avatar,
         });
 
         setContent("");
