@@ -1,8 +1,8 @@
 import { X, Trash, Pen, Reply } from "lucide-react";
 import { ReactionButton } from "../reaction-button";
-import { getMessageHeaderClasses, isOldMessage } from "@/utils/messages";
+import { getMessageHeaderClasses, isOldMessage } from "@/lib/messages";
 import Avatar from "../avatar";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 export function MessageHeader({
     createdAt,

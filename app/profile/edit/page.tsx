@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/server";
 import EditProfileForm from "@/components/edit-profile-form";
 import { prisma } from "@/lib/prisma";
 import { getUsername } from "@/app/login/actions";

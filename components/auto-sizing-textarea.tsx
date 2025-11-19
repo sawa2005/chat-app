@@ -1,7 +1,7 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { useEffect, useRef, ComponentProps, useState, forwardRef, useImperativeHandle } from "react";
 
 interface AutoSizingTextareaProps extends ComponentProps<"textarea"> {

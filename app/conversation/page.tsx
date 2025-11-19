@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/server";
 import Link from "next/link";
 import { UnreadBadge } from "@/components/unread-badge";
 import LastMessage from "@/components/last-message";
-import { isOldMessage } from "@/utils/messages";
+import { isOldMessage } from "@/lib/messages";
 
 export default async function ConversationsPage() {
     const supabase = await createClient();
@@ -23,7 +23,7 @@ export default async function ConversationsPage() {
         return <div className="p-6 text-destructive">Profile not found.</div>;
     }
 
-    const conversations = await prisma.conversations.findMany({
+    const conversations = (await prisma.conversations.findMany({
         where: {
             conversation_members: {
                 some: {
@@ -44,7 +44,10 @@ export default async function ConversationsPage() {
                 include: { sender: true },
             },
         },
-        orderBy: { created_at: "desc" },
+    })).sort((a, b) => {
+        const dateA = a.messages[0]?.created_at ?? a.created_at;
+        const dateB = b.messages[0]?.created_at ?? b.created_at;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
     });
 
     return (

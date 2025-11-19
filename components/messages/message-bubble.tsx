@@ -1,10 +1,10 @@
-import { isEmojiOnly } from "@/utils/messages";
+import { isEmojiOnly } from "@/lib/messages";
 import { Dispatch, SetStateAction, RefObject, useRef, useCallback, useEffect } from "react";
 import { ImageIcon, MessageSquareReply } from "lucide-react";
 import ChatImage from "../chat-image";
 import type { Message } from "@/lib/types";
-import { cn } from "@/utils";
-import { renderMessageContent } from "@/utils/render-helpers";
+import { cn } from "@/lib/utils";
+import { renderMessageContent } from "@/lib/render-helpers";
 import { AutoSizingTextarea } from "../auto-sizing-textarea";
 
 export function MessageBubble({

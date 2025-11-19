@@ -26,7 +26,7 @@ import type {
     BroadcastMessageDeletedPayload,
 } from "@/lib/types";
 import { Spinner } from "../ui/spinner";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 const supabase = createClient();
 

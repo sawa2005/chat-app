@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/server";
 import { logout } from "@/app/login/actions";
 
 import { ThemeToggleButton } from "./theme-toggle-button";
