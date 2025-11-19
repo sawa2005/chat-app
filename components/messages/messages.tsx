@@ -26,7 +26,7 @@ import type {
     BroadcastMessageDeletedPayload,
 } from "@/lib/types";
 import { Spinner } from "../ui/spinner";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 const supabase = createClient();
 
@@ -39,7 +39,6 @@ export default function Messages({
     conversationName,
     currentUsername,
     currentProfileId,
-    currentUserAvatar,
     initialUnreadCount,
 }: {
     conversationId: string;
@@ -49,24 +48,25 @@ export default function Messages({
     currentUserAvatar: string | null;
     initialUnreadCount: number | null;
 }) {
-    const { containerRef, scrollToBottom } = useChatScroll();
-    const [initialLoad, setInitialLoad] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
-    const messagesRef = useRef(messages);
-    useEffect(() => {
-        messagesRef.current = messages;
-    }, [messages]);
+    const [initialLoad, setInitialLoad] = useState(true);
     const [firstUnreadIndex, setFirstUnreadIndex] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [imageCount, setImageCount] = useState(0);
-    const [allImagesLoaded, setAllImagesLoaded] = useState(false);
     const [typers, setTypers] = useState<string[]>([]);
     const [replyTo, setReplyTo] = useState<bigint | null>(null);
     const [allMessagesLoaded, setAllMessagesLoaded] = useState(false);
     const [hasNewMessage, setHasNewMessage] = useState(false);
     const [hasEverScrolledUp, setHasEverScrolledUp] = useState(false);
     const [isScrollable, setIsScrollable] = useState(false);
+
+    const { containerRef, scrollToBottom } = useChatScroll();
+    const messagesRef = useRef(messages);
+
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -97,6 +97,33 @@ export default function Messages({
 
     const isAtTop = useIsScrollOnTop(containerRef, loading || isLoadingMore);
 
+    const markAllMessagesAsRead = useCallback(() => {
+        // 1. Prevent unnecessary updates if everything is already read.
+        if (unreadCount === 0 && firstUnreadIndex === null) return;
+
+        // 2. Call the server action.
+        markMessagesAsRead(conversationId, currentProfileId);
+
+        // 3. Reset all the relevant state variables.
+        setUnreadCount(0);
+        setHasNewMessage(false);
+        setFirstUnreadIndex(null);
+
+        // 4. Perform the same optimistic UI update.
+        setMessages((prevMessages) =>
+            prevMessages.map((message) => {
+                // Avoid adding duplicate read receipts
+                if (message.message_reads.some((read) => read.profile_id === currentProfileId)) {
+                    return message;
+                }
+                return {
+                    ...message,
+                    message_reads: [...message.message_reads, { profile_id: currentProfileId }],
+                };
+            })
+        );
+    }, [conversationId, currentProfileId, unreadCount, firstUnreadIndex]);
+
     // Handle image loading completion
     const handleImageLoad = useCallback(() => {
         setImageCount((prev) => prev - 1);
@@ -123,12 +150,6 @@ export default function Messages({
             });
         }
     }, [userHasScrolled, firstUnreadIndex, hasDoneInitialScroll, scrollToBottom, setHasDoneInitialScroll]);
-
-    useEffect(() => {
-        if (imageCount === 0) {
-            setAllImagesLoaded(true);
-        }
-    }, [imageCount]);
 
     useEffect(() => {
         if (unreadCount > 0) {
@@ -261,31 +282,28 @@ export default function Messages({
             }
         };
 
-        if (isAtTop && !isLoadingMore && !allMessagesLoaded && !initialLoad && !hasTriggeredLoadRef.current) {
+        if (
+            isAtTop &&
+            !isLoadingMore &&
+            !allMessagesLoaded &&
+            !initialLoad &&
+            !hasTriggeredLoadRef.current &&
+            messages.length >= 20
+        ) {
             getMoreMessages();
         }
     }, [isAtTop, conversationId, isLoadingMore, allMessagesLoaded, initialLoad, messages, containerRef]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && allImagesLoaded) {
-                setFirstUnreadIndex(null);
-                setUnreadCount(0);
-                markMessagesAsRead(conversationId, currentProfileId);
-
-                // Optimistically update the messages state
-                setMessages((prevMessages) =>
-                    prevMessages.map((message) => ({
-                        ...message,
-                        message_reads: [...message.message_reads, { profile_id: currentProfileId }],
-                    }))
-                );
+            if (e.key === "Escape") {
+                markAllMessagesAsRead();
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [allImagesLoaded, conversationId, currentProfileId]);
+    }, [markAllMessagesAsRead]);
 
     // Initial scroll - handle both cases
     useEffect(() => {
@@ -424,27 +442,10 @@ export default function Messages({
 
     useEffect(() => {
         const canMarkAsRead = hasEverScrolledUp || !isScrollable;
-        if (!userHasScrolled && hasDoneInitialScroll && allImagesLoaded && canMarkAsRead) {
-            markMessagesAsRead(conversationId, currentProfileId);
-            setUnreadCount(0);
-
-            // Optimistically update the messages state
-            setMessages((prevMessages) =>
-                prevMessages.map((message) => ({
-                    ...message,
-                    message_reads: [...message.message_reads, { profile_id: currentProfileId }],
-                }))
-            );
+        if (!userHasScrolled && hasDoneInitialScroll && canMarkAsRead) {
+            markAllMessagesAsRead();
         }
-    }, [
-        userHasScrolled,
-        hasDoneInitialScroll,
-        allImagesLoaded,
-        hasEverScrolledUp,
-        isScrollable,
-        conversationId,
-        currentProfileId,
-    ]);
+    }, [userHasScrolled, hasDoneInitialScroll, hasEverScrolledUp, isScrollable, markAllMessagesAsRead]);
 
     useEffect(() => {
         if (!conversationId || !currentProfileId) return;
@@ -471,16 +472,6 @@ export default function Messages({
                 );
 
                 setLoading(false);
-
-                // Count images and set loading state
-                const imageMessages =
-                    messages?.filter((message) => message.image_url !== null && message.deleted !== true) ?? [];
-                if (imageMessages.length === 0) {
-                    setAllImagesLoaded(true);
-                } else {
-                    setImageCount(imageMessages.length);
-                    setAllImagesLoaded(false);
-                }
             } catch (err) {
                 console.error(err);
             }
@@ -489,17 +480,8 @@ export default function Messages({
 
         const handleVisibilityChange = async () => {
             if (document.visibilityState === "visible") {
-                if (!userHasScrolledRef.current && allImagesLoaded) {
-                    setUnreadCount(0);
-                    markMessagesAsRead(conversationId, currentProfileId).catch(console.error);
-
-                    // Optimistically update the messages state
-                    setMessages((prevMessages) =>
-                        prevMessages.map((message) => ({
-                            ...message,
-                            message_reads: [...message.message_reads, { profile_id: currentProfileId }],
-                        }))
-                    );
+                if (!userHasScrolledRef.current) {
+                    markAllMessagesAsRead();
                 } else {
                     setIsLoadingMore(true);
                     const messageIds = messagesRef.current.map((m) => m.id);
@@ -659,7 +641,7 @@ export default function Messages({
             window.removeEventListener("visibilitychange", handleVisibilityChange);
             supabase.removeChannel(channel);
         };
-    }, [conversationId, currentProfileId, currentUsername, allImagesLoaded, initialUnreadCount]);
+    }, [conversationId, currentProfileId, currentUsername, initialUnreadCount, markAllMessagesAsRead]);
 
     function handleNewMessage(msg: Message) {
         setMessages((prev) => {
@@ -675,8 +657,7 @@ export default function Messages({
             ];
         });
         if (msg.sender?.id === currentProfileId) {
-            setFirstUnreadIndex(null);
-            markMessagesAsRead(conversationId, currentProfileId);
+            markAllMessagesAsRead();
         }
         if (!userHasScrolledRef.current) {
             setHasNewMessage(false);
@@ -752,7 +733,6 @@ export default function Messages({
                 conversationId={conversationId}
                 currentProfileId={currentProfileId}
                 currentUsername={currentUsername}
-                currentUserAvatar={currentUserAvatar}
                 sendMessage={sendMessage}
                 onNewMessage={handleNewMessage}
                 replyTo={replyTo ?? null}

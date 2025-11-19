@@ -363,12 +363,15 @@ export async function handleCreateConversation(formData: FormData) {
     const currentProfileId = await getCurrentProfileId();
     if (!currentProfileId) throw new Error("Not authenticated or profile missing");
 
-    const selectedProfileNames =
-        formData
+    const currentUsername = formData.get("current-username")?.toString() ?? "";
+    const selectedProfileNames = [
+        currentUsername,
+        ...(formData
             .get("selected-profile-names")
             ?.toString()
             .split(",")
-            .map((s) => s.trim()) ?? [];
+            .map((s) => s.trim()) ?? []),
+    ].filter(Boolean);
 
     const groupName = formData.get("group-name")?.toString() ?? undefined;
     const firstMessage = formData.get("first-message")?.toString() ?? "";
@@ -422,10 +425,8 @@ export async function createConversation(
         },
     });
 
-    const memberIds = [currentProfileId, ...selectedProfileIds];
-
     await prisma.conversation_members.createMany({
-        data: memberIds.map((id) => ({
+        data: selectedProfileIds.map((id) => ({
             conversation_id: conversation.id,
             profile_id: id,
         })),
@@ -445,8 +446,6 @@ export async function createConversation(
 export async function sendMessage(
     conversationId: string,
     senderId: bigint,
-    senderUsername: string,
-    senderAvatar: string | null,
     content: string,
     image: { url: string; height: number; width: number } | null,
     parentId: bigint | null
@@ -464,12 +463,19 @@ export async function sendMessage(
         ...messagePayload,
     });
 
+    await broadcastMessage(conversationId, {
+        ...message,
+        sender_id: message.sender?.id ?? null,
+        sender_username: message.sender?.username ?? undefined,
+        sender_avatar: message.sender?.avatar ?? null,
+    });
+
     return {
         ...message,
         sender: {
             id: senderId,
-            username: senderUsername,
-            avatar: senderAvatar,
+            username: message.sender?.username ?? "",
+            avatar: message.sender?.avatar ?? null,
         },
     };
 }

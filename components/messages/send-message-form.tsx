@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import EmojiComponent from "../emoji-component";
 import type { sendMessage } from "@/app/conversation/create/actions";
-import { broadcastMessage } from "@/lib/broadcast";
 import Image from "next/image";
 import { Image as ImageIcon, X, AlertCircleIcon } from "lucide-react";
 import GifComponent from "../gif-component";
@@ -20,7 +19,6 @@ type SendMessageFormProps = {
     conversationId: string;
     currentProfileId: bigint;
     currentUsername: string;
-    currentUserAvatar: string | null;
     sendMessage: typeof sendMessage;
     replyTo: bigint | null;
     setReplyTo: Dispatch<SetStateAction<bigint | null>>;
@@ -32,7 +30,6 @@ export default function SendMessageForm({
     conversationId,
     currentProfileId,
     currentUsername,
-    currentUserAvatar,
     sendMessage,
     onNewMessage,
     replyTo,
@@ -47,6 +44,7 @@ export default function SendMessageForm({
     const [alert, setAlert] = useState<React.ReactNode | null>(null);
     const [imageHeight, setImageHeight] = useState<number | null>(null);
     const [imageWidth, setImageWidth] = useState<number | null>(null);
+    const [initialTextareaWidth, setInitialTextareaWidth] = useState<number | undefined>();
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -55,11 +53,15 @@ export default function SendMessageForm({
     let typingTimeout: NodeJS.Timeout | null = null;
 
     useEffect(() => {
+        if (inputRef.current) {
+            setInitialTextareaWidth(inputRef.current.clientWidth);
+        }
+    }, []); // Run once on mount
+
+    useEffect(() => {
         inputRef.current?.focus();
         console.log({ inputRef });
     }, [replyTo, imgPreview]);
-
-    // TODO: convert the responsive textarea and its functions into a custom component.
 
     function showAlert(message: React.ReactNode) {
         setAlert(message);
@@ -156,8 +158,6 @@ export default function SendMessageForm({
         const newMessage = await sendMessage(
             conversationId,
             currentProfileId,
-            currentUsername,
-            currentUserAvatar,
             content,
             uploadedImageUrl && imageHeight && imageWidth
                 ? { url: uploadedImageUrl, height: imageHeight, width: imageWidth }
@@ -169,13 +169,6 @@ export default function SendMessageForm({
             ...newMessage,
             created_at: new Date(newMessage.created_at),
             edited_at: newMessage.edited_at ? new Date(newMessage.edited_at) : null,
-        });
-
-        await broadcastMessage(conversationId, {
-            ...newMessage,
-            sender_id: newMessage.sender.id,
-            sender_username: newMessage.sender.username,
-            sender_avatar: newMessage.sender.avatar,
         });
 
         setContent("");
@@ -220,7 +213,7 @@ export default function SendMessageForm({
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full gap-1 min-h-[54px] items-end">
+            <form onSubmit={handleSubmit} autoComplete="off" className="flex w-full max-w-full gap-1 items-end">
                 <div className="flex grow items-center gap-1">
                     <div className="relative flex grow gap-1">
                         <AutoSizingTextarea
@@ -244,7 +237,7 @@ export default function SendMessageForm({
                             autoComplete="none"
                             wrap="hard"
                             initialHeight={54}
-                            debug={false}
+                            maxWidth={initialTextareaWidth}
                         />
 
                         <Input
@@ -316,7 +309,7 @@ export default function SendMessageForm({
                 </div>
                 <Button
                     type="submit"
-                    className="cursor-pointer h-[54px]"
+                    className="cursor-pointer h-full max-h-[54px]"
                     size={"default"}
                     disabled={isPending || uploading}
                 >
@@ -326,3 +319,4 @@ export default function SendMessageForm({
         </>
     );
 }
+

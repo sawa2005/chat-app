@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/client";
 import { Image as ImageIcon } from "lucide-react";
-import { isOldMessage } from "@/utils/messages";
+import { isOldMessage } from "@/lib/messages";
 
 const supabase = createClient();
 

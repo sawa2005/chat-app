@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentProfileId, getUsername } from "@/app/login/actions";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
 import Messages from "@/components/messages/messages";
 import ConversationHeader from "@/components/conversation-header";
-import { isValidUUID } from "@/utils";
+import { isValidUUID } from "@/lib/utils";
 
 interface ConversationPageProps {
     params: Promise<{ id: string }>;

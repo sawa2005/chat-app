@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/server";
 
 export async function getAvatarUrlById(senderId: bigint | null): Promise<string | null> {
     if (senderId === null) {
@@ -211,6 +211,16 @@ export async function getUsername(userId: string): Promise<string | null> {
         console.error("Error fetching username:", error);
         return null;
     }
+}
+
+export async function getCurrentUserId(): Promise<string | null> {
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    return user ? user.id : null;
 }
 
 export async function getCurrentProfileId() {
