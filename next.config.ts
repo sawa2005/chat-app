@@ -22,15 +22,15 @@ const nextConfig: NextConfig = {
             },
         ],
     },
-    webpack: (config) => {
-        config.module.rules.push({
-            test: /\.js$/,
-            use: ["source-map-loader"],
-            enforce: "pre",
-            exclude: /node_modules/,
-        });
-        return config;
-    },
+    // webpack: (config) => {
+    //     config.module.rules.push({
+    //         test: /\.js$/,
+    //         use: ["source-map-loader"],
+    //         enforce: "pre",
+    //         exclude: /node_modules/,
+    //     });
+    //     return config;
+    // },
 };
 
 export default nextConfig;
