@@ -1,11 +1,3 @@
-# Next.js & Supabase Realtime Chat App
-
-This is an open-source, real-time chat application built with Next.js, Supabase, and Prisma. It's designed to be a solid foundation for anyone looking to build a feature-rich chat application with a modern tech stack.
-
-## Features
-
-*   Real-time messaging
-*   User authentication (Supabase Auth)
 *   Conversation creation and management
 *   Message reactions
 *   Typing indicators
