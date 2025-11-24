@@ -58,23 +58,30 @@ npm install
 2.  Go to "Project Settings" > "Database" and find your database connection string.
 3.  Go to "Project Settings" > "API" and find your Project URL and `anon` public key.
 
-### 4. Configure Database Triggers
+### 4. Configure Supabase Auth
+
+To enable users to sign up and log in:
+
+1.  Go to your Supabase project dashboard.
+2.  Navigate to **Authentication** > **Providers** in the sidebar.
+3.  Expand the **Email** provider section.
+4.  Ensure **Enable Email provider** is toggled **ON**.
+5.  (Optional) Turn off "Confirm email" if you want to skip email verification during development.
+
+### 5. Configure Database Triggers
 
 To automatically create a user profile when a new user signs up via Supabase Auth, you need to set up a database trigger. Run the following SQL in your Supabase project's **SQL Editor**:
 
 ```sql
 -- Function to handle new user creation
-create or replace function public.handle_new_user()
+create or replace function public.create_user_profile()
 returns trigger as $$
 begin
-  insert into public.profiles (user_id, username, display_name, avatar)
-  values (
-    new.id,
-    -- Default username to email prefix if not provided in metadata
-    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data->>'avatar_url', '')
-  );
+  -- Add a check to prevent duplicate insertions
+  if not exists (select 1 from public.profiles where user_id = new.id) then
+    insert into public.profiles(user_id)
+    values (new.id);
+  end if;
   return new;
 end;
 $$ language plpgsql security definer;
@@ -82,10 +89,10 @@ $$ language plpgsql security definer;
 -- Trigger to call the function on new user insertion
 create or replace trigger on_auth_user_created
   after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+  for each row execute procedure public.create_user_profile();
 ```
 
-### 5. Set up environment variables
+### 6. Set up environment variables
 
 Create a `.env.local` file by copying the `.env.example` file:
 
