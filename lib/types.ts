@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../generated/prisma/client";
 import { messagePayload } from "./prisma";
 
 export type Reaction = Prisma.message_reactionsGetPayload<{

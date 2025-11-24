@@ -15,7 +15,7 @@ import ConversationTitle from "@/components/conversation-title";
 import LeaveButton from "@/components/leave-button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { Prisma as PrismaClient } from "@prisma/client";
+import { type Prisma as PrismaClient } from "../generated/prisma/client"; // Updated import path
 
 import { getConversationMembers } from "@/app/conversation/create/actions";
 import { createClient } from "@/lib/client";

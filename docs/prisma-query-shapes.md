@@ -26,7 +26,7 @@ Create a dedicated file, for instance, `lib/prisma-shapes.ts` (or `src/prisma/qu
 
 ```typescript
 // lib/prisma-shapes.ts
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 
 // Define a common shape for a message including its sender's username and reactions
 export const messageWithSenderAndReactionsArgs = {
@@ -60,7 +60,7 @@ In your type definition file (e.g., `lib/types.ts`), import these argument const
 
 ```typescript
 // lib/types.ts
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 import { messageWithSenderAndReactionsArgs, simpleMessageArgs } from './prisma-shapes';
 
 // This type now accurately reflects the data shape defined in messageWithSenderAndReactionsArgs

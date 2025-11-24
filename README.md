@@ -17,15 +17,25 @@ This is an open-source, real-time chat application built with Next.js, Supabase,
 
 ## Tech Stack
 
--   **Framework:** [Next.js](https://nextjs.org/)
+-   **Framework:** [Next.js](https://nextjs.org/) (v16.0.3)
+-   **Language:** [TypeScript](https://www.typescriptlang.org/) (v5.9.2)
+-   **Library:** [React](https://react.dev/) (v19.2.0)
 -   **Database:** [Supabase](https://supabase.io/) (Postgres)
--   **ORM:** [Prisma](https://www.prisma.io/)
+-   **ORM:** [Prisma](https://www.prisma.io/) (v7.0.0)
 -   **Authentication:** [Supabase Auth](https://supabase.io/docs/guides/auth)
 -   **Real-time:** [Supabase Realtime](https://supabase.io/docs/guides/realtime)
 -   **UI:** [shadcn/ui](https://ui.shadcn.com/)
--   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
--   **Linting:** [ESLint](https://eslint.org/)
--   **Formatting:** [Prettier](https://prettier.io/)
+-   **Styling:** [Tailwind CSS](https://tailwindcss.com/) (v4.0.0)
+-   **Linting:** [ESLint](https://eslint.org/) (v9.0.0)
+
+### Major Dependencies
+
+-   **@radix-ui/primitives**: Accessible UI components for building high-quality design systems.
+-   **lucide-react**: Beautiful & consistent icons (v0.540.0).
+-   **next-themes**: Perfect dark mode support for Next.js (v0.4.6).
+-   **react-easy-crop**: Easy image cropping for React (v5.5.0).
+-   **gif-picker-react**: Customizable GIF picker component (v1.4.0).
+-   **frimousse**: Simple and lightweight emoji picker (v0.3.0).
 
 ## Getting Started
 
@@ -121,6 +131,22 @@ If user avatars or shared images are not loading, ensure your `NEXT_PUBLIC_SUPAB
 ### Database connection errors
 
 Double-check your `DATABASE_URL` in `.env.local`. It should be the Transaction connection pooler string (port 6543) or the Session connection string (port 5432) from Supabase.
+
+### Verifying Changes (Tests)
+
+This project uses [Vitest](https://vitest.dev/) for unit and integration testing. If you make changes to the codebase, run the tests to ensure existing functionality remains intact.
+
+To run the tests interactively (opens UI):
+
+```bash
+npm run test
+```
+
+To run tests once in the console:
+
+```bash
+npx vitest run
+```
 
 ## License
 
