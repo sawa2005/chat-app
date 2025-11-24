@@ -9,7 +9,7 @@
         "start": "next start",
         "lint": "eslint",
         "test": "vitest --ui",
-        "release": "release-it"
+        "release": "dotenv -e .env.local -- release-it"
     },
     "dependencies": {
         "@prisma/adapter-pg": "^7.0.0",
