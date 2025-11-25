@@ -23,6 +23,7 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
         const sizeRef = useRef<HTMLDivElement>(null);
         const [textAreaHeight, setTextAreaHeight] = useState<number | undefined>(initialHeight);
         const [textAreaWidth, setTextAreaWidth] = useState<number | undefined>();
+        const [useNativeSizing, setUseNativeSizing] = useState(false);
 
         useImperativeHandle(ref, () => textAreaRef.current!);
 
@@ -33,13 +34,19 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
         };
 
         useEffect(() => {
+            if (typeof CSS !== "undefined" && CSS.supports("field-sizing", "content")) {
+                setUseNativeSizing(true);
+            }
+        }, []);
+
+        useEffect(() => {
             // console.log({ textAreaRef, sizeRef });
 
-            if (!CSS.supports("field-sizing", "content") && textAreaRef.current && sizeRef.current) {
+            if (!useNativeSizing && textAreaRef.current && sizeRef.current) {
                 const textarea = textAreaRef.current;
                 const sizer = sizeRef.current;
 
-                if (textarea && sizer && !CSS.supports("field-sizing", "content")) {
+                if (textarea && sizer) {
                     const textareaStyle = window.getComputedStyle(textarea);
                     const borderY = parseFloat(textareaStyle.borderTopWidth) + parseFloat(textareaStyle.borderTopWidth);
 
@@ -56,9 +63,9 @@ export const AutoSizingTextarea = forwardRef<HTMLTextAreaElement, AutoSizingText
                     }
                 }
             }
-        }, [initialHeight, value]);
+        }, [initialHeight, value, useNativeSizing]);
 
-        if (typeof window !== "undefined" && CSS.supports("field-sizing", "content")) {
+        if (useNativeSizing) {
             return (
                 <Textarea
                     ref={textAreaRef}
