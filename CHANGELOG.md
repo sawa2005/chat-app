@@ -1,5 +1,18 @@
 # Changelog
 
+# [0.2.0](/compare/v0.1.4...v0.2.0) (2025-11-25)
+
+
+### Bug Fixes
+
+* added state for native sizing to prevent occasional textarea hydration error 111d767
+* undefined firstUnreadIndex.id & clipping focus ring on conversation header da1e754
+
+
+### Features
+
+* clicking navbar login options now selects the correct login page tab 9caa57f
+
 ## [0.1.4](/compare/v0.1.3...v0.1.4) (2025-11-25)
 
 
