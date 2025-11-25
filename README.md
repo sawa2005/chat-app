@@ -52,13 +52,26 @@ cd chat-app
 npm install
 ```
 
-### 3. Set up Supabase
+### 3. Set up environment variables
+
+Create a `.env` file by copying the `.env.example` file:
+
+```bash
+cp .env.example .env
+```
+
+We will fill in the values within this file in the next steps.
+
+### 4. Set up Supabase
 
 1.  Create a new project on [Supabase](https://app.supabase.io/).
-2.  Go to "Project Settings" > "Database" and find your database connection string.
-3.  Go to "Project Settings" > "API" and find your Project URL and `anon` public key.
+2.  Remember to note down your database password somewhere safe as you will need it later.
+3.  Go to "Project Settings" > "Data API" and copy the URL under **Project URL**. Paste it into your `.env` as `NEXT_PUBLIC_SUPABASE_URL`.
+4.  Go to the "Database" section of your project and click the "Connect" button to find your database connection string.
+5.  Copy the string found under the method "Transaction pooler" and paste it into your `.env` as `DATABASE_URL`. Replace `[YOUR-PASSWORD]` with your database password. The URL should look something like `postgresql://[user].[project-id]:[password]@aws-x-xx-xxxx-x.pooler.supabase.com:6543/postgres?pgbouncer=true`.
+6.  Go to "Project Settings" > "API Keys" > "Legacy API Keys" and copy the `anon` public key. Paste it into your `.env` as `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-### 4. Configure Supabase Auth
+### 5. Configure Supabase Auth
 
 To enable users to sign up and log in:
 
@@ -68,7 +81,7 @@ To enable users to sign up and log in:
 4.  Ensure **Enable Email provider** is toggled **ON**.
 5.  (Optional) Turn off "Confirm email" if you want to skip email verification during development.
 
-### 5. Configure Database Triggers
+### 6. Configure Database Triggers
 
 To automatically create a user profile when a new user signs up via Supabase Auth, you need to set up a database trigger. Run the following SQL in your Supabase project's **SQL Editor**:
 
@@ -92,52 +105,52 @@ create or replace trigger on_auth_user_created
   for each row execute procedure public.create_user_profile();
 ```
 
-### 6. Set up environment variables
+### 7. Setup Database Schema
 
-Create a `.env.local` file by copying the `.env.example` file:
+Instead of running migrations locally, we will apply the schema directly in Supabase.
+
+1.  Open the file `prisma/migrations/20241124000000_init_full/migration.sql` in your code editor.
+2.  Copy the entire content of the file.
+3.  Go to your Supabase project's **SQL Editor**.
+4.  Paste the SQL content and run it.
+
+### 8. Get Tenor API Key
+
+To enable GIF support in the chat, you need a Tenor API key from Google Cloud.
+
+1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2.  Create a new project (or select an existing one).
+3.  Search for **"Tenor API"** in the library and enable it.
+4.  Go to **Credentials** and create a new **API Key**.
+5.  Copy the API Key and paste it into your `.env` as `NEXT_PUBLIC_TENOR_API_KEY`.
+
+An official quickstart guide is accessible [here](https://developers.google.com/tenor/guides/quickstart).
+
+### 9. Generate Prisma Client
+
+Generate the client code which the application uses to interact with prisma by running the following command.
 
 ```bash
-cp .env.example .env.local
+npx prisma generate
 ```
 
-Then, fill in the values for `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `NEXT_PUBLIC_TENOR_API_KEY`.
-
-**Crucial for Database Operations (`DATABASE_URL`):**
-For `npx prisma db push` to work correctly and bypass Row Level Security (RLS) policies during schema updates:
-
-1.  Use the **Session** connection string (Port **5432**), NOT the Transaction Pooler (Port 6543).
-2.  Ensure you are connecting as the `postgres` user (default), which has superuser privileges and bypasses RLS.
-
-Example:
-`DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres"`
-
-### 6. Apply Prisma Migrations
-
-Once your `DATABASE_URL` is set in `.env.local`, apply the database migrations:
-
-```bash
-npx prisma migrate dev
-```
-
-This command will create or update your database schema based on your Prisma schema and local migration files.
-
-### 7. Run the development server
+### 10. Run the development server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) or whichever URL is shown in your terminal with your browser to see the chat application in action!
 
 ## Troubleshooting
 
 ### Images not loading
 
-If user avatars or shared images are not loading, ensure your `NEXT_PUBLIC_SUPABASE_URL` is correctly set in `.env.local`. The application uses this variable to configure allowed image domains in `next.config.ts`.
+If user avatars or shared images are not loading, ensure your `NEXT_PUBLIC_SUPABASE_URL` is correctly set in `.env`. The application uses this variable to configure allowed image domains in `next.config.ts`.
 
 ### Database connection errors
 
-Double-check your `DATABASE_URL` in `.env.local`. It should be the Transaction connection pooler string (port 6543) or the Session connection string (port 5432) from Supabase.
+Double-check your `DATABASE_URL` in `.env`. It should be the Transaction connection pooler string (port 6543) from Supabase.
 
 ### Verifying Changes (Tests)
 

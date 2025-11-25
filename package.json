@@ -9,7 +9,7 @@
         "start": "next start",
         "lint": "eslint",
         "test": "vitest --ui",
-        "release": "dotenv -e .env.local -- release-it"
+        "release": "release-it"
     },
     "dependencies": {
         "@prisma/adapter-pg": "^7.0.0",
@@ -53,6 +53,7 @@
         "@typescript-eslint/parser": "^8.47.0",
         "@vitejs/plugin-react": "^5.1.1",
         "@vitest/ui": "^4.0.10",
+        "dotenv": "^17.2.3",
         "eslint": "^9",
         "eslint-config-next": "^16.0.3",
         "jsdom": "^27.2.0",
