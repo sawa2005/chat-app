@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { InfoIcon } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 function isValidEmail(email: string) {
     const re =
@@ -27,12 +28,20 @@ function isValidEmail(email: string) {
 }
 
 export default function LoginPage() {
+    const params = useSearchParams();
+    const tab: "signup" | "login" = params.get("tab") === "signup" ? "signup" : "login";
+
     const [password, setPassword] = useState("");
     const [confirmPass, setConfirmPass] = useState("");
     const [emailInput, setEmailInput] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [confirmEmail, setConfirmEmail] = useState<string | undefined>();
+    const [selectedTab, setSelectedTab] = useState(tab);
+
+    useEffect(() => {
+        setSelectedTab(tab);
+    }, [params, tab]);
 
     useEffect(() => {
         if (!emailInput) return setError("");
@@ -89,12 +98,12 @@ export default function LoginPage() {
                     </AlertDialogContent>
                 </AlertDialog>
             )}
-            <Tabs defaultValue="login">
+            <Tabs defaultValue={tab} value={selectedTab}>
                 <TabsList>
-                    <TabsTrigger value="login" className="cursor-pointer">
+                    <TabsTrigger value="login" onClick={() => setSelectedTab("login")} className="cursor-pointer">
                         Log In
                     </TabsTrigger>
-                    <TabsTrigger value="signup" className="cursor-pointer">
+                    <TabsTrigger value="signup" onClick={() => setSelectedTab("signup")} className="cursor-pointer">
                         Sign Up
                     </TabsTrigger>
                 </TabsList>

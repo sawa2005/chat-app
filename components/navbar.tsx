@@ -79,7 +79,7 @@ export default async function Navigation() {
                             <Link href="/login">Existing Account</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
-                            <Link href="/login">
+                            <Link href="/login?tab=signup">
                                 <span className="font-semibold">Sign Up</span>
                             </Link>
                         </DropdownMenuItem>
