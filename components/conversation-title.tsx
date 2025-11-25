@@ -52,7 +52,7 @@ export default function ConversationTitle({
                             value={name}
                             placeholder={existingName}
                             onChange={(e) => setName(e.target.value)}
-                            className="text-xl font-bold border-0 shadow-none p-0 h-fit md:!text-xl"
+                            className="text-xl font-bold border-0 shadow-none p-0 h-fit md:text-xl! focus-visible:ring-0 focus:ring-0"
                         />
                     </div>
 

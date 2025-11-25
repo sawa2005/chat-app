@@ -308,7 +308,7 @@ export default function Messages({
     // Initial scroll - handle both cases
     useEffect(() => {
         if (!loading && !hasDoneInitialScroll) {
-            if (firstUnreadIndex !== null) {
+            if (messages !== null && firstUnreadIndex !== null) {
                 // Has unread messages
                 if (imageCount === 0) {
                     // No images, scroll immediately
