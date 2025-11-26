@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 const supabase = createClient();
 
-// TODO: custom scroll bar styles.
+// TODO: better custom scroll bar styles.
 // TODO: list profile pictures of users who have read a message.
 // TODO: no country flags in emoji picker.
 

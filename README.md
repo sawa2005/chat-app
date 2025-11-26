@@ -168,6 +168,32 @@ To run tests once in the console:
 npx vitest run
 ```
 
+## Improvement Areas & Future Development
+
+Of course there are still features and improvements I'd like to implement. Here are a few ideas:
+
+### Smaller To-Dos
+
+-   [ ] **Feature:** Show user avatars for read status
+-   [ ] **Feature:** Rich link embeds/previews
+-   [ ] **QoL:** Add fallback emojis to emoji picker if OS doesn't have certain emojis
+-   [ ] **Tech Debt:** Remove fallback logic for chat image sizing as this isn't needed for current instances of the project
+
+### Future Ideas
+
+-   **Media:** File sharing (PDFs, docs) beyond images
+-   **Notifications:** Ability to mention/tag users the chat and notifications menu to see unread/tagged in messages
+-   **Communication:** Voice messages
+-   **Visuals:** More customizable themes and functionality for selecting a theme per conversation.
+
+## Contributing
+
+We welcome contributions from the community!
+
+-   **Found a bug?** Please open an issue reporting the bug with steps to reproduce.
+-   **Have a feature idea?** Open an issue to discuss it before starting work.
+-   **Want to code?** Fork the repo, make your changes, and submit a Pull Request.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
